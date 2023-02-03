@@ -3,3 +3,6 @@ webserv
 
 # object files
 *.o
+
+# OSX
+.DS_Store
