@@ -1,7 +1,14 @@
-#include <iostream>
+#include "server.hpp"
 
-int main(void)
+int main(int argc, char** argv)
 {
-	std::cout << "Hello, webserv" << std::endl;
+  if (argc != 2)
+    return 1;
+  try {
+    Server server("", std::atoi(argv[1]));
+    server.start();
+  } catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
+  }
 	return 0;
 }
