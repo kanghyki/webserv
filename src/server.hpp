@@ -1,9 +1,10 @@
 #ifndef SERVER_HPP
-# define SERVER_HPP
+#define SERVER_HPP
 
-# define BUF_SIZE 100
+#define BUF_SIZE (100)
 
-# include "socket.hpp"
+#include <fcntl.h>
+#include "socket.hpp"
 
 class Server {
   public:

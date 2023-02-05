@@ -1,4 +1,5 @@
 #include "server.hpp"
+#include <sys/socket.h>
 
 Server::Server(std::string host, int port) : socket(host, port) {
   std::cout << "hello webserv!!" << std::endl;
@@ -6,35 +7,38 @@ Server::Server(std::string host, int port) : socket(host, port) {
 
 void Server::start(void) {
   fd_set reads_cpy;
-	struct timeval timeout;
-  int fd_num;
-	socklen_t adr_sz;	
+  fd_set writes_cpy;
   int clnt_sock;
-	struct sockaddr_in clnt_addr;
 
-	while(1)
-	{
-		reads_cpy = socket.GetReads();
-		timeout.tv_sec = 5;
-		timeout.tv_usec = 5000;
+  while (1) {
+    reads_cpy = socket.GetReads();
+    writes_cpy = socket.GetWrites();
 
-		if ((fd_num = select(socket.GetFdMax() + 1, &reads_cpy, 0, 0, &timeout)) == -1)
-			break;
-		if (fd_num == 0)
-			continue;
+    if (select(socket.GetFdMax() + 1, &reads_cpy, &writes_cpy, 0, 0) == -1)
+      break;
 
-		for (int i = 0; i < socket.GetFdMax() + 1; i++)
-		{
-			if (FD_ISSET(i, &reads_cpy))
-			{
-				if (i == socket.GetServSock())
-				{
-					adr_sz = sizeof(clnt_addr);
-					clnt_sock = accept(socket.GetServSock(), (struct sockaddr*)&clnt_addr, &adr_sz);
-					FD_SET(clnt_sock, &socket.GetReads());
-					if (socket.GetFdMax() < clnt_sock)
+    for (int i = 0; i < socket.GetFdMax() + 1; i++) {
+      if (FD_ISSET(i, &reads_cpy)) {
+        if (i == socket.GetServSock()) {
+          printf("connected client: %d \n", clnt_sock);
+          clnt_sock = accept(socket.GetServSock(), 0, 0);
+          FD_SET(clnt_sock, &socket.GetReads());
+          fcntl(clnt_sock, F_SETFL, O_NONBLOCK);
+          if (socket.GetFdMax() < clnt_sock)
             socket.SetFdMax(clnt_sock);
-					const char * ddd = "\
+        }
+        else {
+          FD_CLR(i, &socket.GetReads());
+          FD_SET(clnt_sock, &socket.GetWrites());
+//          int buf_size = 30;
+//          char buf[31];
+//          buf[30] = 0;
+//          int reads;
+//
+//          while ((reads = read(clnt_sock, buf, buf_size)) != -1) {
+//            printf("%s\n", buf);
+//          }
+          const char * html = "\
 HTTP/1.1 200 OK\r\n\
 Server: Hyeongki&Kanghyki server\r\n\
 Content-Length: 63\r\n\
@@ -46,28 +50,15 @@ Content-Type: text/html\r\n\
 <h1>Hello, World!</h1>\
 </body>\
 </html>";
-					write(clnt_sock, ddd, strlen(ddd));
-					close(clnt_sock);
-					FD_CLR(clnt_sock, &socket.GetReads());
-					printf("connected client: %d \n", clnt_sock);
-				}
-				else
-				{
-          char buf[BUF_SIZE];
-					int str_len = read(i, buf, BUF_SIZE);
-					if (str_len == 0)
-					{
-						FD_CLR(i, &socket.GetReads());
-						close(i);
-						printf("closed client: %d \n", i);
-					}
-					else
-					{
-						printf("buf: %s", buf);
-					}
-				}
-			}
-		}
-	}
-	close(socket.GetServSock());
+          send(clnt_sock, html, strlen(html), 0);
+        }
+      }
+      if (FD_ISSET(i, &writes_cpy)) {
+        FD_CLR(i, &socket.GetWrites());
+        close(clnt_sock);
+      }
+
+    }
+  }
+  close(socket.GetServSock());
 }
