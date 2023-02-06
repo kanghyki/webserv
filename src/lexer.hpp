@@ -2,7 +2,7 @@
 * author: kanghyki
 * email: kanghyki@gmail.com
 * created: 2023-01-23 21:03:19
-* updated: 2023-01-27 23:09:19
+* updated: 2023-02-06 17:37:17
 */
 
 #ifndef LEXER_HPP
@@ -14,29 +14,30 @@
 
 class Lexer {
   public:
-    Lexer();
-    Lexer(Lexer const &obj);
     Lexer(std::string input);
-    Lexer& operator=(Lexer const &obj);
     ~Lexer();
 
     Token *NextToken();
-
-  private:
-    void ReadChar();
-    char PeekChar();
-    std::string ReadIdentifier();
-    std::string ReadNumber();
-    bool IsDigit(char ch);
-    bool IsLetter(char ch);
-    std::string LookupIdent(std::string ident);
-    void SkipWhitespace();
 
   private:
     std::string input;
     int position;
     int read_position;
     char ch;
+
+    void ReadChar();
+    char PeekChar();
+    std::string ReadIdentifier();
+    std::string ReadNumber();
+    bool IsDigit(char ch);
+    bool IsLetter(char ch);
+    bool IsSpace(char ch);
+    std::string LookupIdent(std::string ident);
+    void SkipWhitespace();
+
+    Lexer();
+    Lexer(Lexer const &obj);
+    Lexer& operator=(Lexer const &obj);
 };
 
 #endif

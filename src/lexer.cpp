@@ -2,13 +2,10 @@
 * author: kanghyki
 * email: kanghyki@gmaicom
 * created: 2023-01-23 23:02:24
-* updated: 2023-01-27 23:06:38
+* updated: 2023-02-06 17:39:40
 */
 
 #include "lexer.hpp"
-
-Lexer::Lexer(): input(""), position(0), read_position(0), ch(0) {
-}
 
 Lexer::Lexer(std::string input): input(input), \
                                  position(0), \
@@ -17,22 +14,25 @@ Lexer::Lexer(std::string input): input(input), \
   ReadChar();
 }
 
-Lexer::Lexer(Lexer const &obj): input(obj.input), \
-                                position(obj.position), \
-                                read_position(obj.read_position), \
-                                ch(obj.ch)
-{
-}
-
-Lexer &Lexer::operator=(Lexer const &obj) {
-  if (this != &obj) {
-    input = obj.input;
-    position = obj.position;
-    read_position = obj.read_position;
-    ch = obj.ch;
-  }
-  return *this;
-}
+//Lexer::Lexer(): input(""), position(0), read_position(0), ch(0) {
+//}
+//
+//Lexer::Lexer(Lexer const &obj): input(obj.input), \
+//                                position(obj.position), \
+//                                read_position(obj.read_position), \
+//                                ch(obj.ch)
+//{
+//}
+//
+//Lexer &Lexer::operator=(Lexer const &obj) {
+//  if (this != &obj) {
+//    input = obj.input;
+//    position = obj.position;
+//    read_position = obj.read_position;
+//    ch = obj.ch;
+//  }
+//  return *this;
+//}
 
 Lexer::~Lexer() {
 }
@@ -79,12 +79,19 @@ bool Lexer::IsDigit(char ch) {
 }
 
 bool Lexer::IsLetter(char ch) {
-  if (ch != ';' &&
+  if (ch != 0 &&
+      !IsSpace(ch) &&
+      ch != ';' &&
       ch != '{' &&
-      ch != '}' &&
-      (isalpha(ch) || ch == '_')) {
+      ch != '}') {
     return true;
   }
+  return false;
+}
+
+bool Lexer::IsSpace(char ch) {
+  if (ch == ' ' || ch == '\n' || ch == '\r')
+    return true;
   return false;
 }
 

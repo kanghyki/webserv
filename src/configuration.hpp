@@ -50,7 +50,7 @@ class HttpConfiguration {
 class Configuration {
   public:
   private:
-    struct HttpConfiguration http;
+    HttpConfiguration http;
 };
 
 #endif
