@@ -12,7 +12,9 @@ NAME			=	webserv
 INCS			=	./src
 
 SRCS_DIR		=	./src
-SRCS			=	main.cpp
+SRCS			=	main.cpp\
+						lexer.cpp\
+						file_reader.cpp
 
 OBJS_DIR		=	./obj
 OBJS			=	$(addprefix $(OBJS_DIR)/, $(SRCS:.cpp=.o))
