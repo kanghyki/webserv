@@ -15,6 +15,7 @@ void Parser::NextToken() {
 Token *Parser::CurToken() {
   return this->t_arr[this->pos];
 };
+
 // FIXME:
 Token *Parser::PeekToken() {
   return this->t_arr[this->pos + 1];

@@ -48,13 +48,14 @@ class Parser {
         const char *what() const throw();
     };
 
-    void NextToken();
-    Token *CurToken();
-    Token *PeekToken();
   private:
     Configuration *conf;
     std::vector<Token *> t_arr;
     unsigned long pos;
+
+    void NextToken();
+    Token *CurToken();
+    Token *PeekToken();
 
     void ReadAllToken(std::string file_name);
     void PrintToken(Token *tok);

@@ -2,7 +2,7 @@
 * author: kanghyki
 * email: kanghyki@gmaicom
 * created: 2023-01-23 23:02:24
-* updated: 2023-02-09 15:03:30
+* updated: 2023-02-09 18:24:41
 */
 
 #include "lexer.hpp"
@@ -24,7 +24,7 @@ void Lexer::SetInput(std::string input) {
   this->ch = 0;
   ReadChar();
 }
-//
+
 //Lexer::Lexer(Lexer const &obj): input(obj.input), \
 //                                position(obj.position), \
 //                                read_position(obj.read_position), \
