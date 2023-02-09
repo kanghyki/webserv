@@ -37,7 +37,7 @@ int Server::AcceptConnect() {
   fcntl(clnt_sock, F_SETFL, O_NONBLOCK);
   FD_SET(clnt_sock, &socket.GetReads());
   this->request_data = RecvData(clnt_sock);
-  std::cout << this->request_data << std::endl;
+  Http http(this->request_data);
   if (socket.GetFdMax() < clnt_sock)
     socket.SetFdMax(clnt_sock);
   return clnt_sock;

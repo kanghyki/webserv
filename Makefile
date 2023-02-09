@@ -16,7 +16,9 @@ SRCS			=	main.cpp\
             socket.cpp\
             server.cpp\
 						lexer.cpp\
-						file_reader.cpp
+						file_reader.cpp\
+            http.cpp\
+            util.cpp
 
 
 OBJS_DIR	=	./obj

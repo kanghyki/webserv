@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include "socket.hpp"
 #include "file_reader.hpp"
+#include "http.hpp"
 
 class Server {
   public:
