@@ -2,7 +2,7 @@
 * author: kanghyki
 * email: kanghyki@gmail.com
 * created: 2023-01-23 21:03:19
-* updated: 2023-02-06 17:37:17
+* updated: 2023-02-09 13:56:06
 */
 
 #ifndef LEXER_HPP
@@ -14,9 +14,11 @@
 
 class Lexer {
   public:
+    Lexer();
     Lexer(std::string input);
     ~Lexer();
 
+    void SetInput(std::string input);
     Token *NextToken();
 
   private:
@@ -35,7 +37,6 @@ class Lexer {
     std::string LookupIdent(std::string ident);
     void SkipWhitespace();
 
-    Lexer();
     Lexer(Lexer const &obj);
     Lexer& operator=(Lexer const &obj);
 };

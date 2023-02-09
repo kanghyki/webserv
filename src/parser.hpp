@@ -6,38 +6,64 @@
 #include "token.hpp"
 #include "file_reader.hpp"
 #include <string>
+#include <exception>
+#include <vector>
 
 class Parser {
   public:
-    Configuration *Parse(std::string file_name) {
-      Configuration *ret = new Configuration;
-      FileReader reader(file_name);
-      const std::string prompt = ">> ";
-      std::string line;
+    Parser();
+    ~Parser();
+    Configuration *Parse(std::string file_name);
 
-      while (reader.IsReadable()) {
-        line = reader.ReadLine();
-        std::cout << "=====================" << std::endl;
-        std::cout << line << std::endl;
-        std::cout << "=====================" << std::endl;
-        Lexer l(line);
-        Token *tok;
-        while ((tok = l.NextToken())->type != token_type::kEof) {
-          PrintToken(tok);
-          delete tok;
-        }
-        delete tok;
-      }
-      return ret;
+    class LbraceException: public std::exception {
+      public:
+        const char *what() const throw();
     };
-  private:
-    void PrintToken(Token *tok) {
-      std::cout << \
-        "{Type:" << tok->type << \
-        " Literal:" << tok->literal << \
-        "}" << std::endl;
-    }
+    class RbraceException: public std::exception {
+      public:
+        const char *what() const throw();
+    };
+    class SemicolonException: public std::exception {
+      public:
+        const char *what() const throw();
+    };
+    class RootException: public std::exception {
+      public:
+        const char *what() const throw();
+    };
+    class ErrorPageException: public std::exception {
+      public:
+        const char *what() const throw();
+    };
+    class CBBSException: public std::exception {
+      public:
+        const char *what() const throw();
+    };
+    class IndexException: public std::exception {
+      public:
+        const char *what() const throw();
+    };
+    class ParseException: public std::exception {
+      public:
+        const char *what() const throw();
+    };
 
+    void NextToken();
+    Token *CurToken();
+    Token *PeekToken();
+  private:
+    Configuration *conf;
+    std::vector<Token *> t_arr;
+    unsigned long pos;
+
+    void ReadAllToken(std::string file_name);
+    void PrintToken(Token *tok);
+    void ParseHttp(HttpConfiguration *conf);
+    void ParseServer(ServerConfiguration *conf);
+    void ParseLocation(LocationConfiguration *conf);
+
+    void ParseCommon(AConfiguration *conf);
+    std::vector<std::string> Split(std::string line, std::string sep);
 };
 
 #endif

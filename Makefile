@@ -14,14 +14,16 @@ INCS			=	./src
 SRCS_DIR		=	./src
 SRCS			=	main.cpp\
 						lexer.cpp\
-						file_reader.cpp
+						file_reader.cpp\
+						parser.cpp
+
 
 OBJS_DIR		=	./obj
 OBJS			=	$(addprefix $(OBJS_DIR)/, $(SRCS:.cpp=.o))
 #---------------[ cmd ]-----------------
 CXX				=	c++
 CPPFLAGS		=	-I $(INCS)
-CXXFLAGS		=	-Wall -Wextra -Werror -std=c++98
+CXXFLAGS		=	-Wall -Wextra -Werror -std=c++98 -g
 RM				=	rm -rf
 
 vpath %.cpp $(SRCS_DIR)
