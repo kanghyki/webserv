@@ -3,54 +3,40 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <vector>
 
-class CommonConfiguration {
-  public:
-    int client_body_size;
-    std::string root;
-    std::map<int, std::string> error_page;
-    std::vector<std::string> index;
-  private:
-};
+typedef struct AConfiguration {
+  int client_body_size;
+  std::string root;
+  std::map<int, std::string> error_page;
+  std::set<std::string> index;
+} AConfiguration;
 
-class LocationConfiguration {
-  public:
-    CommonConfiguration common;
+typedef struct LocationConfiguration: AConfiguration {
+  std::string path;
+  std::string alias;
+  std::string limit_except;
+  std::map<int, std::string> return_res;
+  bool auto_index;
 
-    std::string alias;
-    std::string limit_except;
-    std::map<int, std::string> return_res;
-    bool auto_index;
+  std::vector<LocationConfiguration *> locations;
+} LocationConfiguration;
 
-    std::vector<LocationConfiguration> locations;
-  private:
-};
+typedef struct ServerConfiguration: AConfiguration {
+  int port;
+  std::string host;
+  std::string server_name;
 
-class ServerConfiguration {
-  public:
-    CommonConfiguration common;
+  std::vector<LocationConfiguration *> locations;
+} ServerConfiguration;
 
-    int port;
-    std::string host;
-    std::string server_name;
+typedef struct HttpConfiguration: AConfiguration {
+  std::vector<ServerConfiguration *> servers;
+} HttpConfiguration;
 
-    std::vector<LocationConfiguration> locations;
-  private:
-};
-
-class HttpConfiguration {
-  public:
-    CommonConfiguration common;
-
-    std::vector<ServerConfiguration> servers;
-  private:
-};
-
-class Configuration {
-  public:
-  private:
-    HttpConfiguration http;
-};
+typedef struct Configuration {
+  HttpConfiguration *http;
+} Configuration;
 
 #endif
