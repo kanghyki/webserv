@@ -2,7 +2,7 @@
 * author: kanghyki
 * email: kanghyki@gmaicom
 * created: 2023-01-23 23:02:24
-* updated: 2023-02-06 17:39:40
+* updated: 2023-02-09 15:03:30
 */
 
 #include "lexer.hpp"
@@ -14,8 +14,16 @@ Lexer::Lexer(std::string input): input(input), \
   ReadChar();
 }
 
-//Lexer::Lexer(): input(""), position(0), read_position(0), ch(0) {
-//}
+Lexer::Lexer(): input(""), position(0), read_position(0), ch(0) {
+}
+
+void Lexer::SetInput(std::string input) {
+  this->input = input;
+  this->position = 0;
+  this->read_position = 0;
+  this->ch = 0;
+  ReadChar();
+}
 //
 //Lexer::Lexer(Lexer const &obj): input(obj.input), \
 //                                position(obj.position), \

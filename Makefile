@@ -18,12 +18,12 @@ SRCS			=	main.cpp\
 						lexer.cpp\
 						file_reader.cpp\
             http.cpp\
-            util.cpp
+            util.cpp\
+						parser.cpp
 
 
 OBJS_DIR	=	./obj
 OBJS			=	$(addprefix $(OBJS_DIR)/, $(SRCS:.cpp=.o))
-#---------------[ cmd ]-----------------
 CXX       =	c++
 CPPFLAGS  =	-I $(INCS)
 #CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
