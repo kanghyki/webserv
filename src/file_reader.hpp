@@ -10,8 +10,9 @@ class FileReader {
     FileReader(const std::string file_name);
     ~FileReader();
 
-    const std::string ReadLine();
-    bool IsReadable();
+    const std::string ReadLine(void);
+    const std::string Read(void);
+    bool IsReadable(void);
 
     class OpenFailedException: public std::exception {
       public:

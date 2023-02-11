@@ -16,6 +16,13 @@ const std::string FileReader::ReadLine() {
   return line;
 }
 
+const std::string FileReader::Read() {
+  std::string ret;
+  while (this->is_readable)
+    ret += ReadLine();
+  return ret;
+}
+
 bool FileReader::IsReadable() {
   return this->is_readable;
 }
