@@ -12,14 +12,7 @@ NAME			=	webserv
 INCS			=	./src
 
 SRCS_DIR		=	./src
-SRCS			=	main.cpp\
-            socket.cpp\
-            server.cpp\
-						lexer.cpp\
-						file_reader.cpp\
-            http.cpp\
-            util.cpp\
-						parser.cpp
+SRCS			=	main.cpp
 
 
 OBJS_DIR	=	./obj
