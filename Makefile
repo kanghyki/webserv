@@ -12,7 +12,8 @@ NAME			=	webserv
 INCS			=	./src
 
 SRCS_DIR		=	./src
-SRCS			=	main.cpp
+SRCS			=	main.cpp\
+						Server.cpp
 
 
 OBJS_DIR	=	./obj
