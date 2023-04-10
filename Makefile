@@ -13,7 +13,8 @@ INCS			=	./src
 
 SRCS_DIR		=	./src
 SRCS			=	main.cpp\
-						Server.cpp
+						Server.cpp\
+						Socket.cpp
 
 
 OBJS_DIR	=	./obj
