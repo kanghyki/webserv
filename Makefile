@@ -14,7 +14,10 @@ INCS			=	./src
 SRCS_DIR		=	./src
 CONFIG_DIR		=	./src/config
 PARSER_DIR		=	./src/config/parser
+
 SRCS			=	main.cpp\
+						Server.cpp\
+						Socket.cpp\
 						Config.cpp\
 						CommonConfig.cpp\
 						HttpConfig.cpp\
@@ -23,7 +26,6 @@ SRCS			=	main.cpp\
 						Token.cpp\
 						Lexer.cpp\
 						ConfigParser.cpp
-
 
 
 OBJS_DIR	=	./obj
