@@ -7,7 +7,6 @@ namespace token_type {
   const std::string ILLEGAL = "ILLEGAL";
   const std::string END_OF_FILE = "EOF";
   const std::string IDENT = "IDENT";
-  const std::string INT = "INT";
 
   const std::string SEMICOLON = ";";
   const std::string LBRACE = "{";
@@ -53,18 +52,23 @@ const std::string keywords[keyword::SIZE][2] = {
 
 class Token {
   public:
-    Token(std::string t, std::string l);
+    Token(const std::string &t, const std::string &l);
     Token();
     Token(Token const &obj);
     Token& operator=(Token const &obj);
     ~Token();
-    bool operator!=(Token const &obj);
+
+    std::string getType() const;
+    std::string getLiteral() const;
+    void setType(const std::string &type);
+    void setLiteral(const std::string &type);
+
+    bool isEqaulType(const std::string &type);
 
   private:
-
-  public:
     std::string type;
     std::string literal;
+
 };
 
 #endif

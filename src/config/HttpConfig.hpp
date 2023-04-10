@@ -1,6 +1,7 @@
 #ifndef HTTP_CONFIG_HPP
 #define HTTP_CONFIG_HPP
 
+#include "CommonConfig.hpp"
 #include "ServerConfig.hpp"
 #include <vector>
 

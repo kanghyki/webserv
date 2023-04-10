@@ -14,5 +14,5 @@ std::vector<HttpConfig> Config::getHttpConfig() const {
 }
 
 void Config::addHttpConfig(HttpConfig http) {
-  https.push_back(http);
+  this->https.push_back(http);
 }

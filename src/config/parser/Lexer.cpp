@@ -1,4 +1,4 @@
-#include "lexer.hpp"
+#include "Lexer.hpp"
 
 Lexer::Lexer(std::string input): input(input), \
                                  position(0), \
@@ -70,12 +70,12 @@ std::string Lexer::ReadNumber() {
 }
 
 bool Lexer::IsDigit(char ch) {
-  return isdigit(ch);
+  return std::isdigit(ch);
 }
 
 bool Lexer::IsLetter(char ch) {
-  if (ch != 0 &&
-      !IsSpace(ch) &&
+  if (!IsSpace(ch) &&
+      ch != 0 &&
       ch != ';' &&
       ch != '{' &&
       ch != '}') {
@@ -124,10 +124,6 @@ Token Lexer::NextToken() {
       if (IsLetter(ch)) {
         std::string ident = ReadIdentifier();
         ret = Token(LookupIdent(ident), ident);
-        return ret;
-      }
-      else if (IsDigit(ch)) {
-        ret = Token(token_type::INT, ReadNumber());
         return ret;
       }
       else

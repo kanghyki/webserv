@@ -8,20 +8,21 @@
 class CommonConfig {
   public:
     CommonConfig();
-    ~CommonConfig();
+    virtual ~CommonConfig();
     CommonConfig(const CommonConfig &obj);
     CommonConfig &operator=(const CommonConfig &obj);
 
     int getClientBodySize() const;
-    void setClientBodySize(int clientBodySize);
     std::string getRoot() const;
-    void setRoot(std::string root);
     std::map<int, std::string> getErrorPage() const;
-    void addErrorPage(std::pair<int, std::string> errorPage);
     std::vector<std::string> getIndex() const;
+
+    void setClientBodySize(int clientBodySize);
+    void setRoot(std::string root);
+    void addErrorPage(std::pair<int, std::string> errorPage);
     void addIndex(std::string index);
 
-  private:
+  protected:
     int clientBodySize;
     std::string root;
     std::map<int, std::string> errorPage;

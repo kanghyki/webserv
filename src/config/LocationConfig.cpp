@@ -1,10 +1,32 @@
 #include "LocationConfig.hpp"
 
-LocationConfig::LocationConfig() {}
+LocationConfig::LocationConfig(): path(""), alias(""), limitExcept(),
+returnRes(), autoIndex(false), locations(0) {}
+
 LocationConfig::~LocationConfig() {}
-LocationConfig::LocationConfig(const LocationConfig &obj) {}
+
+LocationConfig::LocationConfig(const LocationConfig &obj): 
+  CommonConfig(obj),
+  path(obj.getPath()),
+  alias(obj.getAlias()),
+  limitExcept(obj.getLimitExcept()),
+  returnRes(obj.getReturnRes()), 
+  autoIndex(obj.isAutoIndex()),
+  locations(obj.getLocationConfig()) {}
+
 LocationConfig &LocationConfig::operator=(const LocationConfig &obj) {
   if (this != &obj) {
+    this->clientBodySize = obj.getClientBodySize();
+    this->root = obj.getRoot();
+    this->errorPage = obj.getErrorPage();
+    this->index = obj.getIndex();
+
+    this->path = obj.getPath();
+    this->alias = obj.getAlias();
+    this->limitExcept = obj.getLimitExcept();
+    this->returnRes = obj.getReturnRes();
+    this->autoIndex = obj.isAutoIndex();
+    this->locations = obj.getLocationConfig();
   }
   return *this;
 }

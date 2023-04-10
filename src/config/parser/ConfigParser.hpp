@@ -2,18 +2,20 @@
 #define PARSER_HPP
 
 #include "../Config.hpp"
-#include "./Lexer.hpp"
 #include "./Token.hpp"
+#include "./Lexer.hpp"
 #include <fstream>
 #include <string>
 #include <exception>
 #include <vector>
 
-class Parser {
+#include <iostream>
+
+class ConfigParser {
   public:
-    Parser();
-    ~Parser();
-    Config Parse(const std::string fileName);
+    ConfigParser();
+    ~ConfigParser();
+    Config Parse(const std::string &fileName);
 
     class RbraceException: public std::exception {
       public:
@@ -25,7 +27,6 @@ class Parser {
     };
 
   private:
-    Config conf;
     std::vector<Token> tokens;
     unsigned long pos;
 
@@ -35,11 +36,11 @@ class Parser {
     void expectTokenType(std::string expected);
 
     void generateToken(std::string fileName);
-    void ParseHttp(HttpConfig conf);
-    void ParseServer(ServerConfig conf);
-    void ParseLocation(LocationConfig conf);
+    void ParseHttp(HttpConfig &conf);
+    void ParseServer(ServerConfig &conf);
+    void ParseLocation(LocationConfig &conf);
 
-    void ParseCommon(CommonConfig conf);
+    void ParseCommon(CommonConfig &conf);
     std::vector<std::string> Split(std::string line, std::string sep);
 };
 

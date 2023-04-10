@@ -1,7 +1,7 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
 
-#include "token.hpp"
+#include "Token.hpp"
 
 #include <string>
 
