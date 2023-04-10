@@ -1,0 +1,14 @@
+http {
+	server {
+
+		listen 127.0.0.1:80;
+		server_name example.com;
+    client_body_buffer_size 25;
+
+		location /admin/ {
+      client_body_buffer_size 300;
+      error_page 400 /error;
+			index index.php;
+		}
+	}
+}

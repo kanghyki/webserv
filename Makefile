@@ -12,9 +12,20 @@ NAME			=	webserv
 INCS			=	./src
 
 SRCS_DIR		=	./src
+CONFIG_DIR		=	./src/config
+PARSER_DIR		=	./src/config/parser
+
 SRCS			=	main.cpp\
 						Server.cpp\
-						Socket.cpp
+						Socket.cpp\
+						Config.cpp\
+						CommonConfig.cpp\
+						HttpConfig.cpp\
+						LocationConfig.cpp\
+						ServerConfig.cpp\
+						Token.cpp\
+						Lexer.cpp\
+						ConfigParser.cpp
 
 
 OBJS_DIR	=	./obj
@@ -24,7 +35,7 @@ CPPFLAGS  =	-I $(INCS)
 #CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
 RM				=	rm -rf
 
-vpath %.cpp $(SRCS_DIR)
+vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR)
 
 all: $(NAME)
 
