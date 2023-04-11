@@ -179,7 +179,7 @@ void ConfigParser::parseLocation(LocationConfig &conf) {
         else if (curToken().getLiteral() == "off")
           conf.setAutoIndex(false);
       }
-      else if (curToken().isRoot()) {
+      else if (curToken().isReturn()) {
         nextToken();
         int status_code = std::atoi(curToken().getLiteral().c_str());
         nextToken();
