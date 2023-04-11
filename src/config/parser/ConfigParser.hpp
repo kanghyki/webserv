@@ -29,6 +29,7 @@ class ConfigParser {
   private:
     std::vector<Token> tokens;
     unsigned long pos;
+    std::string fileName;
 
     void nextToken();
     Token prevToken();

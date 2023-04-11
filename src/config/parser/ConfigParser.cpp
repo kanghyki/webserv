@@ -32,7 +32,7 @@ void ConfigParser::expectTokenType(std::string expected) {
   // FIXME : CPP11 사용중
   // TODO : 에러 라인 출력
   if (curToken().getType() != expected) {
-    std::string errorMsg = "server.conf|"\
+    std::string errorMsg = this->fileName + "|" \
     + std::to_string(prevToken().getLine()) + ":" + std::to_string(prevToken().getWord())
     + "|expected \'" + expected + "\'\n";
     std::string endMsg = "\nconfig error occured.";
@@ -41,8 +41,9 @@ void ConfigParser::expectTokenType(std::string expected) {
 }
 
 void ConfigParser::generateToken(std::string fileName) {
+  this->fileName = fileName;
   size_t lineCount = 1;
-  std::ifstream fileIn(fileName.c_str(), std::ifstream::in);
+  std::ifstream fileIn(this->fileName.c_str(), std::ifstream::in);
   std::string line;
   Lexer l;
   Token t;
