@@ -30,18 +30,19 @@ class ConfigParser {
     std::vector<Token> tokens;
     unsigned long pos;
 
-    void NextToken();
-    Token CurToken();
-    Token PeekToken();
+    void nextToken();
+    Token prevToken();
+    Token curToken();
+    Token peekToken();
     void expectTokenType(std::string expected);
 
     void generateToken(std::string fileName);
-    void ParseHttp(HttpConfig &conf);
-    void ParseServer(ServerConfig &conf);
-    void ParseLocation(LocationConfig &conf);
+    void parseHttp(HttpConfig &conf);
+    void parseServer(ServerConfig &conf);
+    void parseLocation(LocationConfig &conf);
 
-    void ParseCommon(CommonConfig &conf);
-    std::vector<std::string> Split(std::string line, std::string sep);
+    void parseCommon(CommonConfig &conf);
+    std::vector<std::string> splitStr(std::string line, std::string sep);
 };
 
 #endif

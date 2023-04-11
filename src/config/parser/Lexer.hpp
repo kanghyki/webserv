@@ -13,8 +13,10 @@ class Lexer {
     Lexer(Lexer const &obj);
     Lexer& operator=(Lexer const &obj);
 
-    void SetInput(std::string input);
-    Token NextToken();
+    void setInput(std::string input);
+    Token nextToken();
+
+    int getPosition() const;
 
   private:
     std::string input;
@@ -22,15 +24,15 @@ class Lexer {
     int read_position;
     char ch;
 
-    void ReadChar();
-    char PeekChar();
-    std::string ReadIdentifier();
-    std::string ReadNumber();
-    bool IsDigit(char ch);
-    bool IsLetter(char ch);
-    bool IsSpace(char ch);
-    std::string LookupIdent(std::string ident);
-    void SkipWhitespace();
+    void readChar();
+    char peekChar();
+    std::string readIdentifier();
+    std::string readNumber();
+    bool isDigit(char ch);
+    bool isLetter(char ch);
+    bool isSpace(char ch);
+    std::string lookupIdent(std::string ident);
+    void skipWhitespace();
 
 };
 

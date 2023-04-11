@@ -4,18 +4,18 @@ Lexer::Lexer(std::string input): input(input), \
                                  position(0), \
                                  read_position(0), \
                                  ch(0) {
-  ReadChar();
+  readChar();
 }
 
 Lexer::Lexer(): input(""), position(0), read_position(0), ch(0) {
 }
 
-void Lexer::SetInput(std::string input) {
+void Lexer::setInput(std::string input) {
   this->input = input;
   this->position = 0;
   this->read_position = 0;
   this->ch = 0;
-  ReadChar();
+  readChar();
 }
 
 Lexer::Lexer(Lexer const &obj): input(obj.input), \
@@ -36,7 +36,11 @@ Lexer &Lexer::operator=(Lexer const &obj) {
 Lexer::~Lexer() {
 }
 
-void Lexer::ReadChar() {
+int Lexer::getPosition() const {
+  return this->position;
+}
+
+void Lexer::readChar() {
   if (static_cast<unsigned int>(read_position) >= input.length())
     ch = 0;
   else
@@ -45,36 +49,36 @@ void Lexer::ReadChar() {
   ++read_position;
 }
 
-char Lexer::PeekChar() {
+char Lexer::peekChar() {
   if (static_cast<unsigned int>(read_position) >= input.length())
     return 0;
   return input[read_position];
 }
 
-std::string Lexer::ReadIdentifier() {
+std::string Lexer::readIdentifier() {
   int begin_pos = position;
 
-  while (IsLetter(ch))
-    ReadChar();
+  while (isLetter(ch))
+    readChar();
 
   return input.substr(begin_pos, position - begin_pos);
 }
 
-std::string Lexer::ReadNumber() {
+std::string Lexer::readNumber() {
   int begin_pos = position;
 
-  while (IsDigit(ch))
-    ReadChar();
+  while (isDigit(ch))
+    readChar();
 
   return input.substr(begin_pos, position - begin_pos);
 }
 
-bool Lexer::IsDigit(char ch) {
+bool Lexer::isDigit(char ch) {
   return std::isdigit(ch);
 }
 
-bool Lexer::IsLetter(char ch) {
-  if (!IsSpace(ch) &&
+bool Lexer::isLetter(char ch) {
+  if (!isSpace(ch) &&
       ch != 0 &&
       ch != ';' &&
       ch != '{' &&
@@ -84,13 +88,13 @@ bool Lexer::IsLetter(char ch) {
   return false;
 }
 
-bool Lexer::IsSpace(char ch) {
+bool Lexer::isSpace(char ch) {
   if (ch == ' ' || ch == '\n' || ch == '\r')
     return true;
   return false;
 }
 
-std::string Lexer::LookupIdent(std::string ident) {
+std::string Lexer::lookupIdent(std::string ident) {
   for (int i = 0; i < keyword::SIZE; ++i) {
     if (keywords[i][keyword::IDENT_IDX] == ident)
       return keywords[i][keyword::TYPE_IDX];
@@ -98,15 +102,15 @@ std::string Lexer::LookupIdent(std::string ident) {
   return token_type::IDENT;
 }
 
-void Lexer::SkipWhitespace() {
+void Lexer::skipWhitespace() {
   while (isspace(ch))
-    ReadChar();
+    readChar();
 }
 
-Token Lexer::NextToken() {
+Token Lexer::nextToken() {
   Token ret;
 
-  SkipWhitespace();
+  skipWhitespace();
   switch (ch) {
     case ';':
       ret = Token(token_type::SEMICOLON, std::string(1, ch));
@@ -121,15 +125,15 @@ Token Lexer::NextToken() {
       ret = Token(token_type::END_OF_FILE, std::string(""));
       break;
     default:
-      if (IsLetter(ch)) {
-        std::string ident = ReadIdentifier();
-        ret = Token(LookupIdent(ident), ident);
+      if (isLetter(ch)) {
+        std::string ident = readIdentifier();
+        ret = Token(lookupIdent(ident), ident);
         return ret;
       }
       else
         ret = Token(token_type::ILLEGAL, std::string(1, ch));
       break;
   }
-  ReadChar();
+  readChar();
   return ret;
 }

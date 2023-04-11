@@ -38,17 +38,17 @@ int main(int argc, char** argv) {
     std::cout << a.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getIndex()[0] << std::endl;
     std::cout << a.getHttpConfig()[0].getClientBodySize() << std::endl;
   } catch (std::exception &e) {
-    std::cerr << "Error: " << e.what() << std::endl;
+    std::cerr << "Error|" << e.what() << std::endl;
   }
 
   // ------------------------- hyeongki -------------------------
-  try {
-    Server server;
-    server.socketInit("", std::atoi(argv[1]));
-    server.run();
-  } catch (std::exception& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
-  }
+//  try {
+//    Server server;
+//    server.socketInit("", std::atoi(argv[1]));
+//    server.run();
+//  } catch (std::exception& e) {
+//    std::cerr << "Error: " << e.what() << std::endl;
+//  }
 
   return EXIT_SUCCESS;
 }

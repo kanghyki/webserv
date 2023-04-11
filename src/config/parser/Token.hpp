@@ -62,10 +62,33 @@ class Token {
     std::string getLiteral() const;
     void setType(const std::string &type);
     void setLiteral(const std::string &type);
+    void setLine(size_t line);
+    void setWord(size_t word);
+    size_t getLine() const;
+    size_t getWord() const;
 
-    bool isEqaulType(const std::string &type);
+    bool isType(const std::string &type) const;
+    bool isNotType(const std::string &type) const;
+
+    bool isCommon() const;
+    bool isListen() const;
+    bool isServerName() const;
+    bool isLocation() const;
+    bool isServer() const;
+    bool isHttp() const;
+    bool isAlias() const;
+    bool isLimitExcept() const;
+    bool isAutoIndex() const;
+    bool isReturn() const;
+    bool isRoot() const;
+    bool isErrorPage() const;
+    bool isClientBodyBufferSize() const;
+    bool isIndex() const;
 
   private:
+    size_t line;
+    size_t word;
+
     std::string type;
     std::string literal;
 
