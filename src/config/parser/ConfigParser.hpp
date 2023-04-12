@@ -17,10 +17,6 @@ class ConfigParser {
     ~ConfigParser();
     Config Parse(const std::string &fileName);
 
-    class RbraceException: public std::exception {
-      public:
-        const char *what() const throw();
-    };
     class ParseException: public std::exception {
       public:
         const char *what() const throw();
@@ -32,10 +28,12 @@ class ConfigParser {
     std::string fileName;
 
     void nextToken();
-    Token prevToken();
-    Token curToken();
-    Token peekToken();
-    void expectTokenType(std::string expected);
+    Token prevToken() const;
+    Token curToken() const;
+    Token peekToken() const;
+    void expectNextToken(std::string expected);
+    void expectCurToken(std::string expected);
+    void badSyntax() const;
 
     void generateToken(std::string fileName);
     void parseHttp(HttpConfig &conf);

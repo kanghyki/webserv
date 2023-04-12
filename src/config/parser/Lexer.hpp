@@ -26,11 +26,12 @@ class Lexer {
 
     void readChar();
     char peekChar();
-    std::string readIdentifier();
+    std::string readStr();
     std::string readNumber();
-    bool isDigit(char ch);
-    bool isLetter(char ch);
-    bool isSpace(char ch);
+    bool isDigit(char ch) const;
+    bool isLetter(char ch) const;
+    bool isSpace(char ch) const;
+    bool isStrNumber(const std::string &s) const;
     std::string lookupIdent(std::string ident);
     void skipWhitespace();
 
