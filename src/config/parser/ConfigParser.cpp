@@ -26,51 +26,29 @@ Token ConfigParser::peekToken() const {
   return this->tokens[this->pos + 1];
 }
 
-// FIXME : to_string(CPP11) 사용중
-// TODO: refactor
-void ConfigParser::expectNextToken(std::string expected) {
+void ConfigParser::expectNextToken(const std::string &expected) {
   nextToken();
 
-  if (curToken().getType() != expected) {
-    std::string errorMsg =
-      this->fileName
-      + " "
-      + std::to_string(prevToken().getLineNumber())
-      + ":" + std::to_string(prevToken().getPos() + prevToken().getLiteral().length() + 1)
-      + " expected \'" + expected + "\' but ";
-    if (prevToken().getLineNumber() == curToken().getLineNumber()) {
-      errorMsg += "\'" + curToken().getLiteral() + "\'\n";
-    }
-    else {
-      errorMsg += "nothing\n";
-    }
+  if (curToken().getType() != expected)
+    expectError(expected);
+}
 
-    std::string endMsg = "\nconfig error occured.";
-
-    throw std::invalid_argument(errorMsg + endMsg);
-  }
+void ConfigParser::expectCurToken(const std::string &expected) const {
+  if (curToken().getType() != expected)
+    expectError(expected);
 }
 
 // FIXME : to_string(CPP11) 사용중
-// TODO: refactor
-void ConfigParser::expectCurToken(std::string expected) {
-  if (curToken().getType() != expected) {
-    std::string errorMsg =
-      this->fileName
-      + " "
-      + std::to_string(prevToken().getLineNumber())
-      + ":" + std::to_string(prevToken().getPos() + prevToken().getLiteral().length() + 1)
-      + " expected \'" + expected + "\' but ";
-    if (prevToken().getLineNumber() == curToken().getLineNumber()) {
-      errorMsg += "\'" + curToken().getLiteral() + "\'\n";
-    }
-    else {
-      errorMsg += "nothing\n";
-    }
-    std::string endMsg = "\nconfig error occured.";
+void ConfigParser::expectError(const std::string &expected) const {
+  std::string errorMsg =
+    this->fileName
+    + " "
+    + std::to_string(curToken().getLineNumber())
+    + ":" + std::to_string(curToken().getPos())
+    + " expected \'" + expected + "\' but \'" + curToken().getLiteral() + "\'\n"
+    + "\nconfig error occured.";
 
-    throw std::invalid_argument(errorMsg + endMsg);
-  }
+  throw std::invalid_argument(errorMsg);
 }
 
 // TODO: refactor
@@ -79,7 +57,7 @@ void ConfigParser::badSyntax() const {
     this->fileName
     + " "
     + std::to_string(curToken().getLineNumber())
-    + ":" + std::to_string(curToken().getPos() + prevToken().getLiteral().length() + 1)
+    + ":" + std::to_string(curToken().getPos())
     + " bad syntax \'" + curToken().getLiteral() + "\'";
 
   throw std::invalid_argument(errorMsg);
@@ -100,6 +78,8 @@ void ConfigParser::generateToken(std::string fileName) {
     l.setInput(line);
     t = l.nextToken();
     t.setLineNumber(lineCount);
+    // TODO:: END_OF_LINE TOKEN 추가
+    // TODO:: 로직 수정
     while (t.isNot(token_type::END_OF_FILE)) {
       tokens.push_back(t);
       t = l.nextToken();
@@ -107,7 +87,9 @@ void ConfigParser::generateToken(std::string fileName) {
     }
     lineCount += 1;
   }
-  tokens.push_back(Token(token_type::END_OF_FILE, ""));
+  t = Token(token_type::END_OF_FILE, "END_OF_FILE");
+  t.setLineNumber(lineCount);
+  tokens.push_back(t);
 }
 
 Config ConfigParser::Parse(const std::string &fileName) {

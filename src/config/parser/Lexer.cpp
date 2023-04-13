@@ -40,6 +40,7 @@ int Lexer::getPosition() const {
   return this->position;
 }
 
+// FIXME: casting
 void Lexer::readChar() {
   if (static_cast<unsigned int>(read_position) >= input.length())
     ch = 0;
@@ -49,6 +50,7 @@ void Lexer::readChar() {
   ++read_position;
 }
 
+// FIXME: casting
 char Lexer::peekChar() {
   if (static_cast<unsigned int>(read_position) >= input.length())
     return 0;
@@ -77,6 +79,7 @@ bool Lexer::isDigit(char ch) const {
   return std::isdigit(ch);
 }
 
+// FIXME: 조건 수정
 bool Lexer::isLetter(char ch) const {
   if (!isSpace(ch) &&
       ch != 0 &&
@@ -111,15 +114,16 @@ std::string Lexer::lookupIdent(std::string ident) {
 }
 
 void Lexer::skipWhitespace() {
-  while (isspace(ch))
+  while (std::isspace(ch))
     readChar();
 }
 
 Token Lexer::nextToken() {
   Token ret;
+  size_t beginPosition;
 
-  ret.setPos(getPosition());
   skipWhitespace();
+  beginPosition = getPosition();
   switch (ch) {
     case ';':
       ret = Token(token_type::SEMICOLON, std::string(1, ch));
@@ -140,12 +144,14 @@ Token Lexer::nextToken() {
           ret = Token(token_type::INT, word);
         else
           ret = Token(lookupIdent(word), word);
+        ret.setPos(beginPosition);
         return ret;
       }
       else
         ret = Token(token_type::ILLEGAL, std::string(1, ch));
       break;
   }
+  ret.setPos(beginPosition);
   readChar();
   return ret;
 }

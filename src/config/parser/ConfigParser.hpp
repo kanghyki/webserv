@@ -31,8 +31,9 @@ class ConfigParser {
     Token prevToken() const;
     Token curToken() const;
     Token peekToken() const;
-    void expectNextToken(std::string expected);
-    void expectCurToken(std::string expected);
+    void expectNextToken(const std::string &expected);
+    void expectCurToken(const std::string &expected) const;
+    void expectError(const std::string &expected) const;
     void badSyntax() const;
 
     void generateToken(std::string fileName);

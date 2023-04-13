@@ -1,14 +1,15 @@
 #include "Token.hpp"
 
-Token::Token(const std::string &t, const std::string &l): 
+Token::Token(const std::string &t, const std::string &l):
   lineNumber(0),
   pos(0),
   type(t),
   literal(l) {}
 
+  // TODO: Remove?
 Token::Token():
-  lineNumber(0),
-  pos(0),
+  lineNumber(-42),
+  pos(-42),
   type("undefined"),
   literal("undefined") {}
 
@@ -22,6 +23,8 @@ Token::Token(const Token &obj):
 
 Token &Token::operator=(const Token &obj) {
   if (this != &obj) {
+    this->lineNumber = obj.getLineNumber();
+    this->pos = obj.getPos();
     this->type = obj.getType();
     this->literal = obj.getLiteral();
   }
