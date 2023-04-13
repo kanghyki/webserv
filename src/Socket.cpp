@@ -56,7 +56,7 @@ void Socket::setFdMax(int fdMax) {
  * ----------------------- Member Function -------------------------
  */
 
-int Socket::socketInit(void) {
+inline int Socket::socketInit(void) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == SOCK_CLOSED)
     throw std::runtime_error("Socket init failed");
@@ -64,7 +64,7 @@ int Socket::socketInit(void) {
   return sock;
 }
 
-void Socket::socketaddrInit(const std::string& host, int port, sock& in) {
+inline void Socket::socketaddrInit(const std::string& host, int port, sock& in) {
   (void)host;
 
   if (!memset(&in, 0, sizeof(in)))
@@ -74,14 +74,14 @@ void Socket::socketaddrInit(const std::string& host, int port, sock& in) {
   in.sin_port = htons(port);
 }
 
-void Socket::socketOpen(int servFd, sock& in) {
+inline void Socket::socketOpen(int servFd, sock& in) {
   if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
     throw std::runtime_error("Socket bind failed");
   if (listen(servFd, 128) == -1)
     throw std::runtime_error("Socket listen failed");
 }
 
-void Socket::fdSetInit(fd_set& fs, int fd) {
+inline void Socket::fdSetInit(fd_set& fs, int fd) {
   FD_ZERO(&fs);
   FD_SET(fd, &fs);
 }

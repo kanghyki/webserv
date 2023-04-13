@@ -37,10 +37,10 @@ class Socket {
 
     sock in;
 
-    int socketInit(void);
-    void socketaddrInit(const std::string& host, int port, sock& in);
-    void socketOpen(int servFd, sock& in);
-    void fdSetInit(fd_set& fs, int fd);
+    inline int socketInit(void);
+    inline void socketaddrInit(const std::string& host, int port, sock& in);
+    inline void socketOpen(int servFd, sock& in);
+    inline void fdSetInit(fd_set& fs, int fd);
 
     int acceptConnect();
     std::string recvData(int fd);
