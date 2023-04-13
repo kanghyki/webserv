@@ -4,8 +4,7 @@
  * -------------------------- Constructor --------------------------
  */
 
-Http::Http(const std::string& header) : headerStr(header) {
-  this->versionProtocol = parseVersion(header);
+Http::Http(const std::string& data) {
 }
 
 /*
@@ -28,9 +27,40 @@ Http::Http(const std::string& header) : headerStr(header) {
  * ----------------------- Member Function -------------------------
  */
 
-std::string parseVersion(const std::string& header) {
-  std::string startLine = util::getline(header);
-  return (util::split(startLine, ' ')[0]);
+std::string getStartLine(const std::string& data) {
+  try {
+    size_t n = util::find(data, "\r\n");
+    return data.substr(0, n);
+  } catch (std::exception& e) {
+    throw std::runtime_error("Data not in compliance with HTTP protocol");
+  }
+}
+
+std::string getHeaderBody(const std::string& data) {
+  try {
+    size_t n = util::find(data, "\r\n");
+    return data.substr(n);
+  } catch (std::exception& e) {
+    throw std::runtime_error("Data not in compliance with HTTP protocol");
+  }
+}
+
+std::string getHeader(const std::string& data) {
+  try {
+    size_t n = util::find(data, "\r\r\n");
+    return data.substr(0, n);
+  } catch (std::exception& e) {
+    throw std::runtime_error("Data not in compliance with HTTP protocol");
+  }
+}
+
+std::string getBody(const std::string& data) {
+  try {
+    size_t n = util::find(data, "\r\r\n");
+    return data.substr(n);
+  } catch (std::exception& e) {
+    return "";
+  }
 }
 
 /*

@@ -14,10 +14,14 @@ class HttpResponse : public Http{
   };
 
   public:
+    HttpResponse(const std::string& data);
 
   private:
     int statusCode;
     std::string statusMessage;
+    std::string version;
+
+    void parseResponse(const std::string& startLine);
 };
 
 #endif

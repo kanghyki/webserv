@@ -4,7 +4,7 @@
 # include "Http.hpp"
 
 
-class HttpRequest : public Http{
+class HttpRequest : public Http {
   enum Method {
     GET,
     POST,
@@ -12,11 +12,14 @@ class HttpRequest : public Http{
   };
 
   public:
-    HttpRequest(const std::string& header);
+    HttpRequest(const std::string& data);
 
   private:
     int method;
     std::string path;
+    std::string version;
+
+    void parseRequest(const std::string& startLine);
 };
 
 #endif

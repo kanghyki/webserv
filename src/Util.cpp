@@ -47,4 +47,13 @@ namespace util {
     std::getline(ss, ret);
     return ret;
   }
+
+  size_t find(const std::string& str, const std::string& target) {
+    size_t n = str.find(target);
+
+    if (n == std::string::npos)
+      throw std::runtime_error("Target not found");
+    
+    return n;
+  }
 }

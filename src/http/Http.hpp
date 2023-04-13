@@ -7,17 +7,19 @@
 
 class Http {
   protected:
-    Http(const std::string& header);
+    Http(const std::string& data);
 
   private:
-    std::map<std::string, std::string> headerMap;
-    std::string headerStr;
+    std::map<std::string, std::string> header;
     std::string body;
-    std::string versionProtocol;
 
-    std::map<std::string, std::string> parseHeader(const std::string& header);
-    const std::string parseHeader(std::map<std::string, std::string> header);
-    std::string parseVersion(const std::string& header);
+    void parseHeader(const std::string& header);
+    void parseBody(const std::string& body);
 };
+
+std::string getStartLine(const std::string& data);
+std::string getHeaderBody(const std::string& data);
+std::string getHeader(const std::string& data);
+std::string getBody(const std::string& data);
 
 #endif
