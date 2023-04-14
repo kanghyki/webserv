@@ -13,8 +13,7 @@ class Http {
     std::map<std::string, std::string> header;
     std::string body;
 
-    void parseHeader(const std::string& header);
-    void parseBody(const std::string& body);
+    std::map<std::string, std::string> parseHeader(const std::string& header);
 };
 
 std::string getStartLine(const std::string& data);

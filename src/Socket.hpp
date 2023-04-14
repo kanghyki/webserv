@@ -6,6 +6,7 @@
 # include <unistd.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
+# include <vector>
 
 class Socket {
   typedef struct sockaddr_in sock;
@@ -28,6 +29,7 @@ class Socket {
     static const int FD_CLOSED = -1;
     static const int BUF_SIZE = 128;
 
+    std::vector<std::string> data;
     const std::string host;
     const int port;
     int servFd;
@@ -43,10 +45,10 @@ class Socket {
     inline void fdSetInit(fd_set& fs, int fd);
 
     int acceptConnect();
-    std::string recvData(int fd);
-    void sendData(int fd, int clntFd);
-    void closeSocket(int fd, int clntFd);
-    int handShake(int fd, int clntFd);
+    void receiveData(int fd);
+    void sendData(int fd);
+    void closeSocket(int fd);
+    void handShake(int fd);
 };
 
 #endif

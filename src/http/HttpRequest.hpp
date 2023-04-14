@@ -2,20 +2,26 @@
 # define HTTPREQUEST_HPP
 
 # include "Http.hpp"
+# include <stdexcept>
 
 
 class HttpRequest : public Http {
-  enum Method {
-    GET,
-    POST,
-    DELETE
-  };
+  enum { methodSize = 3 };
+  std::string methods[methodSize] = {"GET", "POST", "DELETE"};
+  const std::string GET = "GET";
+  const std::string POST = "POST";
+  const std::string DELETE = "DELETE";
+//  enum Method {
+//    GET,
+//    POST,
+//    DELETE
+//  };
 
   public:
     HttpRequest(const std::string& data);
 
   private:
-    int method;
+    std::string method;
     std::string path;
     std::string version;
 

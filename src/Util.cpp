@@ -40,11 +40,17 @@ namespace util {
     return ret;
   }
 
-  std::string getline(const std::string& str) {
-    std::stringstream ss(str);
-    std::string ret;
+  std::vector<std::string> split(const std::string& str, const std::string& delim) {
+    std::vector<std::string> ret;
+    size_t start = 0;
+    size_t pos = 0;
 
-    std::getline(ss, ret);
+    while ((pos = str.find(delim, start)) != std::string::npos) {
+      ret.push_back(str.substr(start, pos));
+      start += pos + delim.length();
+    }
+    ret.push_back(str.substr(start));
+
     return ret;
   }
 
@@ -55,5 +61,20 @@ namespace util {
       throw std::runtime_error("Target not found");
     
     return n;
+  }
+
+  std::string trimSpace(std::string s) {
+    size_t f, r;
+
+    f = 0;
+    while (f < s.length() && std::isspace(s[f]))
+      ++f;
+    s.erase(0, f);
+    r = s.length() - 1;
+    while (r > 0 && std::isspace(s[r]))
+      --r;
+    s.erase(r + 1, s.length() - 1 - r);
+
+    return s;
   }
 }
