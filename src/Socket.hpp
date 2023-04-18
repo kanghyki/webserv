@@ -9,6 +9,9 @@
 # include <vector>
 
 # include "Except.hpp"
+# include "Util.hpp"
+# include "http/HttpRequest.hpp"
+# include "http/HttpResponse.hpp"
 
 class Socket {
   typedef struct sockaddr_in sock;

@@ -22,6 +22,6 @@ namespace except {
   }
 
   const char* FileOpenException::what() const throw() {
-    return "File opne failed";
+    return "File open failed";
   }
 }

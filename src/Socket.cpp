@@ -147,10 +147,9 @@ void Socket::receiveData(int fd) {
 void Socket::sendData(int fd) {
   FD_SET(fd, &this->getWrites());
   std::string data("HTTP/1.1 200 OK\r\n\
-      Server: Hyeongki&Kanghyki server\r\n\
-      Content-Length: 21\r\n\
-      Content-Type: text/html\r\n\r\n\
-      Hello, Webserv!");
+      Content-Length: 2048\r\n\
+      Content-Type: text/html\r\n\r\n");
+  data += util::readFile("./html/index.html");
   if (send(fd, data.c_str(), strlen(data.c_str()), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else

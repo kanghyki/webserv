@@ -4,11 +4,9 @@
 # include "Http.hpp"
 
 class HttpRequest : public Http {
-  enum { methodSize = 3 };
-  std::string methods[methodSize] = {"GET", "POST", "DELETE"};
-  const std::string GET = "GET";
-  const std::string POST = "POST";
-  const std::string DELETE = "DELETE";
+  static const std::string GET;
+  static const std::string POST;
+  static const std::string DELETE;
 //  enum Method {
 //    GET,
 //    POST,

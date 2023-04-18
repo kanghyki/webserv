@@ -1,6 +1,10 @@
 #include "HttpRequest.hpp"
 #include "Http.hpp"
 
+const std::string HttpRequest::GET = "GET";
+const std::string HttpRequest::POST = "POSt";
+const std::string HttpRequest::DELETE = "DELETE";
+
 /*
  * -------------------------- Constructor --------------------------
  */
@@ -41,8 +45,6 @@ void HttpRequest::parseRequest(const std::string& startLine) {
   // TODO: validate
   this->version = ss[2];
 }
-
-void HttpRequest::parse
 
 
 /*
