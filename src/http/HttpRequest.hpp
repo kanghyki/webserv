@@ -2,8 +2,6 @@
 # define HTTPREQUEST_HPP
 
 # include "Http.hpp"
-# include <stdexcept>
-
 
 class HttpRequest : public Http {
   enum { methodSize = 3 };

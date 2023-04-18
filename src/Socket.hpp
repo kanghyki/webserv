@@ -8,6 +8,8 @@
 # include <arpa/inet.h>
 # include <vector>
 
+# include "Except.hpp"
+
 class Socket {
   typedef struct sockaddr_in sock;
 

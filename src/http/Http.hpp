@@ -4,6 +4,7 @@
 # include <iostream>
 # include <map>
 # include "../Util.hpp"
+# include "../Except.hpp"
 
 class Http {
   protected:

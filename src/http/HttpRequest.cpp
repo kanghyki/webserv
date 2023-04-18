@@ -33,7 +33,7 @@ void HttpRequest::parseRequest(const std::string& startLine) {
   std::vector<std::string> ss = util::split(startLine, " ");
 
   if (ss.size() != 3)
-    throw std::runtime_error("Data not in compliance with HTTP protocol");
+    throw except::HttpRequestException();
   // TODO: validate
   this->method = ss[0]; 
   // TODO: validate

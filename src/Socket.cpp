@@ -1,4 +1,5 @@
 #include "Socket.hpp"
+#include "Except.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
@@ -60,7 +61,7 @@ void Socket::setFdMax(int fdMax) {
 inline int Socket::socketInit(void) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == SOCK_CLOSED)
-    throw std::runtime_error("Socket init failed");
+    throw except::SocketInitException();
 
   return sock;
 }
@@ -69,7 +70,7 @@ inline void Socket::socketaddrInit(const std::string& host, int port, sock& in) 
   (void)host;
 
   if (!memset(&in, 0, sizeof(in)))
-    throw std::runtime_error("Socket init failed");
+    throw except::SocketInitException();
   in.sin_family = AF_INET;
   in.sin_addr.s_addr = htonl(INADDR_ANY);
   in.sin_port = htons(port);
@@ -77,9 +78,9 @@ inline void Socket::socketaddrInit(const std::string& host, int port, sock& in) 
 
 inline void Socket::socketOpen(int servFd, sock& in) {
   if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
-    throw std::runtime_error("Socket bind failed");
+    throw except::SocketBindException();
   if (listen(servFd, 128) == -1)
-    throw std::runtime_error("Socket listen failed");
+    throw except::SocketListenException();
 }
 
 inline void Socket::fdSetInit(fd_set& fs, int fd) {

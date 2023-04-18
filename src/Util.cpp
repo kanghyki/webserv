@@ -1,32 +1,5 @@
 #include "Util.hpp"
-
-/*
- * -------------------------- Constructor --------------------------
- */
-
-/*
- * -------------------------- Destructor ---------------------------
- */
-
-/*
- * -------------------------- Operator -----------------------------
- */
-
-/*
- * -------------------------- Getter -------------------------------
- */
-
-/*
- * -------------------------- Setter -------------------------------
- */
-
-/*
- * ----------------------- Member Function -------------------------
- */
-
-/*
- * ---------------------- Non-Member Function ----------------------
- */
+#include "Except.hpp"
 
 namespace util {
   std::vector<std::string> split(const std::string& str, char delim) {
@@ -58,7 +31,7 @@ namespace util {
     size_t n = str.find(target);
 
     if (n == std::string::npos)
-      throw std::runtime_error("Target not found");
+      throw except::StringFoundException();
     
     return n;
   }
@@ -76,5 +49,18 @@ namespace util {
     s.erase(r + 1, s.length() - 1 - r);
 
     return s;
+  }
+
+  std::string readFile(const std::string& fileName) {
+    std::ifstream in(fileName, std::ifstream::in);
+    std::string line;
+    std::string ret;
+
+    if (!in.is_open())
+      throw except::FileOpenException();
+    while (std::getline(in, line))
+      ret += line;
+
+    return ret;
   }
 }
