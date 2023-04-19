@@ -38,11 +38,6 @@ namespace request_field {
   const std::string REFERER = "Referer";
   const std::string USER_AGENT = "User-Agent";
 }
-void zz() {};
-
-std::map<std::string, void (*)()> test = { {request_field::CACHE_CONTROL, zz}
-}
-
 
 class HttpRequest : public Http {
   public:
