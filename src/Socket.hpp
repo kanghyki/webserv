@@ -6,6 +6,12 @@
 # include <unistd.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
+# include <vector>
+
+# include "Except.hpp"
+# include "Util.hpp"
+# include "http/HttpRequest.hpp"
+# include "http/HttpResponse.hpp"
 
 class Socket {
   typedef struct sockaddr_in sock;
@@ -28,6 +34,7 @@ class Socket {
     static const int FD_CLOSED = -1;
     static const int BUF_SIZE = 128;
 
+    std::vector<std::string> data;
     const std::string host;
     const int port;
     int servFd;
@@ -37,16 +44,16 @@ class Socket {
 
     sock in;
 
-    int socketInit(void);
-    void socketaddrInit(const std::string& host, int port, sock& in);
-    void socketOpen(int servFd, sock& in);
-    void fdSetInit(fd_set& fs, int fd);
+    inline int socketInit(void);
+    inline void socketaddrInit(const std::string& host, int port, sock& in);
+    inline void socketOpen(int servFd, sock& in);
+    inline void fdSetInit(fd_set& fs, int fd);
 
     int acceptConnect();
-    std::string recvData(int fd);
-    void sendData(int fd, int clntFd);
-    void closeSocket(int fd, int clntFd);
-    int handShake(int fd, int clntFd);
+    void receiveData(int fd);
+    void sendData(int fd);
+    void closeSocket(int fd);
+    void handShake(int fd);
 };
 
 #endif

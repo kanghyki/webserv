@@ -1,15 +1,17 @@
 #include "Socket.hpp"
+#include "Except.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
  */
 
-Socket::Socket(const std::string& host, const int port) : host(host), port(port), \
+Socket::Socket(const std::string& host, const int port) : data(10000), host(host), port(port), \
                                                             servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
   this->servFd = socketInit();
   socketaddrInit(host, port, this->in);
   socketOpen(this->servFd, this->in);
   fdSetInit(this->reads, this->servFd);
+  FD_ZERO(&this->writes);
   this->fdMax = this->servFd;
 }
 
@@ -56,116 +58,115 @@ void Socket::setFdMax(int fdMax) {
  * ----------------------- Member Function -------------------------
  */
 
-int Socket::socketInit(void) {
+inline int Socket::socketInit(void) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == SOCK_CLOSED)
-    throw std::runtime_error("Socket init failed");
+    throw except::SocketInitException();
 
   return sock;
 }
 
-void Socket::socketaddrInit(const std::string& host, int port, sock& in) {
+inline void Socket::socketaddrInit(const std::string& host, int port, sock& in) {
   (void)host;
 
   if (!memset(&in, 0, sizeof(in)))
-    throw std::runtime_error("Socket init failed");
+    throw except::SocketInitException();
   in.sin_family = AF_INET;
   in.sin_addr.s_addr = htonl(INADDR_ANY);
   in.sin_port = htons(port);
 }
 
-void Socket::socketOpen(int servFd, sock& in) {
+inline void Socket::socketOpen(int servFd, sock& in) {
   if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
-    throw std::runtime_error("Socket bind failed");
+    throw except::SocketBindException();
   if (listen(servFd, 128) == -1)
-    throw std::runtime_error("Socket listen failed");
+    throw except::SocketListenException();
 }
 
-void Socket::fdSetInit(fd_set& fs, int fd) {
+inline void Socket::fdSetInit(fd_set& fs, int fd) {
   FD_ZERO(&fs);
   FD_SET(fd, &fs);
 }
 
 void Socket::socketRun(void) {
-  int clntFd = FD_CLOSED;
+  struct timeval t;
+  t.tv_sec = 1;
 
   while (1) {
     fd_set readsCpy = this->getReads();
     fd_set writesCpy = this->getWrites();
 
-    if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, 0) == -1)
+    if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy))
-        clntFd = handShake(i, clntFd);
+        handShake(i);
       if (FD_ISSET(i, &writesCpy))
-        closeSocket(i, clntFd);
+        closeSocket(i);
     }
   }
   close(this->getServFd());
 }
 
 int Socket::acceptConnect() {
-  int clntFd = accept(this->getServFd(), 0, 0);
-  if (clntFd == -1 || fcntl(clntFd, F_SETFL, O_NONBLOCK) == -1) {
+  int fd = accept(this->getServFd(), 0, 0);
+  if (fd == -1 || fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
     std::cout << "[Log] connection failed: " << "\n";
     return FD_CLOSED;
   }
+  std::cout << "[Log] connected client: " << fd << "\n";
+  FD_SET(fd, &this->getReads());
+  if (this->getFdMax() < fd)
+    this->setFdMax(fd);
 
-  std::cout << "[Log] connected client: " << clntFd << "\n";
-  FD_SET(clntFd, &this->getReads());
-  std::cout << "[Log] recevied data: " << recvData(clntFd) << "\n";
-  if (this->getFdMax() < clntFd)
-    this->setFdMax(clntFd);
-
-  return clntFd;
+  return fd;
 }
 
-std::string Socket::recvData(int fd) {
+
+void Socket::receiveData(int fd) {
   char buf[BUF_SIZE + 1];
-  size_t recv_size;
-  std::string ret;
+  int recv_size;
+  int DONE = 0;
 
-  while (1) {
-    recv_size = recv(fd, buf, BUF_SIZE, 0);
-    buf[BUF_SIZE] = 0;
-    ret += buf;
-    if (recv_size < BUF_SIZE)
-      break;
+  recv_size = recv(fd, buf, BUF_SIZE, 0);
+  if (recv_size == -1)
+    return ;
+  buf[recv_size] = 0;
+  this->data[fd] += buf;
+  if (recv_size < BUF_SIZE) {
+    shutdown(fd, SHUT_RD);
+    FD_CLR(fd, &this->getReads());
+    std::cout << this->data[fd] << std::endl;
+    this->data[fd] = "";
+    sendData(fd);
+    // 파싱하고 지지고 볶고, 데이터 전송
   }
-  shutdown(fd, SHUT_RD);
-
-  return ret;
 }
 
-void Socket::sendData(int fd, int clntFd) {
-  FD_CLR(fd, &this->getReads());
-  FD_SET(clntFd, &this->getWrites());
+void Socket::sendData(int fd) {
+  FD_SET(fd, &this->getWrites());
   std::string data("HTTP/1.1 200 OK\r\n\
-      Server: Hyeongki&Kanghyki server\r\n\
-      Content-Length: 21\r\n\
-      Content-Type: text/html\r\n\r\n\
-      Hello, Webserv!");
-  if (send(clntFd, data.c_str(), strlen(data.c_str()), 0) == SOCK_ERROR)
+      Content-Length: 2048\r\n\
+      Content-Type: text/html\r\n\r\n");
+  data += util::readFile("./html/index.html");
+  if (send(fd, data.c_str(), strlen(data.c_str()), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";
 }
 
-void Socket::closeSocket(int fd, int clntFd) {
+void Socket::closeSocket(int fd) {
   std::cout << "[Log] close\n";
   FD_CLR(fd, &this->getWrites());
-  close(clntFd);
+  close(fd);
 }
 
-int Socket::handShake(int fd, int clntFd) {
+void Socket::handShake(int fd) {
   if (fd == this->getServFd())
-    clntFd = acceptConnect();
+    acceptConnect();
   else
-    sendData(fd, clntFd);
-
-  return clntFd;
+    receiveData(fd);
 }
 
 /*
