@@ -7,25 +7,26 @@ namespace token_type {
   const std::string ILLEGAL = "ILLEGAL";
   const std::string END_OF_FILE = "EOF";
   const std::string IDENT = "IDENT";
+  const std::string INT = "int";
 
   const std::string SEMICOLON = ";";
   const std::string LBRACE = "{";
   const std::string RBRACE = "}";
 
-  const std::string HTTP = "HTTP";
-  const std::string SERVER = "SERVER";
-  const std::string LOCATION = "LOCATION";
+  const std::string HTTP = "http";
+  const std::string SERVER = "server";
+  const std::string LOCATION = "location";
 
-  const std::string LISTEN = "LISTEN";
-  const std::string SERVER_NAME = "SERVERNAME";
-  const std::string ROOT = "ROOT";
-  const std::string ERROR_PAGE = "ERROR_PAGE";
-  const std::string CLIENT_BODY_BUFFER_SIZE = "CBBS";
-  const std::string INDEX = "INDEX";
-  const std::string ALIAS = "ALIAS";
-  const std::string LIMIT_EXCEPT = "LIMIT_EXCEPT";
-  const std::string AUTO_INDEX = "AUTO_INDEX";
-  const std::string RETURN = "RETURN";
+  const std::string LISTEN = "listen";
+  const std::string SERVER_NAME = "server_name";
+  const std::string ROOT = "root";
+  const std::string ERROR_PAGE = "error_page";
+  const std::string CLIENT_BODY_BUFFER_SIZE = "client_body_buffer_size";
+  const std::string INDEX = "index";
+  const std::string ALIAS = "alias";
+  const std::string LIMIT_EXCEPT = "limit_except";
+  const std::string AUTO_INDEX = "auto_index";
+  const std::string RETURN = "return";
 };
 
 namespace keyword {
@@ -62,10 +63,19 @@ class Token {
     std::string getLiteral() const;
     void setType(const std::string &type);
     void setLiteral(const std::string &type);
+    void setLineNumber(size_t lineNumber);
+    void setPos(size_t pos);
+    size_t getLineNumber() const;
+    size_t getPos() const;
 
-    bool isEqaulType(const std::string &type);
+    bool is(const std::string &type) const;
+    bool isNot(const std::string &type) const;
+    bool isCommon() const;
 
   private:
+    size_t lineNumber;
+    size_t pos;
+
     std::string type;
     std::string literal;
 

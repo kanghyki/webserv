@@ -6,110 +6,163 @@ ConfigParser::ConfigParser() {
 
 ConfigParser::~ConfigParser() {};
 
-void ConfigParser::NextToken() {
+void ConfigParser::nextToken() {
   if (this->pos + 1 < tokens.size()) {
     this->pos += 1;
   }
 };
 
-Token ConfigParser::CurToken() {
+Token ConfigParser::curToken() const {
   return this->tokens[this->pos];
 };
 
+//FIXME:: 경계조건 에ㅓ러 
+Token ConfigParser::prevToken() const {
+  return this->tokens[this->pos - 1];
+}
+
 // FIXME:
-Token ConfigParser::PeekToken() {
+Token ConfigParser::peekToken() const {
   return this->tokens[this->pos + 1];
 }
 
-void ConfigParser::expectTokenType(std::string expected) {
-  NextToken();
-  if (CurToken().getType() != expected)
-    throw std::invalid_argument("=> " + expected);
+void ConfigParser::expectNextToken(const std::string &expected) {
+  nextToken();
+
+  if (curToken().getType() != expected)
+    expectError(expected);
+}
+
+void ConfigParser::expectCurToken(const std::string &expected) const {
+  if (curToken().getType() != expected)
+    expectError(expected);
+}
+
+// FIXME : to_string(CPP11) 사용중
+void ConfigParser::expectError(const std::string &expected) const {
+  std::string errorMsg =
+    this->fileName
+    + " "
+    + std::to_string(curToken().getLineNumber())
+    + ":" + std::to_string(curToken().getPos())
+    + " expected \'" + expected + "\' but \'" + curToken().getLiteral() + "\'\n"
+    + "\nconfig error occured.";
+
+  throw std::invalid_argument(errorMsg);
+}
+
+// TODO: refactor
+void ConfigParser::badSyntax() const {
+  std::string errorMsg =
+    this->fileName
+    + " "
+    + std::to_string(curToken().getLineNumber())
+    + ":" + std::to_string(curToken().getPos())
+    + " bad syntax \'" + curToken().getLiteral() + "\'";
+
+  throw std::invalid_argument(errorMsg);
 }
 
 void ConfigParser::generateToken(std::string fileName) {
+  size_t lineCount = 1;
   std::ifstream fileIn(fileName.c_str(), std::ifstream::in);
   std::string line;
   Lexer l;
   Token t;
 
+  this->fileName = fileName;
   if (!fileIn.is_open())
     throw std::exception();
 
   while (!std::getline(fileIn, line).eof()) {
-    l.SetInput(line);
-    while (!(t = l.NextToken()).isEqaulType(token_type::END_OF_FILE)) {
+    l.setInput(line);
+    t = l.nextToken();
+    t.setLineNumber(lineCount);
+    // TODO:: END_OF_LINE TOKEN 추가
+    // TODO:: 로직 수정
+    while (t.isNot(token_type::END_OF_FILE)) {
       tokens.push_back(t);
+      t = l.nextToken();
+      t.setLineNumber(lineCount);
     }
+    lineCount += 1;
   }
-  tokens.push_back(Token(token_type::END_OF_FILE, ""));
+  t = Token(token_type::END_OF_FILE, "END_OF_FILE");
+  t.setLineNumber(lineCount);
+  tokens.push_back(t);
 }
 
 Config ConfigParser::Parse(const std::string &fileName) {
   Config conf;
 
   generateToken(fileName);
-  while (CurToken().getType() != token_type::END_OF_FILE) {
-    if (CurToken().getType() == token_type::HTTP) {
+  while (curToken().isNot(token_type::END_OF_FILE)) {
+    // [ http ]
+    if (curToken().is(token_type::HTTP)) {
       HttpConfig http;
-      ParseHttp(http);
+      parseHttp(http);
       conf.addHttpConfig(http);
-    } else {
-      throw ParseException();
     }
-    NextToken();
+    else {
+      badSyntax();
+    }
+    nextToken();
   }
+
+  expectCurToken(token_type::END_OF_FILE);
 
   return conf;
 }
 
-void ConfigParser::ParseHttp(HttpConfig &conf) {
-  expectTokenType(token_type::LBRACE);
+void ConfigParser::parseHttp(HttpConfig &conf) {
+  expectNextToken(token_type::LBRACE);
 
-  NextToken();
-  while (CurToken().getType() != token_type::END_OF_FILE
-      && CurToken().getType() != token_type::RBRACE) {
-    if (CurToken().getType() == token_type::SERVER) {
+  nextToken();
+  while (curToken().isNot(token_type::END_OF_FILE)
+      && curToken().isNot(token_type::RBRACE)) {
+    // [ server ]
+    if (curToken().is(token_type::SERVER)) {
       ServerConfig server;
-      ParseServer(server);
+      parseServer(server);
       conf.addServerConfig(server);
-    } else {
-      if (CurToken().getType() == token_type::ROOT
-          || CurToken().getType() == token_type::CLIENT_BODY_BUFFER_SIZE
-          || CurToken().getType() == token_type::ERROR_PAGE
-          || CurToken().getType() == token_type::INDEX) {
-        ParseCommon(conf);
-      }
-      expectTokenType(token_type::SEMICOLON);
     }
-    NextToken();
-  }
-
-  if (CurToken().getType() != token_type::RBRACE)
-    throw RbraceException();
-}
-
-void ConfigParser::ParseServer(ServerConfig &conf) {
-  expectTokenType(token_type::LBRACE);
-
-  NextToken();
-  while (CurToken().getType() != token_type::END_OF_FILE
-      && CurToken().getType() != token_type::RBRACE) {
-    if (CurToken().getType() == token_type::LOCATION) {
-      LocationConfig location;
-      ParseLocation(location);
-      conf.addLocationConfig(location);
+      // [ common ]
+    else if (curToken().isCommon()) {
+      parseCommon(conf);
+      expectNextToken(token_type::SEMICOLON);
     }
     else {
-      if (CurToken().getType() == token_type::ROOT
-          || CurToken().getType() == token_type::CLIENT_BODY_BUFFER_SIZE
-          || CurToken().getType() == token_type::ERROR_PAGE
-          || CurToken().getType() == token_type::INDEX) {
-        ParseCommon(conf);
-      }
-      else if (CurToken().getType() == token_type::LISTEN) {
-        NextToken();
-        std::vector<std::string> sp = Split(CurToken().getLiteral(), ":");
+      badSyntax();
+    }
+    nextToken();
+  }
+
+  expectCurToken(token_type::RBRACE);
+}
+
+void ConfigParser::parseServer(ServerConfig &conf) {
+  expectNextToken(token_type::LBRACE);
+
+  nextToken();
+  while (curToken().isNot(token_type::END_OF_FILE)
+      && curToken().isNot(token_type::RBRACE)) {
+    // [ location ]
+    if (curToken().is(token_type::LOCATION)) {
+      LocationConfig location;
+      parseLocation(location);
+      conf.addLocationConfig(location);
+    }
+    // [ common ]
+    else if (curToken().isCommon()) {
+      parseCommon(conf);
+      expectNextToken(token_type::SEMICOLON);
+    }
+    // listen
+    else if (curToken().is(token_type::LISTEN)) {
+      nextToken();
+      // HOST:PORT
+      if (curToken().is(token_type::IDENT)) {
+        std::vector<std::string> sp = splitStr(curToken().getLiteral(), ":");
         // FIXME: 포트만 들어오는 경우도 있음
         if (sp.size() != 2) {
           throw ParseException();
@@ -118,102 +171,116 @@ void ConfigParser::ParseServer(ServerConfig &conf) {
         conf.setHost(sp[0]);
         conf.setPort(std::atoi(sp[1].c_str()));
       }
-      else if (CurToken().getType() == token_type::SERVER_NAME) {
-        NextToken();
-        conf.setServerName(CurToken().getLiteral());
+      // PORT
+      else if (curToken().is(token_type::INT)) {
+        conf.setPort(std::atoi(curToken().getLiteral().c_str()));
       }
-      expectTokenType(token_type::SEMICOLON);
+      expectNextToken(token_type::SEMICOLON);
     }
-    NextToken();
-  }
-
-  if (CurToken().getType() != token_type::RBRACE)
-    throw RbraceException();
-}
-
-void ConfigParser::ParseLocation(LocationConfig &conf) {
-  NextToken();
-  conf.setPath(CurToken().getLiteral());
-
-  expectTokenType(token_type::LBRACE);
-
-  NextToken();
-  while (CurToken().getType() != token_type::END_OF_FILE
-      && CurToken().getType() != token_type::RBRACE) {
-    if (CurToken().getType() == token_type::LOCATION) {
-      LocationConfig location;
-      ParseLocation(location);
-      conf.addLocationConfig(location);
+    // server_name
+    else if (curToken().is(token_type::SERVER_NAME)) {
+      expectNextToken(token_type::IDENT);
+      conf.setServerName(curToken().getLiteral());
+      expectNextToken(token_type::SEMICOLON);
     }
     else {
-      if (CurToken().getType() == token_type::ROOT
-          || CurToken().getType() == token_type::CLIENT_BODY_BUFFER_SIZE
-          || CurToken().getType() == token_type::ERROR_PAGE
-          || CurToken().getType() == token_type::INDEX) {
-        ParseCommon(conf);
-      }
-      else if (CurToken().getType() == token_type::ALIAS) {
-        NextToken();
-        conf.setAlias(CurToken().getLiteral());
-      }
-      else if (CurToken().getType() == token_type::LIMIT_EXCEPT) {
-        NextToken();
-        conf.setLimitExcept(CurToken().getLiteral());
-      }
-      else if (CurToken().getType() == token_type::AUTO_INDEX) {
-        NextToken();
-        if (CurToken().getLiteral() == "on")
-          conf.setAutoIndex(true);
-        else
-          conf.setAutoIndex(false);
-      }
-      else if (CurToken().getType() == token_type::RETURN) {
-        NextToken();
-        int status_code = std::atoi(CurToken().getLiteral().c_str());
-        NextToken();
-        conf.addReturnRes(std::pair<int, std::string>(status_code, CurToken().getLiteral()));
-      }
-      expectTokenType(token_type::SEMICOLON);
+      badSyntax();
     }
-    NextToken();
+    nextToken();
   }
-
-  if (CurToken().getType() != token_type::RBRACE)
-    throw RbraceException();
+  expectCurToken(token_type::RBRACE);
 }
 
-void ConfigParser::ParseCommon(CommonConfig &conf) {
-  if (CurToken().getType() == token_type::ROOT) {
-    expectTokenType(token_type::IDENT);
-    conf.setRoot(CurToken().getLiteral());
-  }
-  else if (CurToken().getType() == token_type::ERROR_PAGE) {
-    expectTokenType(token_type::IDENT);
-    int http_status = std::atoi(CurToken().getLiteral().c_str());
-    expectTokenType(token_type::IDENT);
-    conf.addErrorPage(std::pair<int, std::string>(http_status, CurToken().getLiteral()));
-  }
-  else if (CurToken().getType() == token_type::CLIENT_BODY_BUFFER_SIZE) {
-    expectTokenType(token_type::IDENT);
-    conf.setClientBodySize(std::atoi(CurToken().getLiteral().c_str()));
-  }
-  else if (CurToken().getType() == token_type::INDEX) {
-    while (PeekToken().getType() == token_type::IDENT) {
-      NextToken();
-      conf.addIndex(CurToken().getLiteral());
+void ConfigParser::parseLocation(LocationConfig &conf) {
+  expectNextToken(token_type::IDENT);
+  conf.setPath(curToken().getLiteral());
+
+  expectNextToken(token_type::LBRACE);
+
+  nextToken();
+  while (curToken().isNot(token_type::END_OF_FILE)
+      && curToken().isNot(token_type::RBRACE)) {
+    // [ location ]
+    if (curToken().is(token_type::LOCATION)) {
+      LocationConfig location;
+      parseLocation(location);
+      conf.addLocationConfig(location);
     }
+    // [ common ]
+    else if (curToken().isCommon()) {
+      parseCommon(conf);
+      expectNextToken(token_type::SEMICOLON);
+    }
+    // alias
+    else if (curToken().is(token_type::ALIAS)) {
+      expectNextToken(token_type::IDENT);
+      conf.setAlias(curToken().getLiteral());
+      expectNextToken(token_type::SEMICOLON);
+    }
+    // limit_except
+    else if (curToken().is(token_type::LIMIT_EXCEPT)) {
+      expectNextToken(token_type::IDENT);
+      conf.setLimitExcept(curToken().getLiteral());
+      expectNextToken(token_type::SEMICOLON);
+    }
+    // auto_index
+    else if (curToken().is(token_type::AUTO_INDEX)) {
+      expectNextToken(token_type::IDENT);
+      // FIXME: on off else
+      if (curToken().getLiteral() == "on")
+        conf.setAutoIndex(true);
+      else if (curToken().getLiteral() == "off")
+        conf.setAutoIndex(false);
+      expectNextToken(token_type::SEMICOLON);
+    }
+    // return
+    else if (curToken().is(token_type::RETURN)) {
+      expectNextToken(token_type::INT);
+      int status_code = std::atoi(curToken().getLiteral().c_str());
+      expectNextToken(token_type::IDENT);
+      conf.addReturnRes(std::pair<int, std::string>(status_code, curToken().getLiteral()));
+      expectNextToken(token_type::SEMICOLON);
+    }
+    else {
+      badSyntax();
+    }
+    nextToken();
   }
+  expectCurToken(token_type::RBRACE);
 }
 
-const char *ConfigParser::RbraceException::what() const throw() {
-  return "right brace error";
+void ConfigParser::parseCommon(CommonConfig &conf) {
+  // root
+  if (curToken().is(token_type::ROOT)) {
+    expectNextToken(token_type::IDENT);
+    conf.setRoot(curToken().getLiteral());
+  }
+  // error page
+  else if (curToken().is(token_type::ERROR_PAGE)) {
+    expectNextToken(token_type::INT);
+    int http_status = std::atoi(curToken().getLiteral().c_str());
+    expectNextToken(token_type::IDENT);
+    conf.addErrorPage(std::pair<int, std::string>(http_status, curToken().getLiteral()));
+  }
+  // client_body_buffer_size
+  else if (curToken().is(token_type::CLIENT_BODY_BUFFER_SIZE)) {
+    expectNextToken(token_type::INT);
+    conf.setClientBodySize(std::atoi(curToken().getLiteral().c_str()));
+  }
+  // index
+  else if (curToken().is(token_type::INDEX)) {
+    while (peekToken().is(token_type::IDENT)) {
+      expectNextToken(token_type::IDENT);
+      conf.addIndex(curToken().getLiteral());
+    }
+  }
 }
 
 const char *ConfigParser::ParseException::what() const throw() {
   return "parse error";
 }
 
-std::vector<std::string> ConfigParser::Split(std::string line, std::string sep) {
+std::vector<std::string> ConfigParser::splitStr(std::string line, std::string sep) {
   std::vector<std::string> ret;
   unsigned long pos = 0;
   std::string token = "";
