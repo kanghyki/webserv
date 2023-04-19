@@ -15,6 +15,7 @@ SRCS_DIR		=	./src
 CONFIG_DIR		=	./src/config
 PARSER_DIR		=	./src/config/parser
 HTTP_DIR			= ./src/http
+NETWORK_DIR		= ./src/network
 
 SRCS			=	main.cpp\
 						Server.cpp\
@@ -28,7 +29,6 @@ SRCS			=	main.cpp\
 						Lexer.cpp\
 						ConfigParser.cpp\
 						Util.cpp\
-						Http.cpp\
 						HttpRequest.cpp\
 						HttpResponse.cpp\
 						Except.cpp
@@ -41,7 +41,7 @@ CPPFLAGS  =	-I $(INCS)
 #CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
 RM				=	rm -rf
 
-vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR)
+vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR) $(NETWORK_DIR)
 
 all: $(NAME)
 

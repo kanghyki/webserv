@@ -1,6 +1,12 @@
 #ifndef SOCKET_HPP
 # define SOCKET_HPP
 
+# include "../config/ServerConfig.hpp"
+# include "../Except.hpp"
+# include "../Util.hpp"
+# include "../http/HttpRequest.hpp"
+# include "../http/HttpResponse.hpp"
+
 # include <iostream>
 # include <fcntl.h>
 # include <unistd.h>
@@ -8,16 +14,11 @@
 # include <arpa/inet.h>
 # include <vector>
 
-# include "Except.hpp"
-# include "Util.hpp"
-# include "http/HttpRequest.hpp"
-# include "http/HttpResponse.hpp"
-
 class Socket {
   typedef struct sockaddr_in sock;
 
   public:
-    Socket(const std::string& host, const int port);
+    Socket(ServerConfig config);
     ~Socket(void);
 
     const int getServFd(void) const;
@@ -54,6 +55,8 @@ class Socket {
     void sendData(int fd);
     void closeSocket(int fd);
     void handShake(int fd);
+
+    ServerConfig config;
 };
 
 #endif

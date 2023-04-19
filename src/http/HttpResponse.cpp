@@ -24,6 +24,10 @@
  * ----------------------- Member Function -------------------------
  */
 
+//void run() {
+//  HttpDataFecther d(*this);
+//}
+
 /*
  * ---------------------- Non-Member Function ----------------------
  */

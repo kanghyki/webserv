@@ -1,14 +1,13 @@
 #include "Socket.hpp"
-#include "Except.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
  */
 
-Socket::Socket(const std::string& host, const int port) : data(10000), host(host), port(port), \
+Socket::Socket(ServerConfig config) : data(10000), host(config.getHost()), port(config.getPort()), \
                                                             servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
   this->servFd = socketInit();
-  socketaddrInit(host, port, this->in);
+  socketaddrInit(this->host, this->port, this->in);
   socketOpen(this->servFd, this->in);
   fdSetInit(this->reads, this->servFd);
   FD_ZERO(&this->writes);
@@ -134,11 +133,23 @@ void Socket::receiveData(int fd) {
     return ;
   buf[recv_size] = 0;
   this->data[fd] += buf;
+  // FIXME: 임시 조건
   if (recv_size < BUF_SIZE) {
     shutdown(fd, SHUT_RD);
     FD_CLR(fd, &this->getReads());
+
     std::cout << this->data[fd] << std::endl;
     this->data[fd] = "";
+    // HttpRequest request(this->data[fd]);
+    //
+    // HttpDataFetcher fetcher(request);
+    //
+    // HttpResponseBuilder rb;
+    // HttpResponse response = rb.setRequest(request).setFetcher(fecther).build();
+    //
+    // std::string ret = response.toString();
+    // sendData(fd);
+
     sendData(fd);
     // 파싱하고 지지고 볶고, 데이터 전송
   }

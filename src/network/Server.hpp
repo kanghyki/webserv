@@ -1,18 +1,21 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+# include "../config/Config.hpp"
+# include "./Socket.hpp"
+
 # include <iostream>
 # include <cstdlib>
 # include <vector>
-# include "Socket.hpp"
 
 class Server {
   public:
-    Server();
-    void socketInit(const std::string& host, int port);
+    Server(Config config);
+    void socketInit(ServerConfig config);
     void run(void);
 
   private:
+    Config config;
     std::vector<Socket> socketList;
 };
 

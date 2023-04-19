@@ -1,10 +1,8 @@
-#include "Server.hpp"
+#include "HttpDataFetcher.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
  */
-
-Server::Server() {}
 
 /*
  * -------------------------- Destructor ---------------------------
@@ -26,16 +24,9 @@ Server::Server() {}
  * ----------------------- Member Function -------------------------
  */
 
-void Server::socketInit(const std::string& host, int port) {
-  this->socketList.push_back(Socket(host, port));
-}
-
-void Server::run() {
-  if (this->socketList.size() > 1) {
-    // multiple thread processing...
-  }
-  this->socketList[0].socketRun();
-}
+//void getFile() {
+//  util::readFile(this->request.getConfig().getRoot() + this->request.getURL());
+//}
 
 /*
  * ---------------------- Non-Member Function ----------------------

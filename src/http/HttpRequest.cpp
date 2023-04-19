@@ -1,33 +1,32 @@
 #include "HttpRequest.hpp"
-#include "Http.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
  */
 
-HttpRequest::HttpRequest(const std::string& data) : Http(getHeaderBody(data)) {
-  parseRequest(getStartLine(data));
-  this->fields.insert(std::make_pair(request_field::CACHE_CONTROL, HttpRequest::parseCacheControl));
-  this->fields.insert(std::make_pair(request_field::HOST, HttpRequest::parseHost));
-  this->fields.insert(std::make_pair(request_field::PRAGMA, HttpRequest::parsePragma));
-  this->fields.insert(std::make_pair(request_field::RANGE, HttpRequest::parseRange));
-  this->fields.insert(std::make_pair(request_field::TE, HttpRequest::parseTE));
-  this->fields.insert(std::make_pair(request_field::EXPECT, HttpRequest::parseExpect));
-  this->fields.insert(std::make_pair(request_field::MAX_FORWARDS, HttpRequest::parseMaxForwards));
-  this->fields.insert(std::make_pair(request_field::IF_MATCH, HttpRequest::parseIfMatch));
-  this->fields.insert(std::make_pair(request_field::IF_NONE_MATCH, HttpRequest::parseIfNoneMatch));
-  this->fields.insert(std::make_pair(request_field::IF_MODIFIED_SINCE, HttpRequest::parseIfModifiedSince));
-  this->fields.insert(std::make_pair(request_field::IF_UNMODIFIED_SINCE, HttpRequest::parseIfUnmodifiedSince));
-  this->fields.insert(std::make_pair(request_field::IF_RANGE, HttpRequest::parseIfRange));
-  this->fields.insert(std::make_pair(request_field::ACCEPT, HttpRequest::parseAccept));
-  this->fields.insert(std::make_pair(request_field::ACCEPT_CHARSET, HttpRequest::parseAcceptCharset));
-  this->fields.insert(std::make_pair(request_field::ACCEPT_ENCODING, HttpRequest::parseAcceptEncoding));
-  this->fields.insert(std::make_pair(request_field::ACCEPT_LANGUAGE, HttpRequest::parseAcceptLanguage));
-  this->fields.insert(std::make_pair(request_field::AUTHORIZATION, HttpRequest::parseAuthorization));
-  this->fields.insert(std::make_pair(request_field::PROXY_AUTHORIZATION, HttpRequest::parseProxyAuthorization));
-  this->fields.insert(std::make_pair(request_field::FROM, HttpRequest::parseFrom));
-  this->fields.insert(std::make_pair(request_field::REFERER, HttpRequest::parseReferer));
-  this->fields.insert(std::make_pair(request_field::USER_AGENT, HttpRequest::parseUserAgent));
+HttpRequest::HttpRequest(const std::string& data) {
+//  parseRequest(getStartLine(data));
+  this->fieldMethod.insert(std::make_pair(request_field::CACHE_CONTROL, HttpRequest::parseCacheControl));
+  this->fieldMethod.insert(std::make_pair(request_field::HOST, HttpRequest::parseHost));
+  this->fieldMethod.insert(std::make_pair(request_field::PRAGMA, HttpRequest::parsePragma));
+  this->fieldMethod.insert(std::make_pair(request_field::RANGE, HttpRequest::parseRange));
+  this->fieldMethod.insert(std::make_pair(request_field::TE, HttpRequest::parseTE));
+  this->fieldMethod.insert(std::make_pair(request_field::EXPECT, HttpRequest::parseExpect));
+  this->fieldMethod.insert(std::make_pair(request_field::MAX_FORWARDS, HttpRequest::parseMaxForwards));
+  this->fieldMethod.insert(std::make_pair(request_field::IF_MATCH, HttpRequest::parseIfMatch));
+  this->fieldMethod.insert(std::make_pair(request_field::IF_NONE_MATCH, HttpRequest::parseIfNoneMatch));
+  this->fieldMethod.insert(std::make_pair(request_field::IF_MODIFIED_SINCE, HttpRequest::parseIfModifiedSince));
+  this->fieldMethod.insert(std::make_pair(request_field::IF_UNMODIFIED_SINCE, HttpRequest::parseIfUnmodifiedSince));
+  this->fieldMethod.insert(std::make_pair(request_field::IF_RANGE, HttpRequest::parseIfRange));
+  this->fieldMethod.insert(std::make_pair(request_field::ACCEPT, HttpRequest::parseAccept));
+  this->fieldMethod.insert(std::make_pair(request_field::ACCEPT_CHARSET, HttpRequest::parseAcceptCharset));
+  this->fieldMethod.insert(std::make_pair(request_field::ACCEPT_ENCODING, HttpRequest::parseAcceptEncoding));
+  this->fieldMethod.insert(std::make_pair(request_field::ACCEPT_LANGUAGE, HttpRequest::parseAcceptLanguage));
+  this->fieldMethod.insert(std::make_pair(request_field::AUTHORIZATION, HttpRequest::parseAuthorization));
+  this->fieldMethod.insert(std::make_pair(request_field::PROXY_AUTHORIZATION, HttpRequest::parseProxyAuthorization));
+  this->fieldMethod.insert(std::make_pair(request_field::FROM, HttpRequest::parseFrom));
+  this->fieldMethod.insert(std::make_pair(request_field::REFERER, HttpRequest::parseReferer));
+  this->fieldMethod.insert(std::make_pair(request_field::USER_AGENT, HttpRequest::parseUserAgent));
 }
 
 /*
@@ -127,8 +126,8 @@ void HttpRequest::parseRequest(const std::string &s) {
       throw std::invalid_argument("error");
     }
     std::map<std::string, void (*)(const std::string &)>::iterator fd
-          = this->fields.find(itss[0]);
-    if (this->fields.end() != fd)
+          = this->fieldMethod.find(itss[0]);
+    if (this->fieldMethod.end() != fd)
       fd->second(itss[1]);
   }
 }

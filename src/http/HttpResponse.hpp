@@ -1,9 +1,9 @@
 #ifndef HTTPRESPONSE_HPP
 # define HTTPRESPONSE_HPP
 
-# include "Http.hpp"
+# include <string>
 
-class HttpResponse : public Http{
+class HttpResponse {
   enum Status {
     Continue = 100,
     OK = 200,
