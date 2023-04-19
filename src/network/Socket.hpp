@@ -2,7 +2,6 @@
 # define SOCKET_HPP
 
 # include "../config/ServerConfig.hpp"
-# include "../Except.hpp"
 # include "../Util.hpp"
 # include "../http/HttpRequest.hpp"
 # include "../http/HttpResponse.hpp"
@@ -57,6 +56,22 @@ class Socket {
     void handShake(int fd);
 
     ServerConfig config;
+
+  public:
+    class InitException : public std::exception {
+      public:
+        const char* what(void) const throw();
+    };
+
+    class BindException : public std::exception {
+      public:
+        const char* what(void) const throw();
+    };
+
+    class ListenException : public std::exception {
+      public:
+        const char* what(void) const throw();
+    };
 };
 
 #endif

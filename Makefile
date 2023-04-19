@@ -30,8 +30,7 @@ SRCS			=	main.cpp\
 						ConfigParser.cpp\
 						Util.cpp\
 						HttpRequest.cpp\
-						HttpResponse.cpp\
-						Except.cpp
+						HttpResponse.cpp
 
 
 OBJS_DIR	=	./obj

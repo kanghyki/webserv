@@ -60,7 +60,7 @@ void Socket::setFdMax(int fdMax) {
 inline int Socket::socketInit(void) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == SOCK_CLOSED)
-    throw except::SocketInitException();
+    throw Socket::InitException();
 
   return sock;
 }
@@ -69,7 +69,7 @@ inline void Socket::socketaddrInit(const std::string& host, int port, sock& in) 
   (void)host;
 
   if (!memset(&in, 0, sizeof(in)))
-    throw except::SocketInitException();
+    throw Socket::InitException();
   in.sin_family = AF_INET;
   in.sin_addr.s_addr = htonl(INADDR_ANY);
   in.sin_port = htons(port);
@@ -77,9 +77,9 @@ inline void Socket::socketaddrInit(const std::string& host, int port, sock& in) 
 
 inline void Socket::socketOpen(int servFd, sock& in) {
   if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
-    throw except::SocketBindException();
+    throw Socket::BindException();
   if (listen(servFd, 128) == -1)
-    throw except::SocketListenException();
+    throw Socket::ListenException();
 }
 
 inline void Socket::fdSetInit(fd_set& fs, int fd) {
@@ -180,6 +180,17 @@ void Socket::handShake(int fd) {
     receiveData(fd);
 }
 
+const char* Socket::InitException::what() const throw() {
+  return "Socket init failed";
+}
+
+const char* Socket::BindException::what() const throw() {
+  return "Socket bind failed";
+}
+
+const char* Socket::ListenException::what() const throw() {
+  return "Socket listen failed";
+}
 /*
  * ---------------------- Non-Member Function ----------------------
  */

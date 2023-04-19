@@ -102,7 +102,7 @@ void HttpRequest::parseStatusLine(const std::string& line) {
   std::vector<std::string> ss = util::split(line, " ");
 
   if (ss.size() != 3)
-    throw except::HttpRequestException();
+    throw HttpRequest::BadProtocolException();
   // TODO: validate
 
   validateMethod(ss[0]);
@@ -204,3 +204,7 @@ void HttpRequest::parseReferer(const std::string &s) {
 void HttpRequest::parseUserAgent(const std::string &s) {
 }
 
+
+const char* HttpRequest::BadProtocolException::what() const throw() {
+  return "Data not in compliance with HTTP protocol";
+}

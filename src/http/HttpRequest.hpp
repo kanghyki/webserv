@@ -88,6 +88,12 @@ class HttpRequest {
     static void parseFrom(const std::string &s);
     static void parseReferer(const std::string &s);
     static void parseUserAgent(const std::string &s);
+
+  public:
+    class BadProtocolException : public std::exception {
+      public:
+        const char* what(void) const throw();
+    };
 };
 
 #endif

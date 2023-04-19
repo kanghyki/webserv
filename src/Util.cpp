@@ -1,5 +1,4 @@
 #include "Util.hpp"
-#include "Except.hpp"
 
 #include <iostream>
 namespace util {
@@ -32,7 +31,7 @@ namespace util {
     size_t n = str.find(target);
 
     if (n == std::string::npos)
-      throw except::StringFoundException();
+      throw util::StringFoundException();
     
     return n;
   }
@@ -58,10 +57,18 @@ namespace util {
     std::string ret;
 
     if (!in.is_open())
-      throw except::FileOpenException();
+      throw util::FileOpenException();
     while (std::getline(in, line))
       ret += line;
 
     return ret;
+  }
+
+  const char* StringFoundException::what() const throw() {
+    return "Target not found";
+  }
+
+  const char* FileOpenException::what() const throw() {
+    return "File open failed";
   }
 }
