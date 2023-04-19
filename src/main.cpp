@@ -1,5 +1,5 @@
 #include <iostream>
-#include "./network/Server.hpp"
+#include "./Server.hpp"
 #include "./config/parser/ConfigParser.hpp"
 
 const std::string TEAM_MARK = "\

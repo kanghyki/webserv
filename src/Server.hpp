@@ -1,8 +1,8 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include "../config/Config.hpp"
-# include "./Socket.hpp"
+# include "./config/Config.hpp"
+# include "./network/Socket.hpp"
 
 # include <iostream>
 # include <cstdlib>
