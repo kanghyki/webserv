@@ -64,11 +64,33 @@ namespace util {
     return ret;
   }
 
+  pid_t ftFork(void) {
+    pid_t ret = fork();
+    
+    if (ret < 0)
+      throw ForkException();
+
+    return ret;
+  }
+
+  void ftPipe(int* fd) {
+    if (pipe(fd) < 0)
+      throw PipeException();
+  }
+
   const char* StringFoundException::what() const throw() {
     return "Target not found";
   }
 
   const char* FileOpenException::what() const throw() {
     return "File open failed";
+  }
+
+  const char* ForkException::what() const throw() {
+    return "Fork failed";
+  }
+
+  const char* PipeException::what() const throw() {
+    return "Pipe failed";
   }
 }

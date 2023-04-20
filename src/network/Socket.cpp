@@ -37,11 +37,11 @@ const int Socket::getFdMax(void) const {
   return this->fdMax;
 }
 
-fd_set& Socket::getReads(void) {
+fd_set Socket::getReads(void) {
   return this->reads;
 }
 
-fd_set& Socket::getWrites(void) {
+fd_set Socket::getWrites(void) {
   return this->writes;
 }
 
@@ -85,9 +85,10 @@ inline void Socket::fdSetInit(fd_set& fs, int fd) {
   FD_SET(fd, &fs);
 }
 
-void Socket::socketRun(void) {
+void Socket::run(void) {
   struct timeval t;
   t.tv_sec = 1;
+  t.tv_usec = 0;
 
   while (1) {
     fd_set readsCpy = this->getReads();
@@ -113,7 +114,7 @@ int Socket::acceptConnect() {
     return FD_CLOSED;
   }
   std::cout << "[Log] connected client: " << fd << "\n";
-  FD_SET(fd, &this->getReads());
+  FD_SET(fd, &this->reads);
   if (this->getFdMax() < fd)
     this->setFdMax(fd);
 
@@ -134,7 +135,7 @@ void Socket::receiveData(int fd) {
   // FIXME: 임시 조건
   if (recv_size < BUF_SIZE) {
     shutdown(fd, SHUT_RD);
-    FD_CLR(fd, &this->getReads());
+    FD_CLR(fd, &reads);
 
     std::cout << this->data[fd] << std::endl;
     this->data[fd] = "";
@@ -154,7 +155,7 @@ void Socket::receiveData(int fd) {
 }
 
 void Socket::sendData(int fd) {
-  FD_SET(fd, &this->getWrites());
+  FD_SET(fd, &this->writes);
   std::string data("HTTP/1.1 200 OK\r\n\
       Content-Length: 2048\r\n\
       Content-Type: text/html\r\n\r\n");
@@ -167,7 +168,7 @@ void Socket::sendData(int fd) {
 
 void Socket::closeSocket(int fd) {
   std::cout << "[Log] close\n";
-  FD_CLR(fd, &this->getWrites());
+  FD_CLR(fd, &this->writes);
   close(fd);
 }
 
@@ -176,6 +177,14 @@ void Socket::handShake(int fd) {
     acceptConnect();
   else
     receiveData(fd);
+}
+
+void Socket::setReadFd(int fd) {
+  this->readFd = fd;
+}
+
+void Socket::setWriteFd(int fd) {
+  this->writeFd = fd;
 }
 
 const char* Socket::InitException::what() const throw() {

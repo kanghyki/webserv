@@ -23,10 +23,12 @@ class Socket {
     const int getServFd(void) const;
     const int getFdMax(void) const;
     void setFdMax(int fdMax);
-    fd_set& getReads(void);
-    fd_set& getWrites(void);
+    fd_set getReads(void);
+    fd_set getWrites(void);
+    void setReadFd(int fd);
+    void setWriteFd(int fd);
 
-    void socketRun();
+    void run();
 
   private:
     static const int SOCK_CLOSED = -1;
@@ -41,6 +43,8 @@ class Socket {
     int fdMax;
     fd_set reads;
     fd_set writes;
+    int readFd;
+    int writeFd;
 
     sock in;
 
