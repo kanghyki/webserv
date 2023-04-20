@@ -1,9 +1,10 @@
 #ifndef CONFIG_PARSER_HPP
 # define CONFIG_PARSER_HPP
 
-# include "../Config.hpp"
 # include "./Token.hpp"
 # include "./Lexer.hpp"
+# include "../Config.hpp"
+# include "../../Util.hpp"
 
 # include <fstream>
 # include <string>
@@ -42,7 +43,6 @@ class ConfigParser {
     void                      parseLocation(LocationConfig& conf);
 
     void                      parseCommon(CommonConfig& conf);
-    std::vector<std::string>  splitStr(std::string line, std::string sep);
 };
 
 #endif

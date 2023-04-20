@@ -158,7 +158,7 @@ void ConfigParser::parseServer(ServerConfig& conf) {
       nextToken();
       // HOST:PORT
       if (curToken().is(token_type::IDENT)) {
-        std::vector<std::string> sp = splitStr(curToken().getLiteral(), ":");
+        std::vector<std::string> sp = util::split(curToken().getLiteral(), ":");
         // FIXME: 포트만 들어오는 경우도 있음
         if (sp.size() != 2) {
           throw ParseException();
@@ -274,19 +274,4 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
 
 const char *ConfigParser::ParseException::what() const throw() {
   return "parse error";
-}
-
-std::vector<std::string> ConfigParser::splitStr(std::string line, std::string sep) {
-  std::vector<std::string> ret;
-  unsigned long pos = 0;
-  std::string token = "";
-
-  while ((pos = line.find(sep)) != std::string::npos)
-  {
-    token = line.substr(0, pos);
-    ret.push_back(token);
-    line.erase(0, pos + sep.length());
-  }
-  ret.push_back(line);
-  return ret;
 }
