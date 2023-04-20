@@ -12,6 +12,7 @@ Socket::Socket(ServerConfig config) : data(10000), host(config.getHost()), port(
   fdSetInit(this->reads, this->servFd);
   FD_ZERO(&this->writes);
   this->fdMax = this->servFd;
+  this->config = config;
 }
 
 
@@ -90,6 +91,7 @@ inline void Socket::fdSetInit(fd_set& fs, int fd) {
 void Socket::socketRun(void) {
   struct timeval t;
   t.tv_sec = 1;
+  t.tv_usec = 0;
 
   while (1) {
     fd_set readsCpy = this->getReads();
@@ -139,7 +141,6 @@ void Socket::receiveData(int fd) {
     FD_CLR(fd, &this->getReads());
 
     std::cout << this->data[fd] << std::endl;
-    this->data[fd] = "";
     // HttpRequest request(this->data[fd]);
     //
     // HttpDataFetcher fetcher(request);
@@ -155,16 +156,76 @@ void Socket::receiveData(int fd) {
   }
 }
 
+#include "../Worker.hpp"
+
 void Socket::sendData(int fd) {
+  int READ = 0;
+  int WRITE = 1;
+  static bool is_on = false;
+  static int fd1[2], fd2[2];
   FD_SET(fd, &this->getWrites());
-  std::string data("HTTP/1.1 200 OK\r\n\
-      Content-Length: 2048\r\n\
-      Content-Type: text/html\r\n\r\n");
-  data += util::readFile("./html/index.html");
+//  std::string data("HTTP/1.1 200 OK\r\n\
+//      Content-Length: 2048\r\n\
+//      Content-Type: text/html\r\n\r\n");
+
+
+  if (is_on == false) {
+    pipe(fd1);
+    pipe(fd2);
+    int pid = fork();
+    if (pid == 0) {
+      close(fd1[WRITE]);
+      close(fd2[READ]);
+      Worker worker(this->config, fd1[READ], fd2[WRITE]);
+      worker.routine();
+      exit(1);
+    }
+
+    close(fd1[READ]);
+    close(fd2[WRITE]);
+    is_on = true;
+  }
+
+  write(fd1[WRITE], this->data[fd].c_str(), this->data[fd].length());
+
+  int zzzzzzz = 10000;
+  char buf[zzzzzzz + 1];
+  int recv_size;
+  int DONE = 0;
+
+  recv_size = read(fd2[READ], buf, zzzzzzz);
+  buf[recv_size] = 0;
+  std::string data(buf);
+  std::cout << data << std::endl;
+
+
+//  HttpDataFecther h;
+//
+//  std::string data;
+//  std::cout << this->config.getLocationConfig().size() << std::endl;
+//  try {
+//    for (int i = 0; i < this->config.getLocationConfig().size(); ++i) {
+//      if ("." + this->config.getLocationConfig()[i].getPath() == request.getPath()) {
+//        if (this->config.getLocationConfig()[i].isAutoIndex()) {
+//          data = h.readDirectory(request.getPath());
+//        }
+//        else {
+//          data = h.readFile(request.getPath());
+//        }
+//      }
+//      else {
+//        data = h.readFile(request.getPath());
+//      }
+//    }
+//  } catch (std::exception &e) {
+//    data = "HTTP/1.1 404 not-found\r\n\r\n";
+//  }
+//  data += util::readFile("./html/index.html");
   if (send(fd, data.c_str(), strlen(data.c_str()), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";
+  this->data[fd] = "";
 }
 
 void Socket::closeSocket(int fd) {
