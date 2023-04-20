@@ -1,4 +1,4 @@
-#include "Token.hpp"
+#include "./Token.hpp"
 
 Token::Token():
   lineNumber(-42),

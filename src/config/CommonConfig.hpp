@@ -1,9 +1,9 @@
 #ifndef COMMON_CONFIG_HPP
-#define COMMON_CONFIG_HPP
+# define COMMON_CONFIG_HPP
 
-#include <string>
-#include <map>
-#include <vector>
+# include <string>
+# include <map>
+# include <vector>
 
 class CommonConfig {
   public:

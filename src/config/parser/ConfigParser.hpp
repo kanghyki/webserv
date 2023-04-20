@@ -1,5 +1,5 @@
-#ifndef PARSER_HPP
-# define PARSER_HPP
+#ifndef CONFIG_PARSER_HPP
+# define CONFIG_PARSER_HPP
 
 # include "../Config.hpp"
 # include "./Token.hpp"

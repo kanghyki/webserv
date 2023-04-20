@@ -1,4 +1,4 @@
-#include "CommonConfig.hpp"
+#include "./CommonConfig.hpp"
 
 const int         CommonConfig::DEFAULT_CLIENT_BODY_SIZE = 8192;
 const std::string CommonConfig::DEFAULT_ROOT = "/html";

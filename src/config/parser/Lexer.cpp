@@ -1,4 +1,4 @@
-#include "Lexer.hpp"
+#include "./Lexer.hpp"
 
 Lexer::Lexer(std::string input): input(input), position(0), read_position(0), ch(0) {
   readChar();
