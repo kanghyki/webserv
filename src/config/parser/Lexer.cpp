@@ -1,9 +1,6 @@
 #include "Lexer.hpp"
 
-Lexer::Lexer(std::string input): input(input), \
-                                 position(0), \
-                                 read_position(0), \
-                                 ch(0) {
+Lexer::Lexer(std::string input): input(input), position(0), read_position(0), ch(0) {
   readChar();
 }
 
@@ -18,12 +15,12 @@ void Lexer::setInput(std::string input) {
   readChar();
 }
 
-Lexer::Lexer(Lexer const &obj): input(obj.input), \
+Lexer::Lexer(const Lexer& obj): input(obj.input), \
                                 position(obj.position), \
                                 read_position(obj.read_position), \
                                 ch(obj.ch) {}
 
-Lexer &Lexer::operator=(Lexer const &obj) {
+Lexer &Lexer::operator=(const Lexer& obj) {
   if (this != &obj) {
     input = obj.input;
     position = obj.position;

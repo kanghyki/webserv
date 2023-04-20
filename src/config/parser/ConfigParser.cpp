@@ -16,30 +16,26 @@ Token ConfigParser::curToken() const {
   return this->tokens[this->pos];
 };
 
-//FIXME:: 경계조건 에ㅓ러 
-Token ConfigParser::prevToken() const {
-  return this->tokens[this->pos - 1];
-}
-
-// FIXME:
 Token ConfigParser::peekToken() const {
+  if (this->pos > this->tokens.size())
+    return this->tokens[this->tokens.size() - 1];
   return this->tokens[this->pos + 1];
 }
 
-void ConfigParser::expectNextToken(const std::string &expected) {
+void ConfigParser::expectNextToken(const std::string& expected) {
   nextToken();
 
   if (curToken().getType() != expected)
     expectError(expected);
 }
 
-void ConfigParser::expectCurToken(const std::string &expected) const {
+void ConfigParser::expectCurToken(const std::string& expected) const {
   if (curToken().getType() != expected)
     expectError(expected);
 }
 
 // FIXME : to_string(CPP11) 사용중
-void ConfigParser::expectError(const std::string &expected) const {
+void ConfigParser::expectError(const std::string& expected) const {
   std::string errorMsg =
     this->fileName
     + " "
@@ -92,7 +88,7 @@ void ConfigParser::generateToken(std::string fileName) {
   tokens.push_back(t);
 }
 
-Config ConfigParser::Parse(const std::string &fileName) {
+Config ConfigParser::Parse(const std::string& fileName) {
   Config conf;
 
   generateToken(fileName);
@@ -114,7 +110,7 @@ Config ConfigParser::Parse(const std::string &fileName) {
   return conf;
 }
 
-void ConfigParser::parseHttp(HttpConfig &conf) {
+void ConfigParser::parseHttp(HttpConfig& conf) {
   expectNextToken(token_type::LBRACE);
 
   nextToken();
@@ -122,7 +118,7 @@ void ConfigParser::parseHttp(HttpConfig &conf) {
       && curToken().isNot(token_type::RBRACE)) {
     // [ server ]
     if (curToken().is(token_type::SERVER)) {
-      ServerConfig server;
+      ServerConfig server(conf);
       parseServer(server);
       conf.addServerConfig(server);
     }
@@ -140,7 +136,7 @@ void ConfigParser::parseHttp(HttpConfig &conf) {
   expectCurToken(token_type::RBRACE);
 }
 
-void ConfigParser::parseServer(ServerConfig &conf) {
+void ConfigParser::parseServer(ServerConfig& conf) {
   expectNextToken(token_type::LBRACE);
 
   nextToken();
@@ -148,7 +144,7 @@ void ConfigParser::parseServer(ServerConfig &conf) {
       && curToken().isNot(token_type::RBRACE)) {
     // [ location ]
     if (curToken().is(token_type::LOCATION)) {
-      LocationConfig location;
+      LocationConfig location(conf);
       parseLocation(location);
       conf.addLocationConfig(location);
     }
@@ -191,7 +187,7 @@ void ConfigParser::parseServer(ServerConfig &conf) {
   expectCurToken(token_type::RBRACE);
 }
 
-void ConfigParser::parseLocation(LocationConfig &conf) {
+void ConfigParser::parseLocation(LocationConfig& conf) {
   expectNextToken(token_type::IDENT);
   conf.setPath(curToken().getLiteral());
 
@@ -202,7 +198,7 @@ void ConfigParser::parseLocation(LocationConfig &conf) {
       && curToken().isNot(token_type::RBRACE)) {
     // [ location ]
     if (curToken().is(token_type::LOCATION)) {
-      LocationConfig location;
+      LocationConfig location(conf);
       parseLocation(location);
       conf.addLocationConfig(location);
     }
@@ -224,7 +220,7 @@ void ConfigParser::parseLocation(LocationConfig &conf) {
       expectNextToken(token_type::SEMICOLON);
     }
     // auto_index
-    else if (curToken().is(token_type::AUTO_INDEX)) {
+    else if (curToken().is(token_type::AUTOINDEX)) {
       expectNextToken(token_type::IDENT);
       // FIXME: on off else
       if (curToken().getLiteral() == "on")
@@ -249,7 +245,7 @@ void ConfigParser::parseLocation(LocationConfig &conf) {
   expectCurToken(token_type::RBRACE);
 }
 
-void ConfigParser::parseCommon(CommonConfig &conf) {
+void ConfigParser::parseCommon(CommonConfig& conf) {
   // root
   if (curToken().is(token_type::ROOT)) {
     expectNextToken(token_type::IDENT);

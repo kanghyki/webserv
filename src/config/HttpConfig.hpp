@@ -1,19 +1,20 @@
 #ifndef HTTP_CONFIG_HPP
-#define HTTP_CONFIG_HPP
+# define HTTP_CONFIG_HPP
 
-#include "CommonConfig.hpp"
-#include "ServerConfig.hpp"
-#include <vector>
+# include "./CommonConfig.hpp"
+# include "./ServerConfig.hpp"
+
+# include <vector>
 
 class HttpConfig: public CommonConfig {
   public:
     HttpConfig();
     ~HttpConfig();
-    HttpConfig(const HttpConfig &obj);
-    HttpConfig &operator=(const HttpConfig &obj);
+    HttpConfig(const HttpConfig& obj);
+    HttpConfig& operator=(const HttpConfig& obj);
 
     std::vector<ServerConfig> getServerConfig() const;
-    void addServerConfig(ServerConfig server);
+    void                      addServerConfig(ServerConfig server);
 
   private:
     std::vector<ServerConfig> servers;

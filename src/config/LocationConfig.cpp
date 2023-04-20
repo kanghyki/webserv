@@ -1,11 +1,19 @@
-#include "LocationConfig.hpp"
+#include "./LocationConfig.hpp"
+#include "./ServerConfig.hpp"
 
-LocationConfig::LocationConfig(): path(""), alias(""), limitExcept(),
-returnRes(), autoIndex(false), locations(0) {}
+const bool LocationConfig::DEFAULT_AUTOINDEX = false;
+
+LocationConfig::LocationConfig(): autoIndex(DEFAULT_AUTOINDEX) {}
+
+LocationConfig::LocationConfig(const ServerConfig& config): autoIndex(DEFAULT_AUTOINDEX) {
+  this->clientBodySize = config.getClientBodySize();
+  this->root = config.getRoot();
+  this->errorPage = config.getErrorPage();
+}
 
 LocationConfig::~LocationConfig() {}
 
-LocationConfig::LocationConfig(const LocationConfig &obj): 
+LocationConfig::LocationConfig(const LocationConfig& obj): 
   CommonConfig(obj),
   path(obj.getPath()),
   alias(obj.getAlias()),
@@ -14,7 +22,7 @@ LocationConfig::LocationConfig(const LocationConfig &obj):
   autoIndex(obj.isAutoIndex()),
   locations(obj.getLocationConfig()) {}
 
-LocationConfig &LocationConfig::operator=(const LocationConfig &obj) {
+LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
     this->root = obj.getRoot();
@@ -31,48 +39,52 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &obj) {
   return *this;
 }
 
+// getter
+
 std::string LocationConfig::getPath() const {
   return this->path;
-}
-
-void LocationConfig::setPath(std::string path) {
-  this->path = path;
 }
 
 std::string LocationConfig::getAlias() const {
   return this->alias;
 }
 
-void LocationConfig::setAlias(std::string alias) {
-  this->alias = alias;
-}
-
 std::string LocationConfig::getLimitExcept() const {
   return this->limitExcept;
-}
-
-void LocationConfig::setLimitExcept(std::string limitExcept) {
-  this->limitExcept = limitExcept;
 }
 
 std::map<int, std::string> LocationConfig::getReturnRes() const {
   return this->returnRes;
 }
 
-void LocationConfig::addReturnRes(std::pair<int, std::string> returnRes) {
-  this->returnRes.insert(returnRes);
-}
-
 bool LocationConfig::isAutoIndex() const {
   return this->autoIndex;
 }
 
-void LocationConfig::setAutoIndex(bool autoIndex) {
-  this->autoIndex = autoIndex;
-}
-
 std::vector<LocationConfig> LocationConfig::getLocationConfig() const {
   return this->locations;
+}
+
+// setter
+
+void LocationConfig::setPath(std::string path) {
+  this->path = path;
+}
+
+void LocationConfig::setAlias(std::string alias) {
+  this->alias = alias;
+}
+
+void LocationConfig::setLimitExcept(std::string limitExcept) {
+  this->limitExcept = limitExcept;
+}
+
+void LocationConfig::addReturnRes(std::pair<int, std::string> returnRes) {
+  this->returnRes.insert(returnRes);
+}
+
+void LocationConfig::setAutoIndex(bool autoIndex) {
+  this->autoIndex = autoIndex;
 }
 
 void LocationConfig::addLocationConfig(LocationConfig location) {

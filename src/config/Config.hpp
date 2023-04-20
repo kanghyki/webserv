@@ -8,13 +8,13 @@ class Config {
   public:
     Config();
     ~Config();
-    Config(const Config &obj);
-    Config &operator=(const Config &obj);
+    Config(const Config& obj);
+    Config                  &operator=(const Config& obj);
 
     std::vector<HttpConfig> getHttpConfig() const;
-    void addHttpConfig(HttpConfig http);
+    void                    addHttpConfig(HttpConfig http);
 
-    Config &parseServerConfig();
+    Config&                 parseServerConfig();
 
   private:
     std::vector<HttpConfig> https;

@@ -1,39 +1,39 @@
 #ifndef LEXER_HPP
-#define LEXER_HPP
+# define LEXER_HPP
 
-#include "Token.hpp"
+# include "./Token.hpp"
 
-#include <string>
+# include <string>
 
 class Lexer {
   public:
     Lexer();
+    Lexer(const Lexer& obj);
     Lexer(std::string input);
     ~Lexer();
-    Lexer(Lexer const &obj);
-    Lexer& operator=(Lexer const &obj);
+    Lexer&      operator=(const Lexer& obj);
 
-    void setInput(std::string input);
-    Token nextToken();
+    void        setInput(std::string input);
+    Token       nextToken();
 
-    int getPosition() const;
+    int         getPosition() const;
 
   private:
     std::string input;
-    int position;
-    int read_position;
-    char ch;
+    int         position;
+    int         read_position;
+    char        ch;
 
-    void readChar();
-    char peekChar();
+    void        readChar();
+    char        peekChar();
     std::string readStr();
     std::string readNumber();
-    bool isDigit(char ch) const;
-    bool isLetter(char ch) const;
-    bool isSpace(char ch) const;
-    bool isStrNumber(const std::string &s) const;
+    bool        isDigit(char ch) const;
+    bool        isLetter(char ch) const;
+    bool        isSpace(char ch) const;
+    bool        isStrNumber(const std::string &s) const;
     std::string lookupIdent(std::string ident);
-    void skipWhitespace();
+    void        skipWhitespace();
 
 };
 

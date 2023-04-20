@@ -1,31 +1,39 @@
 #ifndef SERVER_CONFIG_HPP
-#define SERVER_CONFIG_HPP
+# define SERVER_CONFIG_HPP
 
-#include "CommonConfig.hpp"
-#include "LocationConfig.hpp"
-#include <string>
-#include <vector>
+# include "./CommonConfig.hpp"
+# include "./LocationConfig.hpp"
+
+# include <string>
+# include <vector>
+
+class HttpConfig;
 
 class ServerConfig: public CommonConfig {
   public:
     ServerConfig();
+    ServerConfig(const HttpConfig& config);
     ~ServerConfig();
-    ServerConfig(const ServerConfig &obj);
-    ServerConfig &operator=(const ServerConfig &obj);
+    ServerConfig(const ServerConfig& obj);
+    ServerConfig& operator=(const ServerConfig& obj);
 
-    int getPort() const;
-    void setPort(int port);
-    std::string getHost() const;
-    void setHost(std::string host);
-    std::string getServerName() const;
-    void setServerName(std::string serverName);
+    short                       getPort() const;
+    std::string                 getHost() const;
+    std::string                 getServerName() const;
     std::vector<LocationConfig> getLocationConfig() const;
-    void addLocationConfig(LocationConfig location);
+
+    void                        setPort(short port);
+    void                        setHost(std::string host);
+    void                        setServerName(std::string serverName);
+    void                        addLocationConfig(LocationConfig location);
 
   private:
-    int port;
-    std::string host;
-    std::string serverName;
+    static const short          DEFAULT_PORT;
+    static const std::string    DEFAULT_HOST;
+
+    short                       port;
+    std::string                 host;
+    std::string                 serverName;
     std::vector<LocationConfig> locations;
 };
 

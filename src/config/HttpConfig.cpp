@@ -4,11 +4,9 @@ HttpConfig::HttpConfig() {}
 
 HttpConfig::~HttpConfig() {}
 
-HttpConfig::HttpConfig(const HttpConfig &obj): 
-  CommonConfig(obj),
-  servers(obj.getServerConfig()) {}
+HttpConfig::HttpConfig(const HttpConfig& obj): CommonConfig(obj), servers(obj.getServerConfig()) {}
 
-HttpConfig &HttpConfig::operator=(const HttpConfig &obj) {
+HttpConfig& HttpConfig::operator=(const HttpConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
     this->root = obj.getRoot();

@@ -8,25 +8,30 @@
 class CommonConfig {
   public:
     CommonConfig();
+    CommonConfig(const CommonConfig& obj);
     virtual ~CommonConfig();
-    CommonConfig(const CommonConfig &obj);
-    CommonConfig &operator=(const CommonConfig &obj);
+    CommonConfig&               operator=(const CommonConfig& obj);
 
-    int getClientBodySize() const;
-    std::string getRoot() const;
-    std::map<int, std::string> getErrorPage() const;
-    std::vector<std::string> getIndex() const;
+    int                         getClientBodySize() const;
+    std::string                 getRoot() const;
+    std::map<int, std::string>  getErrorPage() const;
+    std::vector<std::string>    getIndex() const;
 
-    void setClientBodySize(int clientBodySize);
-    void setRoot(std::string root);
-    void addErrorPage(std::pair<int, std::string> errorPage);
-    void addIndex(std::string index);
+    void                        setClientBodySize(int clientBodySize);
+    void                        setRoot(std::string root);
+    void                        addErrorPage(std::pair<int, std::string> errorPage);
+    void                        addIndex(std::string index);
 
   protected:
-    int clientBodySize;
-    std::string root;
-    std::map<int, std::string> errorPage;
-    std::vector<std::string> index;
+    int                         clientBodySize;
+    std::string                 root;
+    std::map<int, std::string>  errorPage;
+    std::vector<std::string>    index;
+
+  private:
+    static const int            DEFAULT_CLIENT_BODY_SIZE;
+    static const std::string    DEFAULT_ROOT;
+    static const std::string    DEFAULT_INDEX;
 };
 
 #endif
