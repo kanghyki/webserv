@@ -14,6 +14,9 @@ namespace util {
   std::string readFile(const std::string& fileName);
   pid_t ftFork(void);
   void ftPipe(int* fd);
+  std::string appendDataLength(const std::string& data);
+  std::string itoa(int n);
+  std::pair<int, std::string> splitSize(const std::string& str);
 
   class StringFoundException : public std::exception
   {

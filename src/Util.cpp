@@ -78,6 +78,35 @@ namespace util {
       throw PipeException();
   }
 
+  std::string appendDataLength(const std::string& data) {
+    std::string ret;
+
+    ret += itoa(data.length());
+    ret += ';';
+    ret += data;
+
+    return ret;
+  }
+
+  std::string itoa(int n) {
+    std::stringstream ss;
+    ss << n;
+    return ss.str();
+  }
+
+  std::pair<int, std::string> splitSize(const std::string& str) {
+    std::pair<int, std::string> ret;
+    int pos = str.find(';');
+
+    int size = std::atoi(str.substr(0, pos).c_str());
+    std::string data = str.substr(pos + 1);
+
+    ret.first = size;
+    ret.second = data;
+
+    return ret;
+  }
+
   const char* StringFoundException::what() const throw() {
     return "Target not found";
   }
@@ -93,4 +122,5 @@ namespace util {
   const char* PipeException::what() const throw() {
     return "Pipe failed";
   }
+
 }

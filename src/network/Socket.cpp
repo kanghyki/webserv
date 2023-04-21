@@ -4,14 +4,14 @@
  * -------------------------- Constructor --------------------------
  */
 
-Socket::Socket(ServerConfig config) : data(10000), host(config.getHost()), port(config.getPort()), \
+Socket::Socket(ServerConfig config) : receivedData(1000), host(config.getHost()), port(config.getPort()), \
                                                             servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
   this->servFd = socketInit();
   socketaddrInit(this->host, this->port, this->in);
   socketOpen(this->servFd, this->in);
   fdSetInit(this->reads, this->servFd);
   FD_ZERO(&this->writes);
-  this->fdMax = this->servFd;
+  this->setFdMax(this->servFd);
 }
 
 
@@ -45,12 +45,28 @@ fd_set Socket::getWrites(void) {
   return this->writes;
 }
 
+const int Socket::getReadFd(void) const {
+  return this->readFd;
+}
+
+const int Socket::getWriteFd(void) const {
+  return this->writeFd;
+}
+
 /*
  * -------------------------- Setter -------------------------------
  */
 
 void Socket::setFdMax(int fdMax) {
   this->fdMax = fdMax;
+}
+
+void Socket::setReadFd(int fd) {
+  this->readFd = fd;
+}
+
+void Socket::setWriteFd(int fd) {
+  this->writeFd = fd;
 }
 
 /*
@@ -76,7 +92,7 @@ inline void Socket::socketaddrInit(const std::string& host, int port, sock& in) 
 inline void Socket::socketOpen(int servFd, sock& in) {
   if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
     throw Socket::BindException();
-  if (listen(servFd, 128) == -1)
+  if (listen(servFd, 256) == -1)
     throw Socket::ListenException();
 }
 
@@ -124,21 +140,19 @@ int Socket::acceptConnect() {
 
 void Socket::receiveData(int fd) {
   char buf[BUF_SIZE + 1];
-  int recv_size;
-  int DONE = 0;
+  int recvSize;
 
-  recv_size = recv(fd, buf, BUF_SIZE, 0);
-  if (recv_size == -1)
+  recvSize = recv(fd, buf, BUF_SIZE, 0);
+  if (recvSize == -1)
     return ;
-  buf[recv_size] = 0;
-  this->data[fd] += buf;
+  buf[recvSize] = 0;
+  this->receivedData[fd] += buf;
   // FIXME: 임시 조건
-  if (recv_size < BUF_SIZE) {
+  if (recvSize < BUF_SIZE) {
     shutdown(fd, SHUT_RD);
     FD_CLR(fd, &reads);
 
-    std::cout << this->data[fd] << std::endl;
-    this->data[fd] = "";
+    //std::cout << this->receivedData[fd] << std::endl;
     // HttpRequest request(this->data[fd]);
     //
     // HttpDataFetcher fetcher(request);
@@ -149,8 +163,44 @@ void Socket::receiveData(int fd) {
     // std::string ret = response.toString();
     // sendData(fd);
 
-    sendData(fd);
+    //sendData(fd);
     // 파싱하고 지지고 볶고, 데이터 전송
+
+    std::string s = util::appendDataLength(this->receivedData[fd].c_str());
+    write(this->getWriteFd(), s.c_str(), strlen(s.c_str()));
+
+    std::string ret;
+    int receivedDataLength = 0;
+    while (1) {
+      std::cout << "read before" << std::endl;
+      recvSize = read(this->getReadFd(), buf, BUF_SIZE);
+      std::cout << "recvSize : " << recvSize << std::endl;
+      if (recvSize < 0)
+        break;
+      buf[recvSize] = 0;
+      if (receivedDataLength == 0) {
+        std::string b = buf;
+        std::pair<int, std::string> data = util::splitSize(b);
+        receivedDataLength = data.first;
+        ret = data.second;
+      }
+      else {
+        ret += buf;
+        // 제대로 되야하는 조건
+//        if (receivedDataLength == ret.length())
+//          break;
+        // FIXME: 임시조건
+        if (recvSize < BUF_SIZE)
+          break;
+      }
+    }
+    // 왜 0이지 tㅣ팔?h
+    std::cout << ret << std::endl;
+    std::cout << "\n\n\n\n" << std::endl;
+    std::cout << this->receivedData[fd] << std::endl;
+    sendData(fd);
+
+    this->receivedData[fd] = "";
   }
 }
 
@@ -177,14 +227,6 @@ void Socket::handShake(int fd) {
     acceptConnect();
   else
     receiveData(fd);
-}
-
-void Socket::setReadFd(int fd) {
-  this->readFd = fd;
-}
-
-void Socket::setWriteFd(int fd) {
-  this->writeFd = fd;
 }
 
 const char* Socket::InitException::what() const throw() {

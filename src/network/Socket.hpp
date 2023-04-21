@@ -27,6 +27,8 @@ class Socket {
     fd_set getWrites(void);
     void setReadFd(int fd);
     void setWriteFd(int fd);
+    const int getReadFd(void) const;
+    const int getWriteFd(void) const;
 
     void run();
 
@@ -36,7 +38,7 @@ class Socket {
     static const int FD_CLOSED = -1;
     static const int BUF_SIZE = 128;
 
-    std::vector<std::string> data;
+    std::vector<std::string> receivedData;
     const std::string host;
     const int port;
     int servFd;
