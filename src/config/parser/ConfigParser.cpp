@@ -95,7 +95,6 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
   else if (curToken().is(Token::ERROR_PAGE)) parseErrorPage(conf);
   else if (curToken().is(Token::CLIENT_BODY_BUFFER_SIZE)) parseClientBodyBufferSize(conf);
   else if (curToken().is(Token::INDEX)) parseIndex(conf);
-  expectNextToken(Token::SEMICOLON);
 }
 
 // server
@@ -160,27 +159,31 @@ void ConfigParser::parseReturn(LocationConfig& conf) {
 // common
 
 void ConfigParser::parseRoot(CommonConfig& conf) {
-    expectNextToken(Token::IDENT);
-    conf.setRoot(curToken().getLiteral());
+  expectNextToken(Token::IDENT);
+  conf.setRoot(curToken().getLiteral());
+  expectNextToken(Token::SEMICOLON);
 }
 
 void ConfigParser::parseErrorPage(CommonConfig& conf) {
-    expectNextToken(Token::INT);
-    int http_status = std::atoi(curToken().getLiteral().c_str());
-    expectNextToken(Token::IDENT);
-    conf.addErrorPage(std::pair<int, std::string>(http_status, curToken().getLiteral()));
+  expectNextToken(Token::INT);
+  int http_status = std::atoi(curToken().getLiteral().c_str());
+  expectNextToken(Token::IDENT);
+  conf.addErrorPage(std::pair<int, std::string>(http_status, curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
 }
 
 void ConfigParser::parseClientBodyBufferSize(CommonConfig& conf) {
-    expectNextToken(Token::INT);
-    conf.setClientBodySize(std::atoi(curToken().getLiteral().c_str()));
+  expectNextToken(Token::INT);
+  conf.setClientBodySize(std::atoi(curToken().getLiteral().c_str()));
+  expectNextToken(Token::SEMICOLON);
 }
 
 void ConfigParser::parseIndex(CommonConfig& conf) {
-    while (peekToken().is(Token::IDENT)) {
-      expectNextToken(Token::IDENT);
-      conf.addIndex(curToken().getLiteral());
-    }
+  while (peekToken().is(Token::IDENT)) {
+    expectNextToken(Token::IDENT);
+    conf.addIndex(curToken().getLiteral());
+  }
+  expectNextToken(Token::SEMICOLON);
 }
 
 void ConfigParser::generateToken(std::string fileName) {
