@@ -24,8 +24,7 @@ HttpConfig ConfigParser::parseHttp() {
   HttpConfig conf;
 
   expectNextToken(Token::LBRACE);
-  nextToken();
-  for (;curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
+  for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::SERVER)) conf.addServerConfig(parseServer(conf));
     else if (curToken().isCommon()) parseCommon(conf);
     else throwBadSyntax();
@@ -39,8 +38,7 @@ ServerConfig ConfigParser::parseServer(HttpConfig& httpConf) {
   ServerConfig conf(httpConf);
 
   expectNextToken(Token::LBRACE);
-  nextToken();
-  for (;curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
+  for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::LISTEN)) parseListen(conf);
@@ -58,8 +56,7 @@ LocationConfig ConfigParser::parseLocation(ServerConfig& serverConf) {
   expectNextToken(Token::IDENT);
   conf.setPath(curToken().getLiteral());
   expectNextToken(Token::LBRACE);
-  nextToken();
-  for (;curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
+  for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
@@ -79,8 +76,7 @@ LocationConfig ConfigParser::parseLocation(LocationConfig& locationConf) {
   expectNextToken(Token::IDENT);
   conf.setPath(curToken().getLiteral());
   expectNextToken(Token::LBRACE);
-  nextToken();
-  for (;curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
+  for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
