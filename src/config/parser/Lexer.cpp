@@ -60,58 +60,32 @@ char Lexer::peekChar() {
   return input[read_position];
 }
 
-std::string Lexer::readStr() {
+std::string Lexer::readWord() {
   int begin_pos = position;
 
-  while (isLetter(ch))
+  while (isWord(ch))
     readChar();
 
   return input.substr(begin_pos, position - begin_pos);
 }
 
-std::string Lexer::readNumber() {
-  int begin_pos = position;
-
-  while (isDigit(ch))
-    readChar();
-
-  return input.substr(begin_pos, position - begin_pos);
-}
-
-bool Lexer::isDigit(char ch) const {
-  return std::isdigit(ch);
-}
-
-// FIXME: 조건 수정
-bool Lexer::isLetter(char ch) const {
-  if (!isSpace(ch)
-      && ch != 0
-      && ch != ';'
-      && ch != '{'
-      && ch != '}')
+bool Lexer::isWord(char ch) const {
+  if (std::isalnum(ch) || std::strchr("_.:/", ch))
     return true;
   return false;
 }
 
-bool Lexer::isSpace(char ch) const {
-  if (ch == ' ' || ch == '\n' || ch == '\r')
-    return true;
-  return false;
-}
-
-bool Lexer::isStrNumber(const std::string &s) const {
-  for (int i = 0; i < s.length(); ++i) {
-    if (!isDigit(s[i]))
+bool Lexer::isWordNumber(const std::string &s) const {
+  for (int i = 0; i < s.length(); ++i)
+    if (!std::isdigit(s[i]))
       return false;
-  }
   return true;
 }
 
 std::string Lexer::lookupIdent(std::string ident) {
-  for (int i = 0; i < Token::KEYWORD_SIZE; ++i) {
+  for (int i = 0; i < Token::KEYWORD_SIZE; ++i)
     if (Token::keyword[i][Token::IDENT_IDX] == ident)
       return Token::keyword[i][Token::TYPE_IDX];
-  }
   return Token::IDENT;
 }
 
@@ -140,9 +114,9 @@ Token Lexer::nextToken() {
       ret = Token(Token::END_OF_FILE, std::string(""));
       break;
     default:
-      if (isLetter(ch)) {
-        std::string word = readStr();
-        if (isStrNumber(word))
+      if (isWord(ch)) {
+        std::string word = readWord();
+        if (isWordNumber(word))
           ret = Token(Token::INT, word);
         else
           ret = Token(lookupIdent(word), word);
