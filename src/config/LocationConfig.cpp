@@ -5,7 +5,8 @@ const bool LocationConfig::DEFAULT_AUTOINDEX = false;
 
 LocationConfig::LocationConfig(): autoIndex(DEFAULT_AUTOINDEX) {}
 
-LocationConfig::LocationConfig(const ServerConfig& config): autoIndex(DEFAULT_AUTOINDEX) {
+LocationConfig::LocationConfig(const ServerConfig& config):
+  autoIndex(DEFAULT_AUTOINDEX) {
   this->clientBodySize = config.getClientBodySize();
   this->root = config.getRoot();
   this->errorPage = config.getErrorPage();
@@ -13,7 +14,7 @@ LocationConfig::LocationConfig(const ServerConfig& config): autoIndex(DEFAULT_AU
 
 LocationConfig::~LocationConfig() {}
 
-LocationConfig::LocationConfig(const LocationConfig& obj): 
+LocationConfig::LocationConfig(const LocationConfig& obj):
   CommonConfig(obj),
   path(obj.getPath()),
   alias(obj.getAlias()),

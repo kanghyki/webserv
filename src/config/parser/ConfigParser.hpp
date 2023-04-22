@@ -16,18 +16,35 @@ class ConfigParser {
     ConfigParser();
     ~ConfigParser();
 
-    Config                    Parse(const std::string &fileName);
-
-    // TODO: REMOVE
-    class ParseException: public std::exception {
-      public:
-        const char *what() const throw();
-    };
+    Config                    parse(const std::string &fileName);
 
   private:
-    std::vector<Token>        tokens;
     unsigned long             pos;
+    std::vector<Token>        tokens;
     std::string               fileName;
+
+    HttpConfig                parseHttp();
+    ServerConfig              parseServer(HttpConfig& conf);
+    LocationConfig            parseLocation(ServerConfig& conf);
+    LocationConfig            parseLocation(LocationConfig& conf);
+    LocationConfig            parseLocation();
+    void                      parseCommon(CommonConfig& conf);
+
+    // server
+    void                      parseListen(ServerConfig& conf);
+    void                      parseServerName(ServerConfig& conf);
+    // location
+    void                      parseAlias(LocationConfig& conf);
+    void                      parseLimitExcept(LocationConfig& conf);
+    void                      parseAutoIndex(LocationConfig& conf);
+    void                      parseReturn(LocationConfig& conf);
+    // common
+    void                      parseRoot(CommonConfig& conf);
+    void                      parseErrorPage(CommonConfig& conf);
+    void                      parseClientBodyBufferSize(CommonConfig& conf);
+    void                      parseIndex(CommonConfig& conf);
+
+    void                      generateToken(std::string fileName);
 
     void                      nextToken();
     Token                     curToken() const;
@@ -35,14 +52,7 @@ class ConfigParser {
     void                      expectNextToken(const std::string& expected);
     void                      expectCurToken(const std::string& expected) const;
     void                      expectError(const std::string& expected) const;
-    void                      badSyntax() const;
-
-    void                      generateToken(std::string fileName);
-    void                      parseHttp(HttpConfig& conf);
-    void                      parseServer(ServerConfig& conf);
-    void                      parseLocation(LocationConfig& conf);
-
-    void                      parseCommon(CommonConfig& conf);
+    void                      throwBadSyntax() const;
 };
 
 #endif
