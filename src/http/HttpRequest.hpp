@@ -16,6 +16,8 @@ namespace request_method {
 }
 
 namespace request_field {
+  const std::string CONTENT_LENGTH        =   "Content-Length";
+
   const std::string CACHE_CONTROL         =   "Cache-control";
   const std::string HOST                  =   "Host";
   const std::string PRAGMA                =   "Pragma";

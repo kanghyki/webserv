@@ -51,8 +51,9 @@ class Server {
 
     int acceptConnect();
     void receiveData(int fd);
-    void sendData(int fd);
+    void sendData(int fd, std::string header, std::string body);
     void closeSocket(int fd);
+    void receiveDone(int fd, std::string header, std::string body);
 
     ServerConfig config;
 

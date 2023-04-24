@@ -136,24 +136,52 @@ void Server::receiveData(int fd) {
   }
   buf[recv_size] = 0;
   this->data[fd] += buf;
-  if (recv_size < BUF_SIZE) {
-    shutdown(fd, SHUT_RD);
-    FD_CLR(fd, &this->getReads());
-    std::cout << "@---this->data[" << fd << "]" << std::endl;
-    std::cout << this->data[fd];
-    std::cout << "@---" << std::endl;
-    sendData(fd);
-    this->data[fd] = "";
-//    close(fd);
-//    FD_CLR(fd, &this->getReads());
-    return ;
+
+  size_t pos = this->data[fd].find("\r\n\r\n");
+  if (pos != std::string::npos) {
+    std::string header;
+    std::string body;
+
+    size_t start = this->data[fd].find("Content-Length: ");
+    if (start != std::string::npos) {
+      size_t end = this->data[fd].find("\r\n", start);
+      int len = std::atoi(this->data[fd].substr(start, end - start + 1).c_str());
+      if (len == this->data[fd].substr(pos + 4).length()) {
+        // 헤더 파싱해야됨
+        header = this->data[fd].substr(0, pos);
+        body = this->data[fd].substr(pos + 4);
+        std::cout << "header : " << header << std::endl;
+        std::cout << "body : " << body << std::endl;
+        receiveDone(fd, header, body);
+      }
+      else
+        return;
+    }
+    // 헤더 파싱해여됨
+    header = this->data[fd].substr(0, pos);
+    std::cout << "header : " << header << std::endl;
+    std::cout << "body : " << body << std::endl;
+    receiveDone(fd, header, body);
   }
+
+//  if (recv_size < BUF_SIZE) {
+//    shutdown(fd, SHUT_RD);
+//    FD_CLR(fd, &this->getReads());
+//    std::cout << "@---this->data[" << fd << "]" << std::endl;
+//    std::cout << this->data[fd];
+//    std::cout << "@---" << std::endl;
+//    sendData(fd);
+//    this->data[fd] = "";
+////    close(fd);
+////    FD_CLR(fd, &this->getReads());
+//    return ;
+//  }
 }
 
 #include "./http/Http.hpp"
 #include "./http/HttpStatus.hpp"
 
-void Server::sendData(int fd) {
+void Server::sendData(int fd, std::string header, std::string body) {
   Http http(this->config);
   std::string response;
   FD_SET(fd, &this->getWrites());
@@ -175,6 +203,16 @@ void Server::closeSocket(int fd) {
   std::cout << "[Log] close\n";
   FD_CLR(fd, &this->getWrites());
   close(fd);
+}
+
+void Server::receiveDone(int fd, std::string header, std::string body) {
+    shutdown(fd, SHUT_RD);
+    FD_CLR(fd, &this->getReads());
+    std::cout << "@---this->data[" << fd << "]" << std::endl;
+    std::cout << this->data[fd];
+    std::cout << "@---" << std::endl;
+    sendData(fd, header, body);
+    this->data[fd] = "";
 }
 
 const char* Server::InitException::what() const throw() {
