@@ -14,19 +14,22 @@ class CommonConfig {
 
     int                         getClientBodySize() const;
     std::string                 getRoot() const;
-    std::map<int, std::string>  getErrorPage() const;
+    std::string                 getErrorPagePath() const;
+    std::vector<int>            getErrorPageStatus() const;
     std::vector<std::string>    getIndex() const;
 
     void                        setClientBodySize(int clientBodySize);
     void                        setRoot(std::string root);
-    void                        addErrorPage(std::pair<int, std::string> errorPage);
+    void                        setErrorPagePath(std::string path);
+    void                        addErrorPageStatus(int n);
     void                        addIndex(std::string index);
 
   protected:
     int                         clientBodySize;
     std::string                 root;
-    std::map<int, std::string>  errorPage;
     std::vector<std::string>    index;
+    std::string                 errorPagePath;
+    std::vector<int>            errorPageStatus;
 
   private:
     static const int            DEFAULT_CLIENT_BODY_SIZE;
