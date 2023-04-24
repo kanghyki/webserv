@@ -13,17 +13,18 @@ namespace util {
     return ret;
   }
 
-  std::vector<std::string> split(const std::string& str, const std::string& delim) {
+
+  std::vector<std::string> split(std::string s, const std::string& delim) {
     std::vector<std::string> ret;
-    size_t start = 0;
-    size_t pos = 0;
+    unsigned long pos = 0;
+    std::string token = "";
 
-    while ((pos = str.find(delim, start)) != std::string::npos) {
-      ret.push_back(str.substr(start, pos));
-      start += pos + delim.length();
+    while ((pos = s.find(delim)) != std::string::npos) {
+      token = s.substr(0, pos);
+      ret.push_back(token);
+      s.erase(0, pos + delim.length());
     }
-    ret.push_back(str.substr(start));
-
+    ret.push_back(s);
     return ret;
   }
 
@@ -63,6 +64,7 @@ namespace util {
 
     return ret;
   }
+
 
   const char* StringFoundException::what() const throw() {
     return "Target not found";

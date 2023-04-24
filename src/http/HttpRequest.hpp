@@ -1,6 +1,7 @@
 #ifndef HTTPREQUEST_HPP
 # define HTTPREQUEST_HPP
 
+# include "./HttpStatus.hpp"
 # include "../Util.hpp"
 
 # include <stdexcept>
@@ -44,56 +45,56 @@ namespace request_field {
 
 class HttpRequest {
   public:
-    HttpRequest(const std::string& data);
+    HttpRequest(std::string request);
+    ~HttpRequest();
 
     std::string getMethod() const;
     std::string getPath() const;
     std::string getVersion() const;
+    bool        getErrorStatus() const;
+    bool        isError() const;
 
   private:
-    std::map<std::string, void (*)(const std::string &)> fieldMethod;
-    std::string method;
-    std::string path;
-    std::string version;
-    std::map<std::string, std::string> header;
-    std::string body;
+    bool                                errorFlag;
+    HttpStatus                          errorStatus;
+    std::string                         method;
+    std::string                         path;
+    std::string                         version;
+    std::map<std::string, std::string>  header;
+    std::string                         body;
 
-    void validateMethod(const std::string &method);
-    void validateVersion(const std::string &path);
-    void validatePath(const std::string &version);
+    void                                setError(HttpStatus errorStatus);
+    void                                validateMethod(const std::string &method);
+    void                                validateVersion(const std::string &path);
+    void                                validatePath(const std::string &version);
 
-    void parseStatusLine(const std::string &line);
-    void parseRequest(const std::string &s);
+    void                                parseStatusLine(const std::string &line);
 
-    static void parseCacheControl(const std::string &s);
-    static void parseHost(const std::string &s);
-    static void parsePragma(const std::string &s);
-    static void parseRange(const std::string &s);
-    static void parseTE(const std::string &s);
-    static void parseExpect(const std::string &s);
-    static void parseMaxForwards(const std::string &s);
-    static void parseIfMatch(const std::string &s);
-    static void parseIfNoneMatch(const std::string &s);
-    static void parseIfModifiedSince(const std::string &s);
-    static void parseIfUnmodifiedSince(const std::string &s);
-    static void parseIfRange(const std::string &s);
+//    std::map<std::string, void (*)(const std::string &)> fieldMethod;
 
-    static void parseAccept(const std::string &s);
-    static void parseAcceptCharset(const std::string &s);
-    static void parseAcceptEncoding(const std::string &s);
-    static void parseAcceptLanguage(const std::string &s);
-
-    static void parseAuthorization(const std::string &s);
-    static void parseProxyAuthorization(const std::string &s);
-    static void parseFrom(const std::string &s);
-    static void parseReferer(const std::string &s);
-    static void parseUserAgent(const std::string &s);
-
-  public:
-    class BadProtocolException : public std::exception {
-      public:
-        const char* what(void) const throw();
-    };
+//    static void parseCacheControl(const std::string &s);
+//    static void parseHost(const std::string &s);
+//    static void parsePragma(const std::string &s);
+//    static void parseRange(const std::string &s);
+//    static void parseTE(const std::string &s);
+//    static void parseExpect(const std::string &s);
+//    static void parseMaxForwards(const std::string &s);
+//    static void parseIfMatch(const std::string &s);
+//    static void parseIfNoneMatch(const std::string &s);
+//    static void parseIfModifiedSince(const std::string &s);
+//    static void parseIfUnmodifiedSince(const std::string &s);
+//    static void parseIfRange(const std::string &s);
+//
+//    static void parseAccept(const std::string &s);
+//    static void parseAcceptCharset(const std::string &s);
+//    static void parseAcceptEncoding(const std::string &s);
+//    static void parseAcceptLanguage(const std::string &s);
+//
+//    static void parseAuthorization(const std::string &s);
+//    static void parseProxyAuthorization(const std::string &s);
+//    static void parseFrom(const std::string &s);
+//    static void parseReferer(const std::string &s);
+//    static void parseUserAgent(const std::string &s);
 };
 
 #endif

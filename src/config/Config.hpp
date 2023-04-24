@@ -1,8 +1,9 @@
 #ifndef CONFIG_HPP
-#define CONFIG_HPP
+# define CONFIG_HPP
 
-#include "HttpConfig.hpp"
-#include <vector>
+# include "HttpConfig.hpp"
+
+# include <vector>
 
 class Config {
   public:

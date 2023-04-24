@@ -1,7 +1,5 @@
 #include "Socket.hpp"
-
-/*
- * -------------------------- Constructor --------------------------
+/* * -------------------------- Constructor --------------------------
  */
 
 Socket::Socket(ServerConfig config) : data(10000), host(config.getHost()), port(config.getPort()), \
@@ -12,8 +10,8 @@ Socket::Socket(ServerConfig config) : data(10000), host(config.getHost()), port(
   fdSetInit(this->reads, this->servFd);
   FD_ZERO(&this->writes);
   this->fdMax = this->servFd;
+  this->config = config;
 }
-
 
 /*
  * -------------------------- Destructor ---------------------------
@@ -90,6 +88,7 @@ inline void Socket::fdSetInit(fd_set& fs, int fd) {
 void Socket::socketRun(void) {
   struct timeval t;
   t.tv_sec = 1;
+  t.tv_usec = 0;
 
   while (1) {
     fd_set readsCpy = this->getReads();
@@ -129,42 +128,43 @@ void Socket::receiveData(int fd) {
   int DONE = 0;
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
-  if (recv_size == -1)
+  if (recv_size <= 0) {
+    close(fd);
+    FD_CLR(fd, &this->getReads());
     return ;
+  }
   buf[recv_size] = 0;
   this->data[fd] += buf;
   // FIXME: 임시 조건
   if (recv_size < BUF_SIZE) {
     shutdown(fd, SHUT_RD);
     FD_CLR(fd, &this->getReads());
-
+    std::cout << "@---this->data[" << fd << "]" << std::endl;
     std::cout << this->data[fd] << std::endl;
-    this->data[fd] = "";
-    // HttpRequest request(this->data[fd]);
-    //
-    // HttpDataFetcher fetcher(request);
-    //
-    // HttpResponseBuilder rb;
-    // HttpResponse response = rb.setRequest(request).setFetcher(fecther).build();
-    //
-    // std::string ret = response.toString();
-    // sendData(fd);
-
+    std::cout << "@---" << std::endl;
     sendData(fd);
-    // 파싱하고 지지고 볶고, 데이터 전송
   }
 }
 
+#include "../http/Http.hpp"
+#include "../http/HttpStatus.hpp"
+
 void Socket::sendData(int fd) {
-  FD_SET(fd, &this->getWrites());
-  std::string data("HTTP/1.1 200 OK\r\n\
-      Content-Length: 2048\r\n\
-      Content-Type: text/html\r\n\r\n");
-  data += util::readFile("./html/index.html");
-  if (send(fd, data.c_str(), strlen(data.c_str()), 0) == SOCK_ERROR)
+  Http http(this->config);
+  std::string response;
+
+  try {
+    response = http.processing(this->data[fd]);
+  } catch (std::exception &e) {
+    // TODO:: Error page
+    response = "HTTP/1.1 500 " + getStatusText(INTERNAL_SERVER_ERROR) + "\r\n\r\n";
+  }
+
+  if (send(fd, response.c_str(), response.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";
+  this->data[fd].clear();
 }
 
 void Socket::closeSocket(int fd) {

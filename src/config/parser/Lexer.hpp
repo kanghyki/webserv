@@ -11,29 +11,26 @@ class Lexer {
     Lexer(const Lexer& obj);
     Lexer(std::string input);
     ~Lexer();
-    Lexer&      operator=(const Lexer& obj);
+    Lexer&        operator=(const Lexer& obj);
 
-    void        setInput(std::string input);
-    Token       nextToken();
+    void          setInput(std::string input);
+    Token         nextToken();
 
-    int         getPosition() const;
+    int           getPosition() const;
 
   private:
-    std::string input;
-    int         position;
-    int         read_position;
-    char        ch;
+    std::string   input;
+    unsigned int  position;
+    unsigned int  read_position;
+    char          ch;
 
-    void        readChar();
-    char        peekChar();
-    std::string readStr();
-    std::string readNumber();
-    bool        isDigit(char ch) const;
-    bool        isLetter(char ch) const;
-    bool        isSpace(char ch) const;
-    bool        isStrNumber(const std::string &s) const;
-    std::string lookupIdent(std::string ident);
-    void        skipWhitespace();
+    void          readChar();
+    char          peekChar();
+    std::string   readWord();
+    bool          isWord(char ch) const;
+    bool          isWordNumber(const std::string &s) const;
+    std::string   lookupIdent(std::string ident);
+    void          skipWhitespace();
 
 };
 

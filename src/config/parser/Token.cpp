@@ -1,9 +1,50 @@
-#include "Token.hpp"
+#include "./Token.hpp"
+
+const std::string Token::ILLEGAL                 = "ILLEGAL";
+const std::string Token::END_OF_FILE             = "EOF";
+const std::string Token::IDENT                   = "IDENT";
+const std::string Token::INT                     = "int";
+const std::string Token::SEMICOLON               = ";";
+const std::string Token::LBRACE                  = "{";
+const std::string Token::RBRACE                  = "}";
+// Keyword
+const std::string Token::HTTP                    = "http";
+const std::string Token::SERVER                  = "server";
+const std::string Token::LOCATION                = "location";
+const std::string Token::LISTEN                  = "listen";
+const std::string Token::SERVER_NAME             = "server_name";
+const std::string Token::ROOT                    = "root";
+const std::string Token::ERROR_PAGE              = "error_page";
+const std::string Token::CLIENT_BODY_BUFFER_SIZE = "client_body_buffer_size";
+const std::string Token::INDEX                   = "index";
+const std::string Token::ALIAS                   = "alias";
+const std::string Token::LIMIT_EXCEPT            = "limit_except";
+const std::string Token::AUTOINDEX               = "autoindex";
+const std::string Token::RETURN                  = "return";
+
+const int         Token::IDENT_IDX                       = 0;
+const int         Token::TYPE_IDX                        = 1;
+
+const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
+  {"http",                                       Token::HTTP},
+  {"server",                                     Token::SERVER},
+  {"location",                                   Token::LOCATION},
+  {"listen",                                     Token::LISTEN},
+  {"server_name",                                Token::SERVER_NAME},
+  {"root",                                       Token::ROOT},
+  {"error_page",                                 Token::ERROR_PAGE},
+  {"client_body_buffer_size",                    Token::CLIENT_BODY_BUFFER_SIZE},
+  {"index",                                      Token::INDEX},
+  {"alias",                                      Token::ALIAS},
+  {"limit_except",                               Token::LIMIT_EXCEPT},
+  {"autoindex",                                  Token::AUTOINDEX},
+  {"return",                                     Token::RETURN},
+};
 
 Token::Token():
-  lineNumber(-42),
-  pos(-42),
-  type("undefined"),
+  lineNumber(0),
+  pos(0),
+  type(ILLEGAL),
   literal("undefined") {}
 
 Token::Token(const Token &obj):
@@ -43,10 +84,7 @@ bool Token::isNot(const std::string& type) const {
 }
 
 bool Token::isCommon() const {
-  if (is(token_type::ROOT)
-      || is(token_type::CLIENT_BODY_BUFFER_SIZE)
-      || is(token_type::ERROR_PAGE)
-      || is(token_type::INDEX))
+  if (is(ROOT) || is(CLIENT_BODY_BUFFER_SIZE) || is(ERROR_PAGE) || is(INDEX))
     return true;
   return false;
 }

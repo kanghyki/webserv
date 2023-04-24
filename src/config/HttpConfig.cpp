@@ -10,7 +10,8 @@ HttpConfig& HttpConfig::operator=(const HttpConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
     this->root = obj.getRoot();
-    this->errorPage = obj.getErrorPage();
+    this->errorPagePath = obj.getErrorPagePath();
+    this->errorPageStatus = obj.getErrorPageStatus();
     this->index = obj.getIndex();
 
     this->servers = obj.getServerConfig();
