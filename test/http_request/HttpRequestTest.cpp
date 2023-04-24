@@ -25,5 +25,5 @@ Accept-Language: en-US,en;q=0.9";
   AssertEqual(expect, hr.getBody());
 
   std::string expect1 = "123";
-  AssertEqual(expect1, hr.getField("Content-Length"));
+  AssertEqual(expect1, hr.getField("content-length"));
 }
