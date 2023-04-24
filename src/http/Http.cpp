@@ -10,31 +10,8 @@ std::string Http::processing(std::string s) {
   std::string ret;
 
   //////// parse----------------------------------
-  HttpRequest request(s);
-  if (request.isError()) {
-    //!!!!!! parse-error----------------------------
-    std::cout << "REQUEST ERROR" << std::endl;
-    std::cout << request.getErrorStatus() << std::endl;
-
-    std::string data;
-    std::vector<int> sl = this->config.getErrorPageStatus();
-    std::vector<int>::iterator it = std::find(sl.begin(), sl.end(), 404);
-    if (it != sl.end()) {
-      data = HttpDataFecther::readFile(this->config.getErrorPagePath());
-    }
-//    std::map<int, std::string> ep = this->config.getErrorPage();
-//    if (ep.find(404) != ep.end()) {
-//    }
-    ret = HttpResponseBuilder::getBuilder()
-      .statusCode(NOT_FOUND)
-      .httpVersion("HTTP/1.1")
-      .header("date", getNowStr())
-      .body(data)
-      .build()
-      .toString();
-  }
-  //////// parse-end------------------------------
-  else {
+  try {
+    HttpRequest request(s);
     //////// fetch----------------------------------
     HttpDataFecther fetcher(request, this->config);
     try {
@@ -63,7 +40,26 @@ std::string Http::processing(std::string s) {
         .build()
         .toString();
     }
-    //////// fetch-end------------------------------
+  } catch (HttpStatus status) {
+    //!!!!!! parse-error----------------------------
+    std::cout << "REQUEST ERROR" << std::endl;
+
+    std::string data;
+    std::vector<int> sl = this->config.getErrorPageStatus();
+    std::vector<int>::iterator it = std::find(sl.begin(), sl.end(), 404);
+    if (it != sl.end()) {
+      data = HttpDataFecther::readFile(this->config.getErrorPagePath());
+    }
+    //    std::map<int, std::string> ep = this->config.getErrorPage();
+    //    if (ep.find(404) != ep.end()) {
+    //    }
+    ret = HttpResponseBuilder::getBuilder()
+      .statusCode(NOT_FOUND)
+      .httpVersion("HTTP/1.1")
+      .header("date", getNowStr())
+      .body(data)
+      .build()
+      .toString();
   }
   return ret;
 }

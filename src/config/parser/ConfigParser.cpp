@@ -99,6 +99,7 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
 
 // server
 
+#include <iostream>
 void ConfigParser::parseListen(ServerConfig& conf) {
   nextToken();
   // HOST:PORT
@@ -108,7 +109,13 @@ void ConfigParser::parseListen(ServerConfig& conf) {
     if (sp.size() != 2) throw std::runtime_error("Listen error");
     // TODO: check arguments
     conf.setHost(sp[0]);
-    conf.setPort(std::atoi(sp[1].c_str()));
+    srand(time(0));
+    int r = rand() % 30000;
+    if (r < 1023)
+      r += 1023;
+    std::cout << "Port: " << r << std::endl;
+//    conf.setPort(std::atoi(sp[1].c_str()));
+    conf.setPort(r);
   }
   // PORT
   else if (curToken().is(Token::INT)) {

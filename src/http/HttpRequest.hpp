@@ -48,27 +48,26 @@ class HttpRequest {
     HttpRequest(std::string request);
     ~HttpRequest();
 
-    std::string getMethod() const;
-    std::string getPath() const;
-    std::string getVersion() const;
-    bool        getErrorStatus() const;
-    bool        isError() const;
+    std::string                         getMethod() const;
+    std::string                         getPath() const;
+    std::string                         getVersion() const;
 
   private:
-    bool                                errorFlag;
-    HttpStatus                          errorStatus;
+    static const size_t                 URL_MAX_LENGTH;
+    static const std::string            CRLF;
+
     std::string                         method;
     std::string                         path;
     std::string                         version;
     std::map<std::string, std::string>  header;
     std::string                         body;
 
-    void                                setError(HttpStatus errorStatus);
+    void                                parseHeader(const std::string &h);
+    void                                parseStatusLine(const std::string &line);
+
     void                                validateMethod(const std::string &method);
     void                                validateVersion(const std::string &path);
     void                                validatePath(const std::string &version);
-
-    void                                parseStatusLine(const std::string &line);
 
 //    std::map<std::string, void (*)(const std::string &)> fieldMethod;
 
