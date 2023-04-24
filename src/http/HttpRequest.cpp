@@ -4,17 +4,18 @@
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
 const std::string HttpRequest::CRLF = "\r\n";
 
-HttpRequest::HttpRequest(std::string request) {
-  std::vector<std::string>            vs;
+//HttpRequest::HttpRequest(std::string request) {
+//  std::vector<std::string>            vs;
+//
+//  vs = util::split(request, CRLF + CRLF);
+//  parseHeader(vs[0]);
+//  this->body = vs[1];
+//}
 
-  vs = util::split(request, CRLF + CRLF);
-  parseHeader(vs[0]);
-  this->body = vs[1];
-}
+HttpRequest::HttpRequest() {}
 
 HttpRequest::~HttpRequest() {}
 
-#include <stdio.h>
 void HttpRequest::parseHeader(const std::string& h) {
   std::vector<std::string>            vs;
   std::vector<std::string>::iterator  it;
@@ -22,20 +23,9 @@ void HttpRequest::parseHeader(const std::string& h) {
   vs = util::split(h, CRLF);
   it = vs.begin();
   parseStatusLine(*it);
-  ++it;
-  while (it != vs.end()) {
-    std::vector<std::string> itss;
-
-    int pos;
-    if ((pos = (*it).find(":")) != std::string::npos) {
-      std::string f = (*it).substr(0, pos);
-      util::trimSpace(f);
-      std::string b = (*it).substr(pos + 1);
-      util::trimSpace(b);
-      this->header.insert(std::make_pair(f, b));
-    }
-    else throw BAD_REQUEST;
-    ++it;
+  while (++it != vs.end()) {
+    std::pair<std::string, std::string> ret = splitField(*it);
+    this->field.insert(ret);
   }
 }
 
@@ -64,6 +54,7 @@ void HttpRequest::validatePath(const std::string &path) {
   i = 0;
   if (path.length() > URL_MAX_LENGTH)     throw URI_TOO_LONG;
   if (path[i++] != '/')                   throw BAD_REQUEST;
+
   while (i < path.length()) {
     if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=", path[i]))
       throw BAD_REQUEST;
@@ -83,6 +74,18 @@ void HttpRequest::validateVersion(const std::string &version) {
   if (v < 1.1)                            throw UPGRADE_REQUIRED;
 }
 
+std::pair<std::string, std::string> HttpRequest::splitField(const std::string& line) {
+  std::string field;
+  std::string value;
+  int pos;
+
+  if ((pos = line.find(":")) == std::string::npos) throw BAD_REQUEST;
+  field = util::trimSpace(line.substr(0, pos));
+  value = util::trimSpace(line.substr(pos + 1));
+
+  return std::make_pair(field, value);
+}
+
 // getter
 
 std::string HttpRequest::getMethod() const { return this->method; }
@@ -90,6 +93,24 @@ std::string HttpRequest::getMethod() const { return this->method; }
 std::string HttpRequest::getPath() const { return this->path; }
 
 std::string HttpRequest::getVersion() const { return this->version; }
+
+std::string HttpRequest::getField(const std::string& field) const {
+  std::map<std::string, std::string>::const_iterator it;
+  std::string                                        ret;
+
+  if ((it = this->field.find(field)) != this->field.end())
+    ret = it->second;
+
+  return ret;
+}
+
+std::string HttpRequest::getBody() const {
+  return this->body;
+}
+
+// setter
+
+void  HttpRequest::setBody(const std::string& body) { this->body = body; }
 
 //void HttpRequest::parseCacheControl(const std::string &s) {
 //}

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HttpRequest.hpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kanghyki <kanghyki@student.42seoul.>       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/04/24 18:33:07 by kanghyki          #+#    #+#             */
+/*   Updated: 2023/04/24 18:47:38 by kanghyki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef HTTPREQUEST_HPP
 # define HTTPREQUEST_HPP
 
@@ -45,12 +57,19 @@ namespace request_field {
 
 class HttpRequest {
   public:
-    HttpRequest(std::string request);
+    HttpRequest();
+//    HttpRequest(std::string request);
     ~HttpRequest();
+
+    void                                parseHeader(const std::string &h);
 
     std::string                         getMethod() const;
     std::string                         getPath() const;
     std::string                         getVersion() const;
+    std::string                         getField(const std::string& field) const;
+    std::string                         getBody() const;
+
+    void                                setBody(const std::string& body);
 
   private:
     static const size_t                 URL_MAX_LENGTH;
@@ -59,15 +78,16 @@ class HttpRequest {
     std::string                         method;
     std::string                         path;
     std::string                         version;
-    std::map<std::string, std::string>  header;
+    std::map<std::string, std::string>  field;
     std::string                         body;
 
-    void                                parseHeader(const std::string &h);
     void                                parseStatusLine(const std::string &line);
 
     void                                validateMethod(const std::string &method);
     void                                validateVersion(const std::string &path);
     void                                validatePath(const std::string &version);
+
+    std::pair<std::string, std::string> splitField(const std::string& line);
 
 //    std::map<std::string, void (*)(const std::string &)> fieldMethod;
 
