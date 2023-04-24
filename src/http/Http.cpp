@@ -7,11 +7,11 @@ Http::Http(ServerConfig config): config(config) {}
 
 Http::~Http() {}
 
-std::string Http::processing(std::string s) {
+std::string Http::processing(HttpRequest& request) {
   std::string ret;
 
   try {
-    HttpRequest request(s);
+    //HttpRequest request(s);
     HttpDataFecther fetcher(request, this->config);
     std::string data = fetcher.fetch();
     ret = HttpResponseBuilder::getBuilder()

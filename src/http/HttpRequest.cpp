@@ -12,7 +12,7 @@ HttpRequest::HttpRequest(std::string request) {
   setBody(vs[1]);
 }
 
-//HttpRequest::HttpRequest() {}
+HttpRequest::HttpRequest() {}
 
 HttpRequest::~HttpRequest() {}
 

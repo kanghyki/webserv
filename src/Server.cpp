@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Util.hpp"
 /* * -------------------------- Constructor --------------------------
  */
 
@@ -142,26 +143,31 @@ void Server::receiveData(int fd) {
     std::string header;
     std::string body;
 
-    size_t start = this->data[fd].find("Content-Length: ");
+    size_t start = util::toLowerStr(this->data[fd]).find("content-length: ");
     if (start != std::string::npos) {
       size_t end = this->data[fd].find("\r\n", start);
-      int len = std::atoi(this->data[fd].substr(start, end - start + 1).c_str());
+      int len = std::atoi(this->data[fd].substr(start + 16, end - start + 1).c_str());
+      std::cout << "start : " << start << std::endl;
+      std::cout << "end : " << end << std::endl;
+      std::cout << "len1 : " << len << std::endl;
+      std::cout << "len2 : " << this->data[fd].substr(pos + 4).length() << std::endl;
       if (len == this->data[fd].substr(pos + 4).length()) {
-        // 헤더 파싱해야됨
+        HttpRequest req;
         header = this->data[fd].substr(0, pos);
         body = this->data[fd].substr(pos + 4);
         std::cout << "header : " << header << std::endl;
         std::cout << "body : " << body << std::endl;
-        receiveDone(fd, header, body);
+        req.parseHeader(header);
+        req.setBody(body);
+        receiveDone(fd, req);
       }
       else
         return;
     }
-    // 헤더 파싱해여됨
+    HttpRequest req;
     header = this->data[fd].substr(0, pos);
-    std::cout << "header : " << header << std::endl;
-    std::cout << "body : " << body << std::endl;
-    receiveDone(fd, header, body);
+    req.parseHeader(header);
+    receiveDone(fd, req);
   }
 
 //  if (recv_size < BUF_SIZE) {
@@ -181,13 +187,13 @@ void Server::receiveData(int fd) {
 #include "./http/Http.hpp"
 #include "./http/HttpStatus.hpp"
 
-void Server::sendData(int fd, std::string header, std::string body) {
+void Server::sendData(int fd, HttpRequest& req) {
   Http http(this->config);
   std::string response;
   FD_SET(fd, &this->getWrites());
 
   try {
-    response = http.processing(this->data[fd]);
+    response = http.processing(req);
   } catch (std::exception &e) {
     // TODO:: Error page
     response = "HTTP/1.1 500 " + getStatusText(INTERNAL_SERVER_ERROR) + "\r\n\r\n";
@@ -205,14 +211,14 @@ void Server::closeSocket(int fd) {
   close(fd);
 }
 
-void Server::receiveDone(int fd, std::string header, std::string body) {
-    shutdown(fd, SHUT_RD);
-    FD_CLR(fd, &this->getReads());
-    std::cout << "@---this->data[" << fd << "]" << std::endl;
-    std::cout << this->data[fd];
-    std::cout << "@---" << std::endl;
-    sendData(fd, header, body);
-    this->data[fd] = "";
+void Server::receiveDone(int fd, HttpRequest& req) {
+  shutdown(fd, SHUT_RD);
+  FD_CLR(fd, &this->getReads());
+  std::cout << "@---this->data[" << fd << "]" << std::endl;
+  std::cout << this->data[fd];
+  std::cout << "@---" << std::endl;
+  sendData(fd, req);
+  this->data[fd] = "";
 }
 
 const char* Server::InitException::what() const throw() {

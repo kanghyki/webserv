@@ -15,7 +15,7 @@ class Http {
     Http(ServerConfig config);
     ~Http();
 
-    std::string processing(std::string request);
+    std::string processing(HttpRequest& req);
 
   private:
     ServerConfig  config;
