@@ -20,6 +20,13 @@ HttpResponseBuilder& HttpResponseBuilder::httpVersion(std::string version) {
   return *this;
 }
 
+HttpResponseBuilder& HttpResponseBuilder::httpVersion(void) {
+  this->response.setHttpVersion("HTTP/1.1");
+
+  return *this;
+}
+
+
 HttpResponseBuilder& HttpResponseBuilder::header(const std::string &key, const std::string &value) {
   this->response.setHeader(key, value);
 

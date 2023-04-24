@@ -53,7 +53,6 @@ class Server {
     void receiveData(int fd);
     void sendData(int fd);
     void closeSocket(int fd);
-    void handShake(int fd);
 
     ServerConfig config;
 

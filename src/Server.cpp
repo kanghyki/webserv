@@ -96,8 +96,12 @@ void Server::run(void) {
       break;
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
-      if (FD_ISSET(i, &readsCpy))
-        handShake(i);
+      if (FD_ISSET(i, &readsCpy)) {
+        if (i == this->getServFd())
+          acceptConnect();
+        else
+          receiveData(i);
+      }
       if (FD_ISSET(i, &writesCpy))
         closeSocket(i);
     }
@@ -169,13 +173,6 @@ void Server::closeSocket(int fd) {
   std::cout << "[Log] close\n";
   FD_CLR(fd, &this->getWrites());
   close(fd);
-}
-
-void Server::handShake(int fd) {
-  if (fd == this->getServFd())
-    acceptConnect();
-  else
-    receiveData(fd);
 }
 
 const char* Server::InitException::what() const throw() {

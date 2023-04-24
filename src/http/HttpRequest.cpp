@@ -70,7 +70,9 @@ void HttpRequest::parseStatusLine(const std::string& line) {
   this->version = ss[2];
 }
 
-// getter
+/*
+ * -------------------------- Getter -------------------------------
+ */
 
 std::string HttpRequest::getMethod() const {
   return this->method;
@@ -92,7 +94,9 @@ bool HttpRequest::getErrorStatus() const {
   return this->errorStatus;
 }
 
-// setter
+/*
+ * -------------------------- Setter -------------------------------
+ */
 
 void HttpRequest::setError(HttpStatus errorStatus) {
   this->errorFlag = true;

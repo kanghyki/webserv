@@ -10,7 +10,11 @@ std::string HttpDataFecther::fetch() const {
   std::cout << "Root: " << this->config.getRoot() << std::endl;
   std::cout << "Request path: " << this->request.getPath() << std::endl;
 
-  data = readFile(this->request.getPath());
+  try {
+    data = readFile(this->request.getPath());
+  } catch (util::FileOpenException& e) {
+    throw NOT_FOUND;
+  }
 
   return data;
 }

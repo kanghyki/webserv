@@ -1,8 +1,20 @@
 #include "HttpResponse.hpp"
 
+/*
+ * -------------------------- Constructor --------------------------
+ */
+
 HttpResponse::HttpResponse() {}
 
+/*
+ * -------------------------- Destructor ---------------------------
+ */
+
 HttpResponse::~HttpResponse() {}
+
+/*
+ * -------------------------- Setter -------------------------------
+ */
 
 void HttpResponse::setStatusCode(const HttpStatus statusCode) {
   this->statusCode = statusCode;

@@ -1,4 +1,5 @@
 #include "./Http.hpp"
+#include "HttpResponseBuilder.hpp"
 #include <sys/select.h>
 #include <unistd.h>
 
@@ -12,26 +13,8 @@ std::string Http::processing(std::string s) {
   //////// parse----------------------------------
   HttpRequest request(s);
   if (request.isError()) {
-    //!!!!!! parse-error----------------------------
-    std::cout << "REQUEST ERROR" << std::endl;
     std::cout << request.getErrorStatus() << std::endl;
-
-    std::string data;
-    std::vector<int> sl = this->config.getErrorPageStatus();
-    std::vector<int>::iterator it = std::find(sl.begin(), sl.end(), 404);
-    if (it != sl.end()) {
-      data = HttpDataFecther::readFile(this->config.getErrorPagePath());
-    }
-//    std::map<int, std::string> ep = this->config.getErrorPage();
-//    if (ep.find(404) != ep.end()) {
-//    }
-    ret = HttpResponseBuilder::getBuilder()
-      .statusCode(NOT_FOUND)
-      .httpVersion("HTTP/1.1")
-      .header("date", getNowStr())
-      .body(data)
-      .build()
-      .toString();
+    ret = getErrorPage(NOT_FOUND);
   }
   //////// parse-end------------------------------
   else {
@@ -46,24 +29,31 @@ std::string Http::processing(std::string s) {
         .body(data)
         .build()
         .toString();
-    } catch (std::exception &e) {
-      //!!!!!! fetch-error----------------------------
-      std::cout << "FETCH ERROR" << std::endl;
-      std::string data;
-      std::vector<int> sl = this->config.getErrorPageStatus();
-      std::vector<int>::iterator it = std::find(sl.begin(), sl.end(), 404);
-      if (it != sl.end()) {
-        data = HttpDataFecther::readFile(this->config.getErrorPagePath());
-      }
-      ret = HttpResponseBuilder::getBuilder()
-        .statusCode(NOT_FOUND)
-        .httpVersion("HTTP/1.1")
-        .header("date", getNowStr())
-        .body(data)
-        .build()
-        .toString();
+    } catch (HttpStatus NOT_FOUND) {
+      //!!!!!! not-found-error----------------------------
+      ret = getErrorPage(NOT_FOUND);
     }
     //////// fetch-end------------------------------
   }
+  return ret;
+}
+
+std::string Http::getErrorPage(HttpStatus status) {
+  std::string ret;
+  std::string data;
+  std::vector<int> sl = this->config.getErrorPageStatus();
+  std::vector<int>::iterator it = std::find(sl.begin(), sl.end(), status);
+ 
+  if (it != sl.end())
+    data = HttpDataFecther::readFile(this->config.getErrorPagePath());
+
+  ret = HttpResponseBuilder::getBuilder()
+    .statusCode(status)
+    .httpVersion()
+    .header("date", getNowStr())
+    .body(data)
+    .build()
+    .toString();
+
   return ret;
 }

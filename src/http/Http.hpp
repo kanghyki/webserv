@@ -19,6 +19,8 @@ class Http {
 
   private:
     ServerConfig  config;
+  
+    std::string getErrorPage(HttpStatus status);
 };
 
 #endif
