@@ -80,8 +80,8 @@ std::pair<std::string, std::string> HttpRequest::splitField(const std::string& l
   int pos;
 
   if ((pos = line.find(":")) == std::string::npos) throw BAD_REQUEST;
-  field = util::trimSpace(line.substr(0, pos));
-  value = util::trimSpace(line.substr(pos + 1));
+  field = util::toLowerStr(util::trimSpace(line.substr(0, pos)));
+  value = util::toLowerStr(util::trimSpace(line.substr(pos + 1)));
 
   return std::make_pair(field, value);
 }
@@ -98,7 +98,7 @@ std::string HttpRequest::getField(const std::string& field) const {
   std::map<std::string, std::string>::const_iterator it;
   std::string                                        ret;
 
-  if ((it = this->field.find(field)) != this->field.end())
+  if ((it = this->field.find(util::toLowerStr(field))) != this->field.end())
     ret = it->second;
 
   return ret;
