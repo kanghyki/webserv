@@ -41,6 +41,9 @@ class Server {
     int fdMax;
     fd_set reads;
     fd_set writes;
+    std::map<int, time_t> timeout;
+    static const int TIME_MAX = 5;
+    bool checkTimeout(int fd);
 
     sock in;
 

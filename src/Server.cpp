@@ -83,6 +83,21 @@ inline void Server::fdSetInit(fd_set& fs, int fd) {
   FD_SET(fd, &fs);
 }
 
+#include <time.h>
+bool Server::checkTimeout(int fd) {
+  std::map<int, time_t>::iterator it;
+
+  if ((it = this->timeout.find(fd)) != this->timeout.end()) {
+    time_t initTime = it->second;
+    time_t currTime;
+    time(&currTime);
+    if (currTime - initTime> TIME_MAX)
+      return false;
+  }
+  return true;
+}
+
+
 void Server::run(void) {
   struct timeval t;
   t.tv_sec = 1;
@@ -95,6 +110,16 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
+    std::map<int, time_t> cp = this->timeout;
+    for (auto it = cp.begin(); it != cp.end(); ++it) {
+      if (checkTimeout((*it).first) == false) {
+        FD_CLR((*it).first, &this->getReads());
+        close((*it).first);
+        std::cout << "Timeout: " << (*it).first << std::endl;
+        this->timeout.erase((*it).first);
+      }
+    }
+
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
         if (i == this->getServFd())
@@ -104,6 +129,7 @@ void Server::run(void) {
       }
       if (FD_ISSET(i, &writesCpy))
         closeSocket(i);
+
     }
   }
   close(this->getServFd());
@@ -123,11 +149,17 @@ int Server::acceptConnect() {
   return fd;
 }
 
-
 void Server::receiveData(int fd) {
   char buf[BUF_SIZE + 1];
   int recv_size;
   int DONE = 0;
+
+  std::map<int, time_t>::iterator it;
+  if ((it = this->timeout.find(fd)) == this->timeout.end()) {
+    time_t initTime;
+    time(&initTime);
+    this->timeout.insert(std::make_pair(fd, initTime));
+  }
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;
