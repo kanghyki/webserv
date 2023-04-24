@@ -20,9 +20,6 @@ std::string HttpDataFecther::fetch() const {
 }
 
 std::string HttpDataFecther::readDirectory() const {
-  if (this->request.getPath() == "/favicon.ico")
-    return "";
-
   std::string dirpath = "." + this->config.getRoot() + this->request.getPath();
   DIR* directory = opendir(dirpath.c_str());
   if (directory == NULL) {

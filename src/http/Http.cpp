@@ -10,30 +10,19 @@ Http::~Http() {}
 std::string Http::processing(std::string s) {
   std::string ret;
 
-  //////// parse----------------------------------
-  HttpRequest request(s);
-  if (request.isError()) {
-    std::cout << request.getErrorStatus() << std::endl;
-    ret = getErrorPage(NOT_FOUND);
-  }
-  //////// parse-end------------------------------
-  else {
-    //////// fetch----------------------------------
+  try {
+    HttpRequest request(s);
     HttpDataFecther fetcher(request, this->config);
-    try {
-      std::string data = fetcher.fetch();
-      ret = HttpResponseBuilder::getBuilder()
-        .statusCode(OK)
-        .httpVersion("HTTP/1.1")
-        .header("date", getNowStr())
-        .body(data)
-        .build()
-        .toString();
-    } catch (HttpStatus NOT_FOUND) {
-      //!!!!!! not-found-error----------------------------
-      ret = getErrorPage(NOT_FOUND);
-    }
-    //////// fetch-end------------------------------
+    std::string data = fetcher.fetch();
+    ret = HttpResponseBuilder::getBuilder()
+      .statusCode(OK)
+      .httpVersion("HTTP/1.1")
+      .header("date", getNowStr())
+      .body(data)
+      .build()
+      .toString();
+  } catch (HttpStatus status) {
+    ret = getErrorPage(status);
   }
   return ret;
 }

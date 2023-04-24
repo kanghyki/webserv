@@ -130,21 +130,23 @@ void Server::receiveData(int fd) {
   int DONE = 0;
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
+  std::cout << "recv_size" << recv_size << std::endl;
   if (recv_size <= 0) {
-    close(fd);
-    FD_CLR(fd, &this->getReads());
-    return ;
+    throw "error";
   }
   buf[recv_size] = 0;
   this->data[fd] += buf;
-  // FIXME: 임시 조건
   if (recv_size < BUF_SIZE) {
     shutdown(fd, SHUT_RD);
     FD_CLR(fd, &this->getReads());
     std::cout << "@---this->data[" << fd << "]" << std::endl;
-    std::cout << this->data[fd] << std::endl;
+    std::cout << this->data[fd];
     std::cout << "@---" << std::endl;
     sendData(fd);
+    this->data[fd] = "";
+//    close(fd);
+//    FD_CLR(fd, &this->getReads());
+    return ;
   }
 }
 
@@ -154,6 +156,7 @@ void Server::receiveData(int fd) {
 void Server::sendData(int fd) {
   Http http(this->config);
   std::string response;
+  FD_SET(fd, &this->getWrites());
 
   try {
     response = http.processing(this->data[fd]);
@@ -166,7 +169,6 @@ void Server::sendData(int fd) {
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";
-  this->data[fd].clear();
 }
 
 void Server::closeSocket(int fd) {
