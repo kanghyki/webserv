@@ -43,6 +43,10 @@ fd_set& Server::getWrites(void) {
   return this->writes;
 }
 
+const std::map<int, time_t>& Server::getTimeRecord() const {
+  return this->timeout;
+}
+
 /*
  * -------------------------- Setter -------------------------------
  */
@@ -83,20 +87,33 @@ inline void Server::fdSetInit(fd_set& fs, int fd) {
   FD_SET(fd, &fs);
 }
 
-#include <time.h>
-bool Server::checkTimeout(int fd) {
-  std::map<int, time_t>::iterator it;
-
-  if ((it = this->timeout.find(fd)) != this->timeout.end()) {
-    time_t initTime = it->second;
-    time_t currTime;
-    time(&currTime);
-    if (currTime - initTime> TIME_MAX)
-      return false;
-  }
-  return true;
+void Server::removeTimeRecord(int fd) {
+  this->timeout.erase(fd);
 }
 
+void Server::DisconnectTimeoutClient() {
+  const std::map<int, time_t>&  record = getTimeRecord();
+  std::vector<int>              removeList;
+
+  for (std::map<int, time_t>::const_iterator it = record.begin(); it != record.end(); ++it) {
+    time_t reqTime = it->second;
+    time_t curTime;
+
+    time(&curTime);
+    if (curTime - reqTime > TIMEOUT_MAX) {
+      int fd = it->first;
+
+      // 408 error
+      FD_CLR(fd, &this->getReads());
+      close(fd);
+      std::cout << "timeout client: " << fd << std::endl;
+      removeList.push_back(fd);
+    }
+  }
+
+  for (int i = 0; i < removeList.size(); ++i)
+    removeTimeRecord(removeList[i]);
+}
 
 void Server::run(void) {
   struct timeval t;
@@ -110,15 +127,7 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-    std::map<int, time_t> cp = this->timeout;
-    for (auto it = cp.begin(); it != cp.end(); ++it) {
-      if (checkTimeout((*it).first) == false) {
-        FD_CLR((*it).first, &this->getReads());
-        close((*it).first);
-        std::cout << "Timeout: " << (*it).first << std::endl;
-        this->timeout.erase((*it).first);
-      }
-    }
+    DisconnectTimeoutClient();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
