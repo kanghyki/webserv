@@ -4,15 +4,15 @@
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
 const std::string HttpRequest::CRLF = "\r\n";
 
-//HttpRequest::HttpRequest(std::string request) {
-//  std::vector<std::string>            vs;
-//
-//  vs = util::split(request, CRLF + CRLF);
-//  parseHeader(vs[0]);
-//  this->body = vs[1];
-//}
+HttpRequest::HttpRequest(std::string request) {
+  std::vector<std::string>            vs;
 
-HttpRequest::HttpRequest() {}
+  vs = util::split(request, CRLF + CRLF);
+  parseHeader(vs[0]);
+  setBody(vs[1]);
+}
+
+//HttpRequest::HttpRequest() {}
 
 HttpRequest::~HttpRequest() {}
 

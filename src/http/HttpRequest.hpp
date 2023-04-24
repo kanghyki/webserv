@@ -6,7 +6,7 @@
 /*   By: kanghyki <kanghyki@student.42seoul.>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/24 18:33:07 by kanghyki          #+#    #+#             */
-/*   Updated: 2023/04/24 18:47:38 by kanghyki         ###   ########.fr       */
+/*   Updated: 2023/04/24 20:57:38 by kanghyki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,8 +57,8 @@ namespace request_field {
 
 class HttpRequest {
   public:
-    HttpRequest();
-//    HttpRequest(std::string request);
+//    HttpRequest();
+    HttpRequest(std::string request);
     ~HttpRequest();
 
     void                                parseHeader(const std::string &h);
