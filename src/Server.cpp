@@ -32,7 +32,6 @@ void Server::socketInit(ServerConfig config) {
   this->socketList.push_back(Socket(config));
 }
 
-#include <unistd.h>
 void Server::run() {
   HttpConfig http = config.getHttpConfig()[0];
   std::map<int, int> record;

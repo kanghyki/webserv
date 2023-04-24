@@ -64,12 +64,10 @@ inline int Socket::socketInit(void) {
 }
 
 inline void Socket::socketaddrInit(const std::string& host, int port, sock& in) {
-  (void)host;
-
   if (!memset(&in, 0, sizeof(in)))
     throw Socket::InitException();
   in.sin_family = AF_INET;
-  in.sin_addr.s_addr = htonl(INADDR_ANY);
+  inet_pton(AF_INET, host.c_str(), &(in.sin_addr));
   in.sin_port = htons(port);
 }
 
