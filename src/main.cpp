@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
   try {
     ConfigParser p;
     Config a = p.parse(argv[1]);
-    Server server(a);
+    Server server(a.getHttpConfig()[0].getServerConfig()[0]);
     server.run();
   } catch (std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;
