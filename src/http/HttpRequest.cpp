@@ -1,6 +1,21 @@
 #include "./HttpRequest.hpp"
 
-HttpRequest::HttpRequest(): errorFlag(false), errorStatus(OK) {}
+HttpRequest::HttpRequest(std::string request): errorFlag(false), errorStatus(OK) {
+  std::vector<std::string> ss = util::split(request, "\r\n");
+  parseStatusLine(ss[0]);
+
+  //  for (std::vector<std::string>::iterator it = ss.begin(); it != ss.end(); ++it) {
+  //    if (*it == "\r\n") {
+  //      break ;
+  //    }
+  //    std::vector<std::string> itss = util::split(*it, ":");
+  //    if (itss.size() != 2) {
+  //      this->errorFlag = true;
+  //      this->errorStatus = 400;
+  //    }
+  //    this->header.insert(std::make_pair(itss[0], itss[1]));
+  //  }
+}
 
 HttpRequest::~HttpRequest() {}
 
@@ -53,23 +68,6 @@ void HttpRequest::parseStatusLine(const std::string& line) {
   this->method = ss[0]; 
   this->path = ss[1];
   this->version = ss[2];
-}
-
-void HttpRequest::parse(const std::string &s) {
-  std::vector<std::string> ss = util::split(s, "\r\n");
-  parseStatusLine(ss[0]);
-
-//  for (std::vector<std::string>::iterator it = ss.begin(); it != ss.end(); ++it) {
-//    if (*it == "\r\n") {
-//      break ;
-//    }
-//    std::vector<std::string> itss = util::split(*it, ":");
-//    if (itss.size() != 2) {
-//      this->errorFlag = true;
-//      this->errorStatus = 400;
-//    }
-//    this->header.insert(std::make_pair(itss[0], itss[1]));
-//  }
 }
 
 // getter

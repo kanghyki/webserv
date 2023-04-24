@@ -45,7 +45,7 @@ namespace request_field {
 
 class HttpRequest {
   public:
-    HttpRequest();
+    HttpRequest(std::string request);
     ~HttpRequest();
 
     std::string getMethod() const;
@@ -53,8 +53,6 @@ class HttpRequest {
     std::string getVersion() const;
     bool        getErrorStatus() const;
     bool        isError() const;
-
-    void        parse(const std::string &s);
 
   private:
     bool                                errorFlag;

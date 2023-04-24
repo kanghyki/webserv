@@ -1,7 +1,5 @@
 #include "Socket.hpp"
-
-/*
- * -------------------------- Constructor --------------------------
+/* * -------------------------- Constructor --------------------------
  */
 
 Socket::Socket(ServerConfig config) : data(10000), host(config.getHost()), port(config.getPort()), \
@@ -14,7 +12,6 @@ Socket::Socket(ServerConfig config) : data(10000), host(config.getHost()), port(
   this->fdMax = this->servFd;
   this->config = config;
 }
-
 
 /*
  * -------------------------- Destructor ---------------------------
@@ -131,101 +128,43 @@ void Socket::receiveData(int fd) {
   int DONE = 0;
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
-  if (recv_size == -1)
+  if (recv_size <= 0) {
+    close(fd);
+    FD_CLR(fd, &this->getReads());
     return ;
+  }
   buf[recv_size] = 0;
   this->data[fd] += buf;
   // FIXME: 임시 조건
   if (recv_size < BUF_SIZE) {
     shutdown(fd, SHUT_RD);
     FD_CLR(fd, &this->getReads());
-
+    std::cout << "@---this->data[" << fd << "]" << std::endl;
     std::cout << this->data[fd] << std::endl;
-    // HttpRequest request(this->data[fd]);
-    //
-    // HttpDataFetcher fetcher(request);
-    //
-    // HttpResponseBuilder rb;
-    // HttpResponse response = rb.setRequest(request).setFetcher(fecther).build();
-    //
-    // std::string ret = response.toString();
-    // sendData(fd);
-
+    std::cout << "@---" << std::endl;
     sendData(fd);
-    // 파싱하고 지지고 볶고, 데이터 전송
   }
 }
 
-#include "../Worker.hpp"
+#include "../http/Http.hpp"
+#include "../http/HttpStatus.hpp"
 
 void Socket::sendData(int fd) {
-  int READ = 0;
-  int WRITE = 1;
-  static bool is_on = false;
-  static int fd1[2], fd2[2];
-  FD_SET(fd, &this->getWrites());
-//  std::string data("HTTP/1.1 200 OK\r\n\
-//      Content-Length: 2048\r\n\
-//      Content-Type: text/html\r\n\r\n");
+  Http http(this->config);
+  std::string response;
 
-
-  if (is_on == false) {
-    pipe(fd1);
-    pipe(fd2);
-    int pid = fork();
-    if (pid == 0) {
-      close(fd1[WRITE]);
-      close(fd2[READ]);
-      Worker worker(this->config, fd1[READ], fd2[WRITE]);
-      worker.routine();
-      exit(1);
-    }
-
-    close(fd1[READ]);
-    close(fd2[WRITE]);
-    is_on = true;
+  try {
+    response = http.processing(this->data[fd]);
+  } catch (std::exception &e) {
+    // TODO:: Error page
+    response = "HTTP/1.1 500 " + getStatusText(INTERNAL_SERVER_ERROR) + "\r\n\r\n";
   }
 
-  write(fd1[WRITE], this->data[fd].c_str(), this->data[fd].length());
-
-  int zzzzzzz = 10000;
-  char buf[zzzzzzz + 1];
-  int recv_size;
-  int DONE = 0;
-
-  recv_size = read(fd2[READ], buf, zzzzzzz);
-  buf[recv_size] = 0;
-  std::string data(buf);
-  std::cout << data << std::endl;
-
-
-//  HttpDataFecther h;
-//
-//  std::string data;
-//  std::cout << this->config.getLocationConfig().size() << std::endl;
-//  try {
-//    for (int i = 0; i < this->config.getLocationConfig().size(); ++i) {
-//      if ("." + this->config.getLocationConfig()[i].getPath() == request.getPath()) {
-//        if (this->config.getLocationConfig()[i].isAutoIndex()) {
-//          data = h.readDirectory(request.getPath());
-//        }
-//        else {
-//          data = h.readFile(request.getPath());
-//        }
-//      }
-//      else {
-//        data = h.readFile(request.getPath());
-//      }
-//    }
-//  } catch (std::exception &e) {
-//    data = "HTTP/1.1 404 not-found\r\n\r\n";
-//  }
-//  data += util::readFile("./html/index.html");
-  if (send(fd, data.c_str(), strlen(data.c_str()), 0) == SOCK_ERROR)
+  if (send(fd, response.c_str(), response.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";
-  this->data[fd] = "";
+  this->data[fd].clear();
 }
 
 void Socket::closeSocket(int fd) {
