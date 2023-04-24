@@ -15,11 +15,9 @@ SRCS_DIR		=	./src
 CONFIG_DIR		=	./src/config
 PARSER_DIR		=	./src/config/parser
 HTTP_DIR			= ./src/http
-NETWORK_DIR		= ./src/network
 
 SRCS			=	main.cpp\
 						Server.cpp\
-						Socket.cpp\
 						Config.cpp\
 						CommonConfig.cpp\
 						HttpConfig.cpp\
@@ -44,7 +42,7 @@ CPPFLAGS  =	-I $(INCS)
 #CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
 RM				=	rm -rf
 
-vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR) $(NETWORK_DIR)
+vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR)
 
 all: $(NAME)
 
