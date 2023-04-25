@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hyeongki <hyeongki@student.42seoul.kr>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/04/25 11:11:59 by kanghyki          #+#    #+#             */
+/*   Updated: 2023/04/25 14:26:52 by hyeongki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
@@ -6,11 +18,12 @@
 # include "./http/HttpRequest.hpp"
 # include "./http/HttpResponse.hpp"
 
-# include <iostream>
-# include <fcntl.h>
-# include <unistd.h>
-# include <sys/socket.h>
 # include <arpa/inet.h>
+# include <fcntl.h>
+# include <iostream>
+# include <sys/socket.h>
+# include <time.h>
+# include <unistd.h>
 # include <vector>
 
 class Server {
@@ -20,12 +33,6 @@ class Server {
     Server(ServerConfig config);
     ~Server(void);
 
-    const int getServFd(void) const;
-    const int getFdMax(void) const;
-    void setFdMax(int fdMax);
-    fd_set& getReads(void);
-    fd_set& getWrites(void);
-
     void run();
 
   private:
@@ -34,6 +41,7 @@ class Server {
     static const int FD_CLOSED = -1;
     static const int BUF_SIZE = 1024;
     static const int MANAGE_FD_MAX = 1024;
+    static const int TIMEOUT_MAX = 5;
 
     std::vector<std::string> data;
     std::vector<int> contentLengths;
@@ -44,13 +52,20 @@ class Server {
     int fdMax;
     fd_set reads;
     fd_set writes;
-
     sock in;
+
+    const int getServFd(void) const;
+    const int getFdMax(void) const;
+    fd_set& getReads(void);
+    fd_set& getWrites(void);
+
+    void setFdMax(int fdMax);
 
     inline int socketInit(void);
     inline void socketaddrInit(const std::string& host, int port, sock& in);
     inline void socketOpen(int servFd, sock& in);
     inline void fdSetInit(fd_set& fs, int fd);
+
 
     int acceptConnect();
     void receiveData(int fd);
@@ -71,6 +86,14 @@ class Server {
     void              clearContentLength(int fd);
     void              clearHeaderPos(int fd);
     void              clearReceived(int fd);
+
+    std::map<int, time_t> timeout;
+    const std::map<int, time_t>& getTimeRecord() const;
+    void removeData(int fd);
+    void removeTimeRecord(int fd);
+    bool existsTimeRecord(int fd);
+    void appendTimeRecord(int fd);
+    void DisconnectTimeoutClient();
 
     ServerConfig config;
 

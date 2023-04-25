@@ -1,6 +1,6 @@
 #include "./ConfigTest.hpp"
 
-void ConfigTest::ParseTest1() {
+void ConfigTest::parseTest1() {
   ConfigParser cp;
   Config result = cp.parse("./test1.conf");
   ServerConfig sc = result.getHttpConfig()[0].getServerConfig()[0];
@@ -36,4 +36,24 @@ void ConfigTest::ParseTest1() {
   for (auto it = error_page_status.begin(), it2 = expect2.begin(); it != error_page_status.end(); ++it, ++it2) {
     AssertEqual((*it), (*it2));
   }
+}
+
+void ConfigTest::defaultConfig() {
+  ConfigParser cp;
+  Config result = cp.parse("./test2.conf");
+
+  //http
+  AssertEqual(8192, result.getHttpConfig()[0].getClientBodySize());
+  AssertEqual(std::string("/html"), result.getHttpConfig()[0].getRoot());
+
+  //server
+  AssertEqual(std::string("127.0.0.1"), result.getHttpConfig()[0].getServerConfig()[0].getHost());
+  AssertEqual(8192, result.getHttpConfig()[0].getServerConfig()[0].getClientBodySize());
+  AssertEqual(std::string("/html"), result.getHttpConfig()[0].getServerConfig()[0].getRoot());
+
+  // location
+  AssertEqual(std::string("/hello"), result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getPath());
+  AssertEqual(false, result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].isAutoIndex());
+  AssertEqual(8192, result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getClientBodySize());
+  AssertEqual(std::string("/html"), result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getRoot());
 }

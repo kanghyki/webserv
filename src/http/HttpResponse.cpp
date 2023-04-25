@@ -1,10 +1,12 @@
 #include "HttpResponse.hpp"
 
+const std::string HttpResponse::version = "HTTP/1.1";
+
 /*
  * -------------------------- Constructor --------------------------
  */
 
-HttpResponse::HttpResponse() {}
+HttpResponse::HttpResponse(): statusCode(UNDEFINED), statusText() {}
 
 /*
  * -------------------------- Destructor ---------------------------
@@ -21,34 +23,35 @@ void HttpResponse::setStatusCode(const HttpStatus statusCode) {
   this->statusText = getStatusText(statusCode);
 }
 
-void HttpResponse::setHttpVersion(const std::string& version) {
-  this->version = version;
-}
-
 void HttpResponse::setHeader(const std::string& field, const std::string& value) {
   this->header.insert(std::make_pair(field, value));
 }
 
 void HttpResponse::setBody(const std::string& body) {
-  setHeader("Content-length", std::to_string(body.length()));
+  setHeader(request_field::CONTENT_LENGTH, util::itoa(body.length()));
   this->body = body;
 }
 
 std::string HttpResponse::toString() {
   std::string ret;
 
-  ret = this->version
-    + " "
-    + std::to_string(this->statusCode)
-    + " "
-    + this->statusText
-    + "\r\n";
+  if (this->statusCode == UNDEFINED)
+    throw std::runtime_error("status code unsetted");
+  ret = makeStatusLine();
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
-    ret += (*it).first + ": " + (*it).second + "\r\n";
-  if (this->body.size() > 0)
-    ret += "\r\n" + this->body;
+    ret += makeHeaderField(it->first, it->second);
+  ret += "\r\n";
+  ret += this->body;
 
   return ret;
+}
+
+std::string HttpResponse::makeStatusLine() const {
+  return this->version + " " + util::itoa(this->statusCode) + " " + this->statusText + "\r\n";
+}
+
+std::string HttpResponse::makeHeaderField(const std::string& fieldName, const std::string& value) const {
+  return fieldName + ": " + value + "\r\n";
 }
 
 // TODO: move

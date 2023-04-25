@@ -1,17 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   HttpRequest.hpp                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kanghyki <kanghyki@student.42seoul.>       +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/24 18:33:07 by kanghyki          #+#    #+#             */
-/*   Updated: 2023/04/24 21:53:24 by hyeongki         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#ifndef HTTPREQUEST_HPP
-# define HTTPREQUEST_HPP
+#ifndef HTTP_REQUEST_HPP
+# define HTTP_REQUEST_HPP
 
 # include "./HttpStatus.hpp"
 # include "../Util.hpp"

@@ -72,6 +72,14 @@ namespace util {
     return s;
   }
 
+  std::string itoa(int n) {
+    std::stringstream ss;
+
+    ss << n;
+
+    return ss.str();
+  }
+
 
   const char* StringFoundException::what() const throw() {
     return "Target not found";

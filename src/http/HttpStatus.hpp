@@ -4,6 +4,7 @@
 # include <string>
 
 enum HttpStatus {
+  UNDEFINED                     = 0,
   // 1xx
   CONTINUE                      = 100,
   SWITCHING_PROTOCOLS           = 101,
@@ -31,7 +32,7 @@ enum HttpStatus {
   NOT_FOUND                     = 404,
   METHOD_NOT_ALLOWED            = 405,
   NOT_ACCEPTABLE                = 406,
-  PROXY_AUTHENTICATION_REQUIred = 407,
+  PROXY_AUTHENTICATION_REQUIRED = 407,
   REQUEST_TIMEOUT               = 408,
   CONFLICT                      = 409,
   GONE                          = 410,

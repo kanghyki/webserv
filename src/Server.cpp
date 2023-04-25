@@ -45,6 +45,10 @@ fd_set& Server::getWrites(void) {
   return this->writes;
 }
 
+const std::map<int, time_t>& Server::getTimeRecord() const {
+  return this->timeout;
+}
+
 /*
  * -------------------------- Setter -------------------------------
  */
@@ -85,6 +89,53 @@ inline void Server::fdSetInit(fd_set& fs, int fd) {
   FD_SET(fd, &fs);
 }
 
+void Server::removeData(int fd) {
+  this->data[fd].clear();
+}
+
+void Server::removeTimeRecord(int fd) {
+  this->timeout.erase(fd);
+}
+
+bool Server::existsTimeRecord(int fd) {
+  if (this->timeout.find(fd) != this->timeout.end())
+    return true;
+  return false;
+}
+
+void Server::appendTimeRecord(int fd) {
+  time_t initTime;
+
+  time(&initTime);
+  this->timeout.insert(std::make_pair(fd, initTime));
+}
+
+void Server::DisconnectTimeoutClient() {
+  const std::map<int, time_t>&  record = getTimeRecord();
+  std::vector<int>              removeList;
+
+  for (std::map<int, time_t>::const_iterator it = record.begin(); it != record.end(); ++it) {
+    time_t reqTime = it->second;
+    time_t curTime;
+
+    time(&curTime);
+    if (curTime - reqTime > TIMEOUT_MAX) {
+      int fd = it->first;
+
+      // 408 error
+      FD_CLR(fd, &this->getReads());
+      close(fd);
+      std::cout << "timeout client: " << fd << std::endl;
+      removeList.push_back(fd);
+    }
+  }
+
+  for (int i = 0; i < removeList.size(); ++i) {
+    removeTimeRecord(removeList[i]);
+    removeData(removeList[i]);
+  }
+}
+
 void Server::run(void) {
   struct timeval t;
   t.tv_sec = 1;
@@ -97,6 +148,8 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
+    DisconnectTimeoutClient();
+
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
         if (i == this->getServFd())
@@ -106,6 +159,7 @@ void Server::run(void) {
       }
       if (FD_ISSET(i, &writesCpy))
         closeSocket(i);
+
     }
   }
   close(this->getServFd());
@@ -125,11 +179,13 @@ int Server::acceptConnect() {
   return fd;
 }
 
-
 void Server::receiveData(int fd) {
   char buf[BUF_SIZE + 1];
   int recv_size;
   int DONE = 0;
+
+  if (existsTimeRecord(fd) == false)
+    appendTimeRecord(fd);
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;
@@ -155,9 +211,9 @@ void Server::checkContentLength(int fd) {
       size_t end = getData(fd).find("\r\n", start);
       setContentLength(fd, std::atoi(this->data[fd].substr(start + 16, end - start + 1).c_str()));
     }
-    else
-      receiveDone(fd);
   }
+  if (getContentLength(fd) == 0)
+      receiveDone(fd);
   if (getContentLength(fd) > 0) {
     if (getContentLength(fd) == getData(fd).substr(getHeaderPos(fd) + 4).length())
       receiveDone(fd);
@@ -169,22 +225,23 @@ void Server::checkContentLength(int fd) {
 
 void Server::sendData(int fd) {
   Http http(this->config);
-  std::string response;
+  HttpResponseBuilder response;
   FD_SET(fd, &this->getWrites());
 
   try {
-    HttpRequest req(this->data[fd]);
+    response = http.processing(getData(fd));
     clearReceived(fd);
-    response = http.processing(req);
   } catch (std::exception &e) {
     // TODO:: Error page
-    response = "HTTP/1.1 500 " + getStatusText(INTERNAL_SERVER_ERROR) + "\r\n\r\n";
+    response.statusCode(INTERNAL_SERVER_ERROR).body("ERROR");
   }
 
-  if (send(fd, response.c_str(), response.length(), 0) == SOCK_ERROR)
+  std::string s = response.build().toString();
+  if (send(fd, s.c_str(), s.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
-  else
+  else 
     std::cout << "[Log] send data\n";
+  removeTimeRecord(fd);
 }
 
 void Server::closeSocket(int fd) {
