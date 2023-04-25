@@ -11,8 +11,7 @@ void ConfigTest::parseTest1() {
   std::vector<std::string> index = sc.getIndex();
   int client_body_buffer_size = sc.getClientBodySize();
   std::string root = sc.getRoot();
-  std::string error_page_path = sc.getErrorPagePath();
-  std::vector<int> error_page_status = sc.getErrorPageStatus();
+  std::map<int, std::string> error_page = sc.getErrorPage();
 
   AssertEqual(port, (short)80);
   AssertEqual(host, std::string("localhost"));
@@ -30,12 +29,18 @@ void ConfigTest::parseTest1() {
   }
   AssertEqual(client_body_buffer_size, 30);
   AssertEqual(root, std::string("/"));
-  AssertEqual(error_page_path, std::string("/html/error.html"));
-  std::vector<int> expect2;
-  expect2.push_back(404);
-  expect2.push_back(405);
-  for (auto it = error_page_status.begin(), it2 = expect2.begin(); it != error_page_status.end(); ++it, ++it2) {
-    AssertEqual((*it), (*it2));
+  std::map<int, std::string> expect2;
+  expect2.insert(std::make_pair(404, "/html/error.html"));
+  expect2.insert(std::make_pair(405, "/html/error.html"));
+  expect2.insert(std::make_pair(500, "/html/serror.html"));
+  AssertEqual(expect2.size(), error_page.size());
+  for (auto it = expect2.begin(); it != expect2.end(); ++it) {
+    std::string s;
+    std::map<int, std::string>::iterator it2 = error_page.find(it->first);
+    if (it2 != error_page.end()) {
+      s = it2->second;
+    }
+    AssertEqual(it->second, it2->second);
   }
 }
 

@@ -226,18 +226,19 @@ bool Server::checkContentLength(int fd) {
 #include "./http/HttpStatus.hpp"
 
 void Server::sendData(int fd) {
-  Http http(this->config);
+  std::string         s;
+  Http                http(this->config);
   HttpResponseBuilder response;
-  FD_SET(fd, &this->getWrites());
 
+  FD_SET(fd, &this->getWrites());
   try {
     response = http.processing(getData(fd));
     clearReceived(fd);
+    s = response.build().toString();
   } catch (HttpStatus status) {
     response = http.getErrorPage(status);
   }
 
-  std::string s = response.build().toString();
   if (send(fd, s.c_str(), s.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else 

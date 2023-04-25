@@ -24,8 +24,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
     this->root = obj.getRoot();
-    this->errorPagePath = obj.getErrorPagePath();
-    this->errorPageStatus = obj.getErrorPageStatus();
+    this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
 
     this->port = obj.getPort();

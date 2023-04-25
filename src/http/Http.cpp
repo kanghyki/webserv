@@ -37,23 +37,14 @@ HttpResponseBuilder Http::getMethod(HttpRequest& req) {
 
 HttpResponseBuilder Http::postMethod(HttpRequest& req) {
   std::cout << "POST" << std::endl;
-  if (access(("." + req.getPath()).c_str(), F_OK) == 0) {
-    return HttpResponseBuilder::getBuilder()
-      .statusCode(BAD_REQUEST)
-      .header("date", getNowStr());
-  }
+  if (access(("." + req.getPath()).c_str(), F_OK) == 0) throw BAD_REQUEST;
+
   std::ofstream out("." + req.getPath(), std::ofstream::out);
-  if (!out.is_open()) {
-    return HttpResponseBuilder::getBuilder()
-      .statusCode(NOT_FOUND)
-      .header("date", getNowStr());
-  }
+  if (!out.is_open()) throw NOT_FOUND;
+
   out.write(req.getBody().c_str(), req.getBody().length());
-  if (out.fail() || out.bad() || out.eof()) {
-    return HttpResponseBuilder::getBuilder()
-      .statusCode(INTERNAL_SERVER_ERROR)
-      .header("date", getNowStr());
-  }
+  if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
+
   return HttpResponseBuilder::getBuilder()
     .statusCode(CREATED)
     .header("date", getNowStr())
@@ -65,19 +56,12 @@ HttpResponseBuilder Http::deleteMethod(HttpRequest& req) {
   DIR* dir = opendir(("." + req.getPath()).c_str());
   if (dir) {
     closedir(dir);
-    return HttpResponseBuilder::getBuilder()
-      .statusCode(BAD_REQUEST)
-      .header("date", getNowStr())
-      .body("error: ." + req.getPath());
+    throw BAD_REQUEST;
   }
-  if (std::remove(("." + req.getPath()).c_str()) == 0) {
-    return HttpResponseBuilder::getBuilder()
-      .statusCode(OK)
-      .header("date", getNowStr());
-  }
+  if (std::remove(("." + req.getPath()).c_str()) == -1) throw NOT_FOUND;
   return HttpResponseBuilder::getBuilder()
-      .statusCode(NOT_FOUND)
-      .header("date", getNowStr());
+    .statusCode(OK)
+    .header("date", getNowStr());
 }
 
 HttpResponseBuilder Http::putMethod(HttpRequest& req) {
@@ -85,36 +69,29 @@ HttpResponseBuilder Http::putMethod(HttpRequest& req) {
   DIR* dir = opendir(("." + req.getPath()).c_str());
   if (dir) {
     closedir(dir);
-    return HttpResponseBuilder::getBuilder()
-      .statusCode(BAD_REQUEST)
-      .header("date", getNowStr());
+    throw BAD_REQUEST;
   }
   std::ofstream out("." + req.getPath(), std::ofstream::out);
-  if (!out.is_open()) {
-    return HttpResponseBuilder::getBuilder()
-      .statusCode(NOT_FOUND)
-      .header("date", getNowStr());
-  }
+  if (!out.is_open()) throw NOT_FOUND;
+
   out.write(req.getBody().c_str(), req.getBody().length());
-  if (out.fail() || out.bad() || out.eof()) {
-    return HttpResponseBuilder::getBuilder()
-      .statusCode(INTERNAL_SERVER_ERROR)
-      .header("date", getNowStr());
-  }
+  if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
+
   return HttpResponseBuilder::getBuilder()
-    .statusCode(CREATED)
+    .statusCode(OK)
     .header("date", getNowStr())
     .body(req.getBody());
 }
 
 HttpResponseBuilder Http::getErrorPage(HttpStatus status) {
-  std::string ret;
-  std::string data;
-  std::vector<int> sl = this->config.getErrorPageStatus();
-  std::vector<int>::iterator it = std::find(sl.begin(), sl.end(), status);
+  std::string                                 data;
+  std::map<int, std::string>                  m = this->config.getErrorPage();
+  std::map<int, std::string>::const_iterator  it;
  
-  if (it != sl.end())
-    data = HttpDataFecther::readFile(this->config.getErrorPagePath());
+  if ((it = m.find(status)) != m.end()) {
+    std::string path = it->second;
+    data = HttpDataFecther::readFile(path);
+  }
 
   return HttpResponseBuilder::getBuilder()
     .statusCode(status)
