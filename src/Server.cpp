@@ -3,9 +3,8 @@
 /* * -------------------------- Constructor --------------------------
  */
 
-Server::Server(ServerConfig config) : data(MANAGE_FD_MAX), host(config.getHost()), port(config.getPort()), \
-                                     servFd(SOCK_CLOSED), fdMax(FD_CLOSED), contentLengths(MANAGE_FD_MAX, -1), \
-                                     headerPos(MANAGE_FD_MAX){
+Server::Server(ServerConfig config) : recvTable(MANAGE_FD_MAX), host(config.getHost()), port(config.getPort()), \
+                                     servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
   this->servFd = socketInit();
   socketaddrInit(this->host, this->port, this->in);
   socketOpen(this->servFd, this->in);
@@ -90,7 +89,7 @@ inline void Server::fdSetInit(fd_set& fs, int fd) {
 }
 
 void Server::removeData(int fd) {
-  this->data[fd].clear();
+  this->recvTable[fd].data.clear();
 }
 
 void Server::removeTimeRecord(int fd) {
@@ -199,27 +198,24 @@ void Server::receiveData(int fd) {
 }
 
 bool Server::checkContentLength(int fd) {
-  if (getContentLength(fd) == HEADER_NOT_RECV) {
-    size_t pos = getData(fd).find("\r\n\r\n");
-    if (pos != std::string::npos) {
-      setContentLength(fd, HEADER_RECV);
-      setHeaderPos(fd, pos);
-    }
-  }
+  if (getStatus(fd) == HEADER_NOT_RECV)
+    recvHeader(fd);
 
-  if (getContentLength(fd) == HEADER_RECV) {
+  if (getStatus(fd) == HEADER_RECV) {
     size_t start = util::toLowerStr(getData(fd)).find("content-length: "); 
     if (start != std::string::npos) {
-      size_t end = getData(fd).find("\r\n", start);
-      int len = std::atoi(this->data[fd].substr(start + 16, end - start + 1).c_str());
+      int len = parseContentLength(fd, start);
       if (len == 0) return true;
-      else setContentLength(fd, len);
+      else {
+        setStatus(fd, BODY_RECV);
+        setContentLength(fd, len);
+      } 
     }
     else return true;
   }
 
-  if (getContentLength(fd) > 0) {
-    if (getContentLength(fd) == getData(fd).substr(getHeaderPos(fd) + 4).length())
+  if (getStatus(fd) == BODY_RECV) {
+    if (bodyRecvDone(fd))
       return true;
   }
 
@@ -259,52 +255,86 @@ void Server::receiveDone(int fd) {
   shutdown(fd, SHUT_RD);
   FD_CLR(fd, &this->getReads());
   std::cout << "@---this->data[" << fd << "]" << std::endl;
-  std::cout << this->data[fd];
+  std::cout << this->recvTable[fd].data;
   std::cout << "@---" << std::endl;
   sendData(fd);
   clearReceived(fd);
 }
 
 const std::string Server::getData(int fd) const {
-  return this->data[fd];
+  return this->recvTable[fd].data;
 }
 
 const int         Server::getContentLength(int fd) const {
-  return this->contentLengths[fd];
+  return this->recvTable[fd].contentLength;
 }
 
 void              Server::addData(int fd, const std::string& data) {
-  this->data[fd] += data;
+  this->recvTable[fd].data += data;
 }
 
 void              Server::setContentLength(int fd, int len) {
-  this->contentLengths[fd] = len;
+  this->recvTable[fd].contentLength = len;
 }
 
 void              Server::clearData(int fd) {
-  this->data[fd].clear();
+  this->recvTable[fd].data.clear();
 }
 
 void              Server::clearContentLength(int fd) {
-  this->contentLengths[fd] = -1;
+  this->recvTable[fd].contentLength = -1;
 }
 
 const size_t      Server::getHeaderPos(int fd) const {
-  return this->headerPos[fd];
+  return this->recvTable[fd].headerPos;
 }
 
 void              Server::setHeaderPos(int fd, size_t pos) {
-  this->headerPos[fd] = pos;
+  this->recvTable[fd].headerPos = pos;
 }
 
 void              Server::clearHeaderPos(int fd) {
-  this->headerPos[fd] = 0;
+  this->recvTable[fd].headerPos = 0;
 }
 
 void              Server::clearReceived(int fd) {
   clearData(fd);
   clearContentLength(fd);
   clearHeaderPos(fd);
+  clearStatus(fd);
+}
+
+const int         Server::getStatus(int fd) const {
+  return this->recvTable[fd].status;
+}
+
+void              Server::setStatus(int fd, recvStatus status) {
+  this->recvTable[fd].status = status;
+}
+
+void              Server::clearStatus(int fd) {
+  this->recvTable[fd].status = HEADER_NOT_RECV;
+}
+
+void              Server::recvHeader(int fd) {
+  size_t pos = getData(fd).find("\r\n\r\n");
+
+  if (pos != std::string::npos) {
+    setHeaderPos(fd, pos);
+    setStatus(fd, HEADER_RECV);
+  }
+}
+
+int              Server::parseContentLength(int fd, size_t start) {
+  size_t end = getData(fd).find("\r\n", start);
+  
+  return std::atoi(getData(fd).substr(start + 16, end - start + 1).c_str());
+}
+
+bool              Server::bodyRecvDone(int fd) {
+  if (getContentLength(fd) == getData(fd).substr(getHeaderPos(fd) + 4).length())
+    return true;
+  return false;
 }
 
 const char* Server::InitException::what() const throw() {
