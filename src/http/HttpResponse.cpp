@@ -28,15 +28,14 @@ void HttpResponse::setHeader(const std::string& field, const std::string& value)
 }
 
 void HttpResponse::setBody(const std::string& body) {
-  setHeader(request_field::CONTENT_LENGTH, util::itoa(body.length()));
   this->body = body;
 }
 
 std::string HttpResponse::toString() {
   std::string ret;
 
-  if (this->statusCode == UNDEFINED)
-    throw std::runtime_error("status code unsetted");
+  if (this->statusCode == UNDEFINED) throw INTERNAL_SERVER_ERROR;
+  setHeader(request_field::CONTENT_LENGTH, util::itoa(body.length()));
   ret = makeStatusLine();
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
     ret += makeHeaderField(it->first, it->second);
