@@ -84,13 +84,14 @@ HttpResponseBuilder Http::putMethod(HttpRequest& req) {
 }
 
 HttpResponseBuilder Http::getErrorPage(HttpStatus status) {
-  std::string ret;
-  std::string data;
-  std::vector<int> sl = this->config.getErrorPageStatus();
-  std::vector<int>::iterator it = std::find(sl.begin(), sl.end(), status);
+  std::string                                 data;
+  std::map<int, std::string>                  m = this->config.getErrorPage();
+  std::map<int, std::string>::const_iterator  it;
  
-  if (it != sl.end())
-    data = HttpDataFecther::readFile(this->config.getErrorPagePath());
+  if ((it = m.find(status)) != m.end()) {
+    std::string path = it->second;
+    data = HttpDataFecther::readFile(path);
+  }
 
   return HttpResponseBuilder::getBuilder()
     .statusCode(status)

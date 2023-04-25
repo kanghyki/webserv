@@ -9,8 +9,7 @@ LocationConfig::LocationConfig(const ServerConfig& config):
   autoIndex(DEFAULT_AUTOINDEX) {
   this->clientBodySize = config.getClientBodySize();
   this->root = config.getRoot();
-  this->errorPagePath = config.getErrorPagePath();
-  this->errorPageStatus = config.getErrorPageStatus();
+  this->errorPage = config.getErrorPage();
 }
 
 LocationConfig::~LocationConfig() {}
@@ -28,8 +27,7 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
     this->root = obj.getRoot();
-    this->errorPagePath = obj.getErrorPagePath();
-    this->errorPageStatus = obj.getErrorPageStatus();
+    this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
 
     this->path = obj.getPath();

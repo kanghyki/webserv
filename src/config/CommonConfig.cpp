@@ -7,15 +7,13 @@ const std::string CommonConfig::DEFAULT_INDEX = "index.html";
 CommonConfig::CommonConfig():
   clientBodySize(DEFAULT_CLIENT_BODY_SIZE),
   root(DEFAULT_ROOT),
-  errorPagePath(),
-  errorPageStatus(),
+  errorPage(),
   index() {}
 
 CommonConfig::CommonConfig(const CommonConfig& obj):
   clientBodySize(obj.getClientBodySize()),
   root(obj.getRoot()),
-  errorPagePath(obj.getErrorPagePath()),
-  errorPageStatus(obj.getErrorPageStatus()),
+  errorPage(obj.getErrorPage()),
   index(obj.getIndex()) {}
 
 CommonConfig::~CommonConfig() {}
@@ -24,8 +22,7 @@ CommonConfig &CommonConfig::operator=(const CommonConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
     this->root = obj.getRoot();
-    this->errorPagePath = obj.getErrorPagePath();
-    this->errorPageStatus = obj.getErrorPageStatus();
+    this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
   }
   return *this;
@@ -41,12 +38,8 @@ std::string CommonConfig::getRoot() const {
   return this->root;
 }
 
-std::string CommonConfig::getErrorPagePath() const {
-  return this->errorPagePath;
-}
-
-std::vector<int> CommonConfig::getErrorPageStatus() const {
-  return this->errorPageStatus;
+std::map<int, std::string> CommonConfig::getErrorPage() const {
+  return this->errorPage;
 }
 
 std::vector<std::string> CommonConfig::getIndex() const {
@@ -68,12 +61,8 @@ void CommonConfig::setRoot(std::string root) {
   this->root = root;
 }
 
-void CommonConfig::setErrorPagePath(std::string path) {
-  this->errorPagePath = path;
-}
-
-void CommonConfig::addErrorPageStatus(int n) {
-  this->errorPageStatus.push_back(n);
+void CommonConfig::addErrorPage(int statusCode, std::string path) {
+  this->errorPage.insert(std::make_pair(statusCode, path));
 }
 
 void CommonConfig::addIndex(std::string index) {
