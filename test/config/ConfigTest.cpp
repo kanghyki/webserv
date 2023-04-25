@@ -33,6 +33,7 @@ void ConfigTest::parseTest1() {
   AssertEqual(error_page_path, std::string("/html/error.html"));
   std::vector<int> expect2;
   expect2.push_back(404);
+  expect2.push_back(405);
   for (auto it = error_page_status.begin(), it2 = expect2.begin(); it != error_page_status.end(); ++it, ++it2) {
     AssertEqual((*it), (*it2));
   }
