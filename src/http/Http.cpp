@@ -61,6 +61,14 @@ HttpResponseBuilder Http::postMethod(HttpRequest& req) {
 
 HttpResponseBuilder Http::deleteMethod(HttpRequest& req) {
   std::cout << "DELETE" << std::endl;
+  DIR* dir = opendir(("." + req.getPath()).c_str());
+  if (dir) {
+    closedir(dir);
+    return HttpResponseBuilder::getBuilder()
+      .statusCode(BAD_REQUEST)
+      .header("date", getNowStr())
+      .body("error: ." + req.getPath());
+  }
   if (std::remove(("." + req.getPath()).c_str()) == 0) {
     return HttpResponseBuilder::getBuilder()
       .statusCode(OK)
