@@ -82,31 +82,3 @@ std::string HttpDataFecther::readFile(const std::string &path) {
 
   return data;
 }
-
-std::string HttpDataFecther::getContentType(const std::string &path) const {
-  const char *dot;
-
-  dot = strrchr(path.c_str(), '.');
-  if (dot) {
-    std::string extension = dot + 1;
-    if (extension == "css")
-      return "text/css";
-    if (extension == "html")
-      return "text/html";
-    if (extension == "png")
-      return "image/png";
-  } 
-  return "text/plain";
-}
-
-std::string HttpDataFecther::mergeURL(std::string u1, std::string u2) const {
-  for (size_t i = u1.length() - 1; i >= 0; --i) {
-    if (u1[i] != '/')
-      break;
-    u1.erase(i, 1);
-  }
-  if (u2[0] != '/') {
-    return u1 + '/' + u2;
-  }
-  return u1 + u2;
-}

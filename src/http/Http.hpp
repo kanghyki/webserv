@@ -15,16 +15,16 @@ class Http {
     Http(ServerConfig config);
     ~Http();
 
-    HttpResponseBuilder processing(std::string request);
-    HttpResponseBuilder getErrorPage(HttpStatus status);
+    HttpResponse  processing(std::string request);
+    HttpResponse  getErrorPage(HttpStatus status);
 
   private:
-    ServerConfig        config;
+    ServerConfig  config;
 
-    HttpResponseBuilder getMethod(HttpRequest& req);
-    HttpResponseBuilder postMethod(HttpRequest& req);
-    HttpResponseBuilder deleteMethod(HttpRequest& req);
-    HttpResponseBuilder putMethod(HttpRequest& req);
+    HttpResponse  getMethod(HttpRequest& req);
+    HttpResponse  postMethod(HttpRequest& req);
+    HttpResponse  deleteMethod(HttpRequest& req);
+    HttpResponse  putMethod(HttpRequest& req);
 };
 
 #endif

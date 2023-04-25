@@ -4,7 +4,6 @@
 # include <string>
 
 enum HttpStatus {
-  UNDEFINED                     = 0,
   // 1xx
   CONTINUE                      = 100,
   SWITCHING_PROTOCOLS           = 101,

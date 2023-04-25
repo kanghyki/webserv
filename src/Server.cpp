@@ -226,15 +226,15 @@ bool Server::checkContentLength(int fd) {
 #include "./http/HttpStatus.hpp"
 
 void Server::sendData(int fd) {
-  std::string         s;
-  Http                http(this->config);
-  HttpResponseBuilder response;
+  std::string   s;
+  Http          http(this->config);
+  HttpResponse  response;
 
   FD_SET(fd, &this->getWrites());
   try {
     response = http.processing(getData(fd));
     clearReceived(fd);
-    s = response.build().toString();
+    s = response.toString();
   } catch (HttpStatus status) {
     response = http.getErrorPage(status);
   }

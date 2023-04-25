@@ -8,8 +8,8 @@ Http::Http(ServerConfig config): config(config) {}
 
 Http::~Http() {}
 
-HttpResponseBuilder Http::processing(std::string s) {
-  HttpResponseBuilder ret;
+HttpResponse Http::processing(std::string s) {
+  HttpResponse ret;
 
   try {
     HttpRequest req(s);
@@ -25,17 +25,18 @@ HttpResponseBuilder Http::processing(std::string s) {
   return ret;
 }
 
-HttpResponseBuilder Http::getMethod(HttpRequest& req) {
+HttpResponse Http::getMethod(HttpRequest& req) {
   std::cout << "GET" << std::endl;
   HttpDataFecther fetcher(req, this->config);
   std::string data = fetcher.fetch();
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(data);
+    .body(data)
+    .build();
 }
 
-HttpResponseBuilder Http::postMethod(HttpRequest& req) {
+HttpResponse Http::postMethod(HttpRequest& req) {
   std::cout << "POST" << std::endl;
   if (access(("." + req.getPath()).c_str(), F_OK) == 0) throw BAD_REQUEST;
 
@@ -48,10 +49,11 @@ HttpResponseBuilder Http::postMethod(HttpRequest& req) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(CREATED)
     .header("date", getNowStr())
-    .body(req.getBody());
+    .body(req.getBody())
+    .build();
 }
 
-HttpResponseBuilder Http::deleteMethod(HttpRequest& req) {
+HttpResponse Http::deleteMethod(HttpRequest& req) {
   std::cout << "DELETE" << std::endl;
   DIR* dir = opendir(("." + req.getPath()).c_str());
   if (dir) {
@@ -61,10 +63,11 @@ HttpResponseBuilder Http::deleteMethod(HttpRequest& req) {
   if (std::remove(("." + req.getPath()).c_str()) == -1) throw NOT_FOUND;
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
-    .header("date", getNowStr());
+    .header("date", getNowStr())
+    .build();
 }
 
-HttpResponseBuilder Http::putMethod(HttpRequest& req) {
+HttpResponse Http::putMethod(HttpRequest& req) {
   std::cout << "PUT" << std::endl;
   DIR* dir = opendir(("." + req.getPath()).c_str());
   if (dir) {
@@ -80,10 +83,11 @@ HttpResponseBuilder Http::putMethod(HttpRequest& req) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(req.getBody());
+    .body(req.getBody())
+    .build();
 }
 
-HttpResponseBuilder Http::getErrorPage(HttpStatus status) {
+HttpResponse Http::getErrorPage(HttpStatus status) {
   std::string                                 data;
   std::map<int, std::string>                  m = this->config.getErrorPage();
   std::map<int, std::string>::const_iterator  it;
@@ -96,5 +100,6 @@ HttpResponseBuilder Http::getErrorPage(HttpStatus status) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(status)
     .header("date", getNowStr())
-    .body(data);
+    .body(data)
+    .build();
 }

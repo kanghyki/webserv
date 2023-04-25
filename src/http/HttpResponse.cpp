@@ -6,7 +6,7 @@ const std::string HttpResponse::version = "HTTP/1.1";
  * -------------------------- Constructor --------------------------
  */
 
-HttpResponse::HttpResponse(): statusCode(UNDEFINED), statusText() {}
+HttpResponse::HttpResponse(): statusCode(INTERNAL_SERVER_ERROR), statusText() {}
 
 /*
  * -------------------------- Destructor ---------------------------
@@ -20,7 +20,6 @@ HttpResponse::~HttpResponse() {}
 
 void HttpResponse::setStatusCode(const HttpStatus statusCode) {
   this->statusCode = statusCode;
-  this->statusText = getStatusText(statusCode);
 }
 
 void HttpResponse::setHeader(const std::string& field, const std::string& value) {
@@ -34,7 +33,7 @@ void HttpResponse::setBody(const std::string& body) {
 std::string HttpResponse::toString() {
   std::string ret;
 
-  if (this->statusCode == UNDEFINED) throw INTERNAL_SERVER_ERROR;
+  this->statusText = getStatusText(this->statusCode);
   setHeader(request_field::CONTENT_LENGTH, util::itoa(body.length()));
   ret = makeStatusLine();
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)

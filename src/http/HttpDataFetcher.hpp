@@ -18,14 +18,11 @@ class HttpDataFecther {
     static std::string  readFile(const std::string &path);
 
   private:
-    HttpRequest   request;
-    ServerConfig  config;
+    HttpRequest         request;
+    ServerConfig        config;
 
-    std::string   readDirectory() const;
-    std::string   excuteCGI(const std::string &path) const;
-
-    std::string   getContentType(const std::string &path) const;
-    std::string   mergeURL(std::string u1, std::string u2) const;
+    std::string         readDirectory() const;
+    std::string         excuteCGI(const std::string &path) const;
 };
 
 #endif
