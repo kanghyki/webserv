@@ -8,17 +8,10 @@ TEST_LIB_DIR	=	../test_lib
 TEST_LIB_SRC	=	kunit.cpp
 
 # SRCS
-SRC_DIR				=	../../src/config
-SRC						=	CommonConfig.cpp\
-								HttpConfig.cpp\
-								LocationConfig.cpp\
-								ServerConfig.cpp\
-								Config.cpp
-
-PARSER_DIR		= ../../src/config/parser
-PARSER_SRC		= Token.cpp\
-								Lexer.cpp\
-								ConfigParser.cpp
+SRC_DIR				=	../../src/http
+SRC						=	HttpResponse.cpp\
+								HttpResponseBuilder.cpp\
+								HttpStatus.cpp
 
 UTIL_DIR			=	../../src
 UTIL_SRC			=	Util.cpp
@@ -26,11 +19,10 @@ UTIL_SRC			=	Util.cpp
 # TEST_SRCS
 TEST_SRC_DIR	=	.
 TEST_SRC			=	main.cpp\
-								ConfigTest.cpp
+								HttpResponseTest.cpp
 
 # OBJS
 OBJ						=	$(addprefix $(SRC_DIR)/, $(SRC:.cpp=.o))\
-								$(addprefix $(PARSER_DIR)/, $(PARSER_SRC:.cpp=.o))\
 								$(addprefix $(UTIL_DIR)/, $(UTIL_SRC:.cpp=.o))\
 								$(addprefix $(TEST_SRC_DIR)/, $(TEST_SRC:.cpp=.o))\
 								$(addprefix $(TEST_LIB_DIR)/, $(TEST_LIB_SRC:.cpp=.o))

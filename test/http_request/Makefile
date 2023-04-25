@@ -47,6 +47,8 @@ all: $(NAME)
 
 $(NAME): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
+	./$(NAME)
+	@make fclean
 
 clean:
 	rm -rf $(OBJ)
