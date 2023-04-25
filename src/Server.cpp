@@ -2,7 +2,7 @@
 /* * -------------------------- Constructor --------------------------
  */
 
-Server::Server(ServerConfig config) : data(10000), host(config.getHost()), port(config.getPort()), \
+Server::Server(ServerConfig config) : data(1024), host(config.getHost()), port(config.getPort()), \
                                                             servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
   this->servFd = socketInit();
   socketaddrInit(this->host, this->port, this->in);
@@ -87,8 +87,25 @@ inline void Server::fdSetInit(fd_set& fs, int fd) {
   FD_SET(fd, &fs);
 }
 
+void Server::removeData(int fd) {
+  this->data[fd].clear();
+}
+
 void Server::removeTimeRecord(int fd) {
   this->timeout.erase(fd);
+}
+
+bool Server::existsTimeRecord(int fd) {
+  if (this->timeout.find(fd) != this->timeout.end())
+    return true;
+  return false;
+}
+
+void Server::appendTimeRecord(int fd) {
+  time_t initTime;
+
+  time(&initTime);
+  this->timeout.insert(std::make_pair(fd, initTime));
 }
 
 void Server::DisconnectTimeoutClient() {
@@ -111,8 +128,10 @@ void Server::DisconnectTimeoutClient() {
     }
   }
 
-  for (int i = 0; i < removeList.size(); ++i)
+  for (int i = 0; i < removeList.size(); ++i) {
     removeTimeRecord(removeList[i]);
+    removeData(removeList[i]);
+  }
 }
 
 void Server::run(void) {
@@ -163,12 +182,8 @@ void Server::receiveData(int fd) {
   int recv_size;
   int DONE = 0;
 
-  std::map<int, time_t>::iterator it;
-  if ((it = this->timeout.find(fd)) == this->timeout.end()) {
-    time_t initTime;
-    time(&initTime);
-    this->timeout.insert(std::make_pair(fd, initTime));
-  }
+  if (existsTimeRecord(fd) == false)
+    appendTimeRecord(fd);
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kanghyki <kanghyki@student.42seoul.>       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/04/25 11:11:59 by kanghyki          #+#    #+#             */
+/*   Updated: 2023/04/25 11:12:26 by kanghyki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
@@ -37,14 +49,12 @@ class Server {
     int fdMax;
     fd_set reads;
     fd_set writes;
-    std::map<int, time_t> timeout;
     sock in;
 
     const int getServFd(void) const;
     const int getFdMax(void) const;
     fd_set& getReads(void);
     fd_set& getWrites(void);
-    const std::map<int, time_t>& getTimeRecord() const;
 
     void setFdMax(int fdMax);
 
@@ -59,7 +69,13 @@ class Server {
     void sendData(int fd, std::string header, std::string body);
     void closeSocket(int fd);
     void receiveDone(int fd, std::string header, std::string body);
+
+    std::map<int, time_t> timeout;
+    const std::map<int, time_t>& getTimeRecord() const;
+    void removeData(int fd);
     void removeTimeRecord(int fd);
+    bool existsTimeRecord(int fd);
+    void appendTimeRecord(int fd);
     void DisconnectTimeoutClient();
 
     ServerConfig config;
