@@ -3,5 +3,6 @@
 #include "./ConfigTest.hpp"
 
 int main(void) {
-  Run("test", ConfigTest::ParseTest1);
+  Run("test1", ConfigTest::parseTest1);
+  Run("test2", ConfigTest::defaultConfig);
 }
