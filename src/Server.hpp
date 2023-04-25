@@ -32,9 +32,12 @@ class Server {
     static const int SOCK_CLOSED = -1;
     static const int SOCK_ERROR = -1;
     static const int FD_CLOSED = -1;
-    static const int BUF_SIZE = 128;
+    static const int BUF_SIZE = 1024;
+    static const int MANAGE_FD_MAX = 1024;
 
     std::vector<std::string> data;
+    std::vector<int> contentLengths;
+    std::vector<size_t> headerPos;
     const std::string host;
     const int port;
     int servFd;
@@ -51,9 +54,23 @@ class Server {
 
     int acceptConnect();
     void receiveData(int fd);
-    void sendData(int fd, HttpRequest& req);
+    void checkContentLength(int fd);
+    void sendData(int fd);
     void closeSocket(int fd);
-    void receiveDone(int fd, HttpRequest& req);
+    void receiveDone(int fd);
+
+    const std::string getData(int fd) const;
+    const int         getContentLength(int fd) const;
+    const size_t      getHeaderPos(int fd) const;
+
+    void              addData(int fd, const std::string& data);
+    void              setContentLength(int fd, int len);
+    void              setHeaderPos(int fd, size_t pos);
+
+    void              clearData(int fd);
+    void              clearContentLength(int fd);
+    void              clearHeaderPos(int fd);
+    void              clearReceived(int fd);
 
     ServerConfig config;
 

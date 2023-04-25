@@ -3,8 +3,9 @@
 /* * -------------------------- Constructor --------------------------
  */
 
-Server::Server(ServerConfig config) : data(10000), host(config.getHost()), port(config.getPort()), \
-                                                            servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
+Server::Server(ServerConfig config) : data(MANAGE_FD_MAX), host(config.getHost()), port(config.getPort()), \
+                                     servFd(SOCK_CLOSED), fdMax(FD_CLOSED), contentLengths(MANAGE_FD_MAX, -1), \
+                                     headerPos(MANAGE_FD_MAX){
   this->servFd = socketInit();
   socketaddrInit(this->host, this->port, this->in);
   socketOpen(this->servFd, this->in);
@@ -75,7 +76,7 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
 inline void Server::socketOpen(int servFd, sock& in) {
   if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
     throw Server::BindException();
-  if (listen(servFd, 128) == -1)
+  if (listen(servFd, MANAGE_FD_MAX) == -1)
     throw Server::ListenException();
 }
 
@@ -136,63 +137,44 @@ void Server::receiveData(int fd) {
     throw "error";
   }
   buf[recv_size] = 0;
-  this->data[fd] += buf;
+  addData(fd, buf);
+  checkContentLength(fd);
+}
 
-  size_t pos = this->data[fd].find("\r\n\r\n");
-  if (pos != std::string::npos) {
-    std::string header;
-    std::string body;
-
-    size_t start = util::toLowerStr(this->data[fd]).find("content-length: ");
-    if (start != std::string::npos) {
-      size_t end = this->data[fd].find("\r\n", start);
-      int len = std::atoi(this->data[fd].substr(start + 16, end - start + 1).c_str());
-      std::cout << "start : " << start << std::endl;
-      std::cout << "end : " << end << std::endl;
-      std::cout << "len1 : " << len << std::endl;
-      std::cout << "len2 : " << this->data[fd].substr(pos + 4).length() << std::endl;
-      if (len == this->data[fd].substr(pos + 4).length()) {
-        HttpRequest req;
-        header = this->data[fd].substr(0, pos);
-        body = this->data[fd].substr(pos + 4);
-        std::cout << "header : " << header << std::endl;
-        std::cout << "body : " << body << std::endl;
-        req.parseHeader(header);
-        req.setBody(body);
-        receiveDone(fd, req);
-      }
-      else
-        return;
+void Server::checkContentLength(int fd) {
+  if (getContentLength(fd) == -1) {
+    size_t pos = getData(fd).find("\r\n\r\n");
+    if (pos != std::string::npos) {
+      setContentLength(fd, 0);
+      setHeaderPos(fd, pos);
     }
-    HttpRequest req;
-    header = this->data[fd].substr(0, pos);
-    req.parseHeader(header);
-    receiveDone(fd, req);
   }
-
-//  if (recv_size < BUF_SIZE) {
-//    shutdown(fd, SHUT_RD);
-//    FD_CLR(fd, &this->getReads());
-//    std::cout << "@---this->data[" << fd << "]" << std::endl;
-//    std::cout << this->data[fd];
-//    std::cout << "@---" << std::endl;
-//    sendData(fd);
-//    this->data[fd] = "";
-////    close(fd);
-////    FD_CLR(fd, &this->getReads());
-//    return ;
-//  }
+  if (getContentLength(fd) == 0) {
+    size_t start = util::toLowerStr(getData(fd)).find("content-length: "); 
+    if (start != std::string::npos) {
+      size_t end = getData(fd).find("\r\n", start);
+      setContentLength(fd, std::atoi(this->data[fd].substr(start + 16, end - start + 1).c_str()));
+    }
+    else
+      receiveDone(fd);
+  }
+  if (getContentLength(fd) > 0) {
+    if (getContentLength(fd) == getData(fd).substr(getHeaderPos(fd) + 4).length())
+      receiveDone(fd);
+  }
 }
 
 #include "./http/Http.hpp"
 #include "./http/HttpStatus.hpp"
 
-void Server::sendData(int fd, HttpRequest& req) {
+void Server::sendData(int fd) {
   Http http(this->config);
   std::string response;
   FD_SET(fd, &this->getWrites());
 
   try {
+    HttpRequest req(this->data[fd]);
+    clearReceived(fd);
     response = http.processing(req);
   } catch (std::exception &e) {
     // TODO:: Error page
@@ -211,14 +193,56 @@ void Server::closeSocket(int fd) {
   close(fd);
 }
 
-void Server::receiveDone(int fd, HttpRequest& req) {
-  shutdown(fd, SHUT_RD);
+void Server::receiveDone(int fd) {
+  shutdown(fd, SHUT_RD);;
   FD_CLR(fd, &this->getReads());
   std::cout << "@---this->data[" << fd << "]" << std::endl;
   std::cout << this->data[fd];
   std::cout << "@---" << std::endl;
-  sendData(fd, req);
+  sendData(fd);
   this->data[fd] = "";
+}
+
+const std::string Server::getData(int fd) const {
+  return this->data[fd];
+}
+
+const int         Server::getContentLength(int fd) const {
+  return this->contentLengths[fd];
+}
+
+void              Server::addData(int fd, const std::string& data) {
+  this->data[fd] += data;
+}
+
+void              Server::setContentLength(int fd, int len) {
+  this->contentLengths[fd] = len;
+}
+
+void              Server::clearData(int fd) {
+  this->data[fd].clear();
+}
+
+void              Server::clearContentLength(int fd) {
+  this->contentLengths[fd] = -1;
+}
+
+const size_t      Server::getHeaderPos(int fd) const {
+  return this->headerPos[fd];
+}
+
+void              Server::setHeaderPos(int fd, size_t pos) {
+  this->headerPos[fd] = pos;
+}
+
+void              Server::clearHeaderPos(int fd) {
+  this->headerPos[fd] = 0;
+}
+
+void              Server::clearReceived(int fd) {
+  clearData(fd);
+  clearContentLength(fd);
+  clearHeaderPos(fd);
 }
 
 const char* Server::InitException::what() const throw() {
