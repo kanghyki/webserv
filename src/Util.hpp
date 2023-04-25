@@ -12,6 +12,7 @@ namespace util {
   std::string trimSpace(std::string s);
   std::string readFile(const std::string& fileName);
   std::string toLowerStr(std::string s);
+  std::string itoa(int n);
 
   class StringFoundException : public std::exception
   {

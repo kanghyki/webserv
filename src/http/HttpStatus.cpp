@@ -4,6 +4,9 @@ std::string getStatusText(const HttpStatus statusCode) {
   std::string ret;
 
   switch (statusCode) {
+    case 0:
+      ret = "Undefined";
+      break;
     case 100:
       ret = "Continue";
       break;

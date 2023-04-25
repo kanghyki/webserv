@@ -7,27 +7,51 @@ Http::Http(ServerConfig config): config(config) {}
 
 Http::~Http() {}
 
-std::string Http::processing(std::string s) {
-  std::string ret;
+HttpResponseBuilder Http::processing(std::string s) {
+  HttpResponseBuilder ret;
 
   try {
-    HttpRequest request(s);
-    HttpDataFecther fetcher(request, this->config);
-    std::string data = fetcher.fetch();
-    ret = HttpResponseBuilder::getBuilder()
-      .statusCode(OK)
-      .httpVersion("HTTP/1.1")
-      .header("date", getNowStr())
-      .body(data)
-      .build()
-      .toString();
+    HttpRequest req(s);
+
+    if (req.getMethod() == request_method::GET) ret = getMethod(req);
+    else if (req.getMethod() == request_method::POST) ret = postMethod(req);
+    else if (req.getMethod() == request_method::DELETE) ret = deleteMethod(req);
   } catch (HttpStatus status) {
     ret = getErrorPage(status);
   }
+
   return ret;
 }
 
-std::string Http::getErrorPage(HttpStatus status) {
+HttpResponseBuilder Http::getMethod(HttpRequest& req) {
+  std::cout << "GET" << std::endl;
+  HttpDataFecther fetcher(req, this->config);
+  std::string data = fetcher.fetch();
+  return HttpResponseBuilder::getBuilder()
+    .statusCode(OK)
+    .header("date", getNowStr())
+    .body(data);
+}
+
+HttpResponseBuilder Http::postMethod(HttpRequest& req) {
+  std::cout << "POST" << std::endl;
+  return HttpResponseBuilder::getBuilder();
+}
+
+#include <fstream>
+HttpResponseBuilder Http::deleteMethod(HttpRequest& req) {
+  std::cout << "DELETE" << std::endl;
+  if (std::remove(("." + req.getPath()).c_str()) == 0) {
+    return HttpResponseBuilder::getBuilder()
+      .statusCode(OK)
+      .header("date", getNowStr());
+  }
+  return HttpResponseBuilder::getBuilder()
+      .statusCode(NOT_FOUND)
+      .header("date", getNowStr());
+}
+
+HttpResponseBuilder Http::getErrorPage(HttpStatus status) {
   std::string ret;
   std::string data;
   std::vector<int> sl = this->config.getErrorPageStatus();
@@ -36,13 +60,8 @@ std::string Http::getErrorPage(HttpStatus status) {
   if (it != sl.end())
     data = HttpDataFecther::readFile(this->config.getErrorPagePath());
 
-  ret = HttpResponseBuilder::getBuilder()
+  return HttpResponseBuilder::getBuilder()
     .statusCode(status)
-    .httpVersion()
     .header("date", getNowStr())
-    .body(data)
-    .build()
-    .toString();
-
-  return ret;
+    .body(data);
 }

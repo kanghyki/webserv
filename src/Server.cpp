@@ -239,17 +239,18 @@ void Server::receiveData(int fd) {
 
 void Server::sendData(int fd, std::string header, std::string body) {
   Http http(this->config);
-  std::string response;
+  HttpResponseBuilder response;
   FD_SET(fd, &this->getWrites());
 
   try {
     response = http.processing(this->data[fd]);
   } catch (std::exception &e) {
     // TODO:: Error page
-    response = "HTTP/1.1 500 " + getStatusText(INTERNAL_SERVER_ERROR) + "\r\n\r\n";
+    response.statusCode(INTERNAL_SERVER_ERROR).body("ERROR");
   }
 
-  if (send(fd, response.c_str(), response.length(), 0) == SOCK_ERROR)
+  std::string s = response.build().toString();
+  if (send(fd, s.c_str(), s.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";

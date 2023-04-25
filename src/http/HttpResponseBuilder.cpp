@@ -14,19 +14,6 @@ HttpResponseBuilder& HttpResponseBuilder::statusCode(const HttpStatus code) {
   return *this;
 }
 
-HttpResponseBuilder& HttpResponseBuilder::httpVersion(std::string version) {
-  this->response.setHttpVersion(version);
-
-  return *this;
-}
-
-HttpResponseBuilder& HttpResponseBuilder::httpVersion(void) {
-  this->response.setHttpVersion("HTTP/1.1");
-
-  return *this;
-}
-
-
 HttpResponseBuilder& HttpResponseBuilder::header(const std::string &key, const std::string &value) {
   this->response.setHeader(key, value);
 

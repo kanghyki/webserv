@@ -13,8 +13,6 @@ class HttpResponseBuilder {
 
     static HttpResponseBuilder  getBuilder();
     HttpResponseBuilder&        statusCode(const HttpStatus code);
-    HttpResponseBuilder&        httpVersion(std::string version);
-    HttpResponseBuilder&        httpVersion(void);
 
     HttpResponseBuilder&        header(const std::string &key, const std::string &value);
     HttpResponseBuilder&        body(std::string body);
