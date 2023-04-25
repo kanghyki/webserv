@@ -43,7 +43,10 @@ void HttpRequest::parseStatusLine(const std::string& line) {
 }
 
 void HttpRequest::validateMethod(const std::string &method) {
-  if (method != request_method::GET && method != request_method::POST && method != request_method::DELETE)
+  if (method != request_method::GET &&
+      method != request_method::POST &&
+      method != request_method::DELETE &&
+      method != request_method::PUT)
     throw METHOD_NOT_ALLOWED;
   this->method = method;
 }

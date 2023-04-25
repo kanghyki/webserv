@@ -172,9 +172,11 @@ void ConfigParser::parseRoot(CommonConfig& conf) {
 }
 
 void ConfigParser::parseErrorPage(CommonConfig& conf) {
-  expectNextToken(Token::INT);
-  int http_status = std::atoi(curToken().getLiteral().c_str());
-  conf.addErrorPageStatus(http_status);
+  while (peekToken().is(Token::INT)) {
+    nextToken();
+    int http_status = std::atoi(curToken().getLiteral().c_str());
+    conf.addErrorPageStatus(http_status);
+  }
   expectNextToken(Token::IDENT);
   conf.setErrorPagePath(curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);

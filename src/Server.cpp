@@ -236,9 +236,9 @@ void Server::sendData(int fd) {
 
   try {
     response = http.processing(getData(fd));
-  } catch (std::exception &e) {
-    // TODO:: Error page
-    response.statusCode(INTERNAL_SERVER_ERROR).body("ERROR");
+    clearReceived(fd);
+  } catch (HttpStatus status) {
+    response = http.getErrorPage(status);
   }
 
   std::string s = response.build().toString();

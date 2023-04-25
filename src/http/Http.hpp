@@ -16,6 +16,7 @@ class Http {
     ~Http();
 
     HttpResponseBuilder processing(std::string request);
+    HttpResponseBuilder getErrorPage(HttpStatus status);
 
   private:
     ServerConfig        config;
@@ -23,7 +24,7 @@ class Http {
     HttpResponseBuilder getMethod(HttpRequest& req);
     HttpResponseBuilder postMethod(HttpRequest& req);
     HttpResponseBuilder deleteMethod(HttpRequest& req);
-    HttpResponseBuilder getErrorPage(HttpStatus status);
+    HttpResponseBuilder putMethod(HttpRequest& req);
 };
 
 #endif
