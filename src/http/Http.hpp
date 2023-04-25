@@ -15,10 +15,15 @@ class Http {
     Http(ServerConfig config);
     ~Http();
 
-    std::string processing(std::string request);
+    HttpResponseBuilder processing(std::string request);
 
   private:
-    ServerConfig  config;
+    ServerConfig        config;
+
+    HttpResponseBuilder getMethod(HttpRequest& req);
+    HttpResponseBuilder postMethod(HttpRequest& req);
+    HttpResponseBuilder deleteMethod(HttpRequest& req);
+    HttpResponseBuilder getErrorPage(HttpStatus status);
 };
 
 #endif

@@ -6,7 +6,8 @@
 
 class ConfigTest {
   public:
-    static void ParseTest1();
+    static void parseTest1();
+    static void defaultConfig();
   private:
 };
 

@@ -65,6 +65,21 @@ namespace util {
     return ret;
   }
 
+  std::string toLowerStr(std::string s) {
+    for (size_t i = 0; i < s.length(); ++i)
+      if (std::isupper(s[i]))
+        s[i] = std::tolower(s[i]);
+    return s;
+  }
+
+  std::string itoa(int n) {
+    std::stringstream ss;
+
+    ss << n;
+
+    return ss.str();
+  }
+
 
   const char* StringFoundException::what() const throw() {
     return "Target not found";

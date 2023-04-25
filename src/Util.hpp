@@ -11,6 +11,8 @@ namespace util {
   size_t find(const std::string& str, const std::string& target);
   std::string trimSpace(std::string s);
   std::string readFile(const std::string& fileName);
+  std::string toLowerStr(std::string s);
+  std::string itoa(int n);
 
   class StringFoundException : public std::exception
   {

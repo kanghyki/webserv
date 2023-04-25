@@ -6,3 +6,8 @@ webserv
 
 # OSX
 .DS_Store
+# ctag
+tags
+
+# test
+test

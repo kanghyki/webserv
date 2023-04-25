@@ -1,9 +1,11 @@
 #include "Server.hpp"
+#include "Util.hpp"
 /* * -------------------------- Constructor --------------------------
  */
 
-Server::Server(ServerConfig config) : data(10000), host(config.getHost()), port(config.getPort()), \
-                                                            servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
+Server::Server(ServerConfig config) : data(MANAGE_FD_MAX), host(config.getHost()), port(config.getPort()), \
+                                     servFd(SOCK_CLOSED), fdMax(FD_CLOSED), contentLengths(MANAGE_FD_MAX, -1), \
+                                     headerPos(MANAGE_FD_MAX){
   this->servFd = socketInit();
   socketaddrInit(this->host, this->port, this->in);
   socketOpen(this->servFd, this->in);
@@ -43,6 +45,10 @@ fd_set& Server::getWrites(void) {
   return this->writes;
 }
 
+const std::map<int, time_t>& Server::getTimeRecord() const {
+  return this->timeout;
+}
+
 /*
  * -------------------------- Setter -------------------------------
  */
@@ -74,13 +80,60 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
 inline void Server::socketOpen(int servFd, sock& in) {
   if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
     throw Server::BindException();
-  if (listen(servFd, 128) == -1)
+  if (listen(servFd, MANAGE_FD_MAX) == -1)
     throw Server::ListenException();
 }
 
 inline void Server::fdSetInit(fd_set& fs, int fd) {
   FD_ZERO(&fs);
   FD_SET(fd, &fs);
+}
+
+void Server::removeData(int fd) {
+  this->data[fd].clear();
+}
+
+void Server::removeTimeRecord(int fd) {
+  this->timeout.erase(fd);
+}
+
+bool Server::existsTimeRecord(int fd) {
+  if (this->timeout.find(fd) != this->timeout.end())
+    return true;
+  return false;
+}
+
+void Server::appendTimeRecord(int fd) {
+  time_t initTime;
+
+  time(&initTime);
+  this->timeout.insert(std::make_pair(fd, initTime));
+}
+
+void Server::DisconnectTimeoutClient() {
+  const std::map<int, time_t>&  record = getTimeRecord();
+  std::vector<int>              removeList;
+
+  for (std::map<int, time_t>::const_iterator it = record.begin(); it != record.end(); ++it) {
+    time_t reqTime = it->second;
+    time_t curTime;
+
+    time(&curTime);
+    if (curTime - reqTime > TIMEOUT_MAX) {
+      int fd = it->first;
+
+      // 408 error
+      FD_CLR(fd, &this->getReads());
+      close(fd);
+      std::cout << "timeout client: " << fd << std::endl;
+      removeList.push_back(fd);
+    }
+  }
+
+  for (int i = 0; i < removeList.size(); ++i) {
+    removeTimeRecord(removeList[i]);
+    removeData(removeList[i]);
+  }
 }
 
 void Server::run(void) {
@@ -95,11 +148,18 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
+    DisconnectTimeoutClient();
+
     for (int i = 0; i < this->getFdMax() + 1; i++) {
-      if (FD_ISSET(i, &readsCpy))
-        handShake(i);
+      if (FD_ISSET(i, &readsCpy)) {
+        if (i == this->getServFd())
+          acceptConnect();
+        else
+          receiveData(i);
+      }
       if (FD_ISSET(i, &writesCpy))
         closeSocket(i);
+
     }
   }
   close(this->getServFd());
@@ -119,29 +179,51 @@ int Server::acceptConnect() {
   return fd;
 }
 
-
 void Server::receiveData(int fd) {
   char buf[BUF_SIZE + 1];
   int recv_size;
   int DONE = 0;
 
+  if (existsTimeRecord(fd) == false)
+    appendTimeRecord(fd);
+
   recv_size = recv(fd, buf, BUF_SIZE, 0);
+  std::cout << "recv_size" << recv_size << std::endl;
   if (recv_size <= 0) {
-    close(fd);
-    FD_CLR(fd, &this->getReads());
-    return ;
+    throw "error";
   }
   buf[recv_size] = 0;
-  this->data[fd] += buf;
-  // FIXME: 임시 조건
-  if (recv_size < BUF_SIZE) {
-    shutdown(fd, SHUT_RD);
-    FD_CLR(fd, &this->getReads());
-    std::cout << "@---this->data[" << fd << "]" << std::endl;
-    std::cout << this->data[fd] << std::endl;
-    std::cout << "@---" << std::endl;
-    sendData(fd);
+  addData(fd, buf);
+  if (checkContentLength(fd) == true)
+    receiveDone(fd);
+}
+
+bool Server::checkContentLength(int fd) {
+  if (getContentLength(fd) == HEADER_NOT_RECV) {
+    size_t pos = getData(fd).find("\r\n\r\n");
+    if (pos != std::string::npos) {
+      setContentLength(fd, HEADER_RECV);
+      setHeaderPos(fd, pos);
+    }
   }
+
+  if (getContentLength(fd) == HEADER_RECV) {
+    size_t start = util::toLowerStr(getData(fd)).find("content-length: "); 
+    if (start != std::string::npos) {
+      size_t end = getData(fd).find("\r\n", start);
+      int len = std::atoi(this->data[fd].substr(start + 16, end - start + 1).c_str());
+      if (len == 0) return true;
+      else setContentLength(fd, len);
+    }
+    else return true;
+  }
+
+  if (getContentLength(fd) > 0) {
+    if (getContentLength(fd) == getData(fd).substr(getHeaderPos(fd) + 4).length())
+      return true;
+  }
+
+  return false;
 }
 
 #include "./http/Http.hpp"
@@ -149,20 +231,22 @@ void Server::receiveData(int fd) {
 
 void Server::sendData(int fd) {
   Http http(this->config);
-  std::string response;
+  HttpResponseBuilder response;
+  FD_SET(fd, &this->getWrites());
 
   try {
-    response = http.processing(this->data[fd]);
+    response = http.processing(getData(fd));
   } catch (std::exception &e) {
     // TODO:: Error page
-    response = "HTTP/1.1 500 " + getStatusText(INTERNAL_SERVER_ERROR) + "\r\n\r\n";
+    response.statusCode(INTERNAL_SERVER_ERROR).body("ERROR");
   }
 
-  if (send(fd, response.c_str(), response.length(), 0) == SOCK_ERROR)
+  std::string s = response.build().toString();
+  if (send(fd, s.c_str(), s.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
-  else
+  else 
     std::cout << "[Log] send data\n";
-  this->data[fd].clear();
+  removeTimeRecord(fd);
 }
 
 void Server::closeSocket(int fd) {
@@ -171,11 +255,56 @@ void Server::closeSocket(int fd) {
   close(fd);
 }
 
-void Server::handShake(int fd) {
-  if (fd == this->getServFd())
-    acceptConnect();
-  else
-    receiveData(fd);
+void Server::receiveDone(int fd) {
+  shutdown(fd, SHUT_RD);
+  FD_CLR(fd, &this->getReads());
+  std::cout << "@---this->data[" << fd << "]" << std::endl;
+  std::cout << this->data[fd];
+  std::cout << "@---" << std::endl;
+  sendData(fd);
+  clearReceived(fd);
+}
+
+const std::string Server::getData(int fd) const {
+  return this->data[fd];
+}
+
+const int         Server::getContentLength(int fd) const {
+  return this->contentLengths[fd];
+}
+
+void              Server::addData(int fd, const std::string& data) {
+  this->data[fd] += data;
+}
+
+void              Server::setContentLength(int fd, int len) {
+  this->contentLengths[fd] = len;
+}
+
+void              Server::clearData(int fd) {
+  this->data[fd].clear();
+}
+
+void              Server::clearContentLength(int fd) {
+  this->contentLengths[fd] = -1;
+}
+
+const size_t      Server::getHeaderPos(int fd) const {
+  return this->headerPos[fd];
+}
+
+void              Server::setHeaderPos(int fd, size_t pos) {
+  this->headerPos[fd] = pos;
+}
+
+void              Server::clearHeaderPos(int fd) {
+  this->headerPos[fd] = 0;
+}
+
+void              Server::clearReceived(int fd) {
+  clearData(fd);
+  clearContentLength(fd);
+  clearHeaderPos(fd);
 }
 
 const char* Server::InitException::what() const throw() {

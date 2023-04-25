@@ -1,5 +1,5 @@
-#ifndef HTTPREQUEST_HPP
-# define HTTPREQUEST_HPP
+#ifndef HTTP_REQUEST_HPP
+# define HTTP_REQUEST_HPP
 
 # include "./HttpStatus.hpp"
 # include "../Util.hpp"
@@ -16,6 +16,8 @@ namespace request_method {
 }
 
 namespace request_field {
+  const std::string CONTENT_LENGTH        =   "Content-Length";
+
   const std::string CACHE_CONTROL         =   "Cache-control";
   const std::string HOST                  =   "Host";
   const std::string PRAGMA                =   "Pragma";
@@ -45,30 +47,37 @@ namespace request_field {
 
 class HttpRequest {
   public:
+    HttpRequest();
     HttpRequest(std::string request);
     ~HttpRequest();
 
-    std::string getMethod() const;
-    std::string getPath() const;
-    std::string getVersion() const;
-    bool        getErrorStatus() const;
-    bool        isError() const;
+    void                                parseHeader(const std::string &h);
+
+    std::string                         getMethod() const;
+    std::string                         getPath() const;
+    std::string                         getVersion() const;
+    std::string                         getField(const std::string& field) const;
+    std::string                         getBody() const;
+
+    void                                setBody(const std::string& body);
 
   private:
-    bool                                errorFlag;
-    HttpStatus                          errorStatus;
+    static const size_t                 URL_MAX_LENGTH;
+    static const std::string            CRLF;
+
     std::string                         method;
     std::string                         path;
     std::string                         version;
-    std::map<std::string, std::string>  header;
+    std::map<std::string, std::string>  field;
     std::string                         body;
 
-    void                                setError(HttpStatus errorStatus);
+    void                                parseStatusLine(const std::string &line);
+
     void                                validateMethod(const std::string &method);
     void                                validateVersion(const std::string &path);
     void                                validatePath(const std::string &version);
 
-    void                                parseStatusLine(const std::string &line);
+    std::pair<std::string, std::string> splitField(const std::string& line);
 
 //    std::map<std::string, void (*)(const std::string &)> fieldMethod;
 
