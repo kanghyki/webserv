@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: hyeongki <hyeongki@student.42seoul.kr>     +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/04/25 11:11:59 by kanghyki          #+#    #+#             */
-/*   Updated: 2023/04/25 14:26:52 by hyeongki         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
@@ -42,6 +30,8 @@ class Server {
     static const int BUF_SIZE = 1024;
     static const int MANAGE_FD_MAX = 1024;
     static const int TIMEOUT_MAX = 5;
+    static const int HEADER_NOT_RECV = -1;
+    static const int HEADER_RECV = 0;
 
     std::vector<std::string> data;
     std::vector<int> contentLengths;
@@ -69,7 +59,7 @@ class Server {
 
     int acceptConnect();
     void receiveData(int fd);
-    void checkContentLength(int fd);
+    bool checkContentLength(int fd);
     void sendData(int fd);
     void closeSocket(int fd);
     void receiveDone(int fd);

@@ -194,30 +194,36 @@ void Server::receiveData(int fd) {
   }
   buf[recv_size] = 0;
   addData(fd, buf);
-  checkContentLength(fd);
+  if (checkContentLength(fd) == true)
+    receiveDone(fd);
 }
 
-void Server::checkContentLength(int fd) {
-  if (getContentLength(fd) == -1) {
+bool Server::checkContentLength(int fd) {
+  if (getContentLength(fd) == HEADER_NOT_RECV) {
     size_t pos = getData(fd).find("\r\n\r\n");
     if (pos != std::string::npos) {
-      setContentLength(fd, 0);
+      setContentLength(fd, HEADER_RECV);
       setHeaderPos(fd, pos);
     }
   }
-  if (getContentLength(fd) == 0) {
+
+  if (getContentLength(fd) == HEADER_RECV) {
     size_t start = util::toLowerStr(getData(fd)).find("content-length: "); 
     if (start != std::string::npos) {
       size_t end = getData(fd).find("\r\n", start);
-      setContentLength(fd, std::atoi(this->data[fd].substr(start + 16, end - start + 1).c_str()));
+      int len = std::atoi(this->data[fd].substr(start + 16, end - start + 1).c_str());
+      if (len == 0) return true;
+      else setContentLength(fd, len);
     }
+    else return true;
   }
-  if (getContentLength(fd) == 0)
-      receiveDone(fd);
+
   if (getContentLength(fd) > 0) {
     if (getContentLength(fd) == getData(fd).substr(getHeaderPos(fd) + 4).length())
-      receiveDone(fd);
+      return true;
   }
+
+  return false;
 }
 
 #include "./http/Http.hpp"
@@ -230,7 +236,6 @@ void Server::sendData(int fd) {
 
   try {
     response = http.processing(getData(fd));
-    clearReceived(fd);
   } catch (std::exception &e) {
     // TODO:: Error page
     response.statusCode(INTERNAL_SERVER_ERROR).body("ERROR");
@@ -251,13 +256,13 @@ void Server::closeSocket(int fd) {
 }
 
 void Server::receiveDone(int fd) {
-  shutdown(fd, SHUT_RD);;
+  shutdown(fd, SHUT_RD);
   FD_CLR(fd, &this->getReads());
   std::cout << "@---this->data[" << fd << "]" << std::endl;
   std::cout << this->data[fd];
   std::cout << "@---" << std::endl;
   sendData(fd);
-  this->data[fd] = "";
+  clearReceived(fd);
 }
 
 const std::string Server::getData(int fd) const {
