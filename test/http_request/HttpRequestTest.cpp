@@ -15,14 +15,11 @@ Accept-Encoding: gzip, deflate, br\r\n\
 Accept-Language: en-US,en;q=0.9";
   HttpRequest hr;
   
-  try {
-    hr.parseHeader(header);
-  } catch (HttpStatus s) {
-    std::cout << s << std::endl;
-  }
+  hr.parseHeader(header);
 
-  std::string expect = "";
-  AssertEqual(expect, hr.getBody());
+  AssertEqual(std::string(""), hr.getBody());
+
+  AssertEqual(std::string("/html/index.html"), hr.getPath());
 
   std::string expect1 = "123";
   AssertEqual(expect1, hr.getField("content-length"));

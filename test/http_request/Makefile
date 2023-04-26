@@ -9,7 +9,8 @@ TEST_LIB_SRC	=	kunit.cpp
 
 # SRCS
 SRC_DIR				=	../../src/http
-SRC						=	HttpRequest.cpp
+SRC						=	HttpRequest.cpp\
+								UriParser.cpp
 
 UTIL_DIR			=	../../src
 UTIL_SRC			=	Util.cpp
@@ -17,7 +18,8 @@ UTIL_SRC			=	Util.cpp
 # TEST_SRCS
 TEST_SRC_DIR	=	.
 TEST_SRC			=	main.cpp\
-								HttpRequestTest.cpp
+								HttpRequestTest.cpp\
+								UriParserTest.cpp
 
 # OBJS
 OBJ						=	$(addprefix $(SRC_DIR)/, $(SRC:.cpp=.o))\
@@ -43,18 +45,18 @@ CXX						=	c++
 all: $(NAME)
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(NAME): $(OBJ)
-	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
-	./$(NAME)
+	@$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
+	@./$(NAME)
 	@make fclean
 
 clean:
-	rm -rf $(OBJ)
+	@rm -rf $(OBJ)
 
 fclean: clean
-	rm -rf $(NAME)
+	@rm -rf $(NAME)
 
 re:
 	@make fclean

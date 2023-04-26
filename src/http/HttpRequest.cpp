@@ -1,7 +1,4 @@
 #include "./HttpRequest.hpp"
-#include "HttpHeaderField.hpp"
-#include "HttpStatus.hpp"
-#include <iostream>
 
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
 const std::string HttpRequest::CRLF = "\r\n";
@@ -40,7 +37,11 @@ void HttpRequest::parseStatusLine(const std::string& line) {
   validateVersion(vs[2]);
 
   this->method = vs[0]; 
-  this->path = vs[1];
+
+  UriParser up(vs[1]);
+  this->path = up.getPath();
+  this->query = up.getQuery();
+
   this->version = vs[2];
 }
 

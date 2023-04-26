@@ -1,9 +1,10 @@
 #ifndef HTTP_REQUEST_HPP
 # define HTTP_REQUEST_HPP
 
-# include "./HttpStatus.hpp"
-# include "../Util.hpp"
 # include "./HttpHeaderField.hpp"
+# include "./HttpStatus.hpp"
+# include "./UriParser.hpp"
+# include "../Util.hpp"
 
 # include <stdexcept>
 # include <string>
@@ -41,8 +42,9 @@ class HttpRequest {
     std::string                         method;
     std::string                         path;
     std::string                         version;
-    std::map<std::string, std::string>  field;
     std::string                         body;
+    std::map<std::string, std::string>  field;
+    std::map<std::string, std::string>  query;
 
     void                                parseStatusLine(const std::string &line);
 
