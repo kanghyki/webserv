@@ -53,18 +53,18 @@ CXX						=	c++
 all: $(NAME)
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(NAME): $(OBJ)
-	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
-	./$(NAME)
+	@$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
+	@./$(NAME)
 	@make fclean
 
 clean:
-	rm -rf $(OBJ)
+	@rm -rf $(OBJ)
 
 fclean: clean
-	rm -rf $(NAME)
+	@rm -rf $(NAME)
 
 re:
 	@make fclean
