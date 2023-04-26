@@ -222,9 +222,6 @@ bool Server::checkContentLength(int fd) {
   return false;
 }
 
-#include "./http/Http.hpp"
-#include "./http/HttpStatus.hpp"
-
 void Server::sendData(int fd) {
   std::string   s;
   Http          http(this->config);

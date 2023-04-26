@@ -10,11 +10,7 @@ std::string HttpDataFecther::fetch() const {
   std::cout << "Root: " << this->config.getRoot() << std::endl;
   std::cout << "Request path: " << this->request.getPath() << std::endl;
 
-  try {
-    data = readFile(this->request.getPath());
-  } catch (util::FileOpenException& e) {
-    throw NOT_FOUND;
-  }
+  data = readFile(this->request.getPath());
 
   return data;
 }
@@ -78,7 +74,29 @@ std::string HttpDataFecther::excuteCGI(const std::string &path) const {
 }
 
 std::string HttpDataFecther::readFile(const std::string &path) {
-  std::string data = util::readFile("." + path);
+  std::string ret;
 
-  return data;
+  try {
+    ret = util::readFile("." + path);
+  } catch (util::IOException& e) {
+    throw NOT_FOUND;
+  }
+
+  return ret;
+}
+
+const std::string HttpDataFecther::getData(void) const {
+  return readFile(this->request.getPath());
+}
+
+const std::string HttpDataFecther::getMimeType(void) const {
+  std::string ret;
+
+  try {
+    ret = util::getMimeType("." + this->request.getPath());
+  } catch (util::IOException& e) {
+    throw NOT_FOUND;
+  }
+
+  return ret;
 }

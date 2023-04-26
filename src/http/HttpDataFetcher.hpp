@@ -3,6 +3,7 @@
 
 # include "./HttpRequest.hpp"
 # include "../config/ServerConfig.hpp"
+# include "../Util.hpp"
 
 # include <string>
 # include <string.h>
@@ -16,6 +17,8 @@ class HttpDataFecther {
     ~HttpDataFecther();
     std::string         fetch() const;
     static std::string  readFile(const std::string &path);
+    const std::string   getData(void) const;
+    const std::string   getMimeType(void) const;
 
   private:
     HttpRequest         request;

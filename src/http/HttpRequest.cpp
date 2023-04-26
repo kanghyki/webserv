@@ -1,4 +1,6 @@
 #include "./HttpRequest.hpp"
+#include "HttpHeaderField.hpp"
+#include "HttpStatus.hpp"
 #include <iostream>
 
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
@@ -84,11 +86,14 @@ std::pair<std::string, std::string> HttpRequest::splitField(const std::string& l
 
   if ((pos = line.find(":")) == std::string::npos) throw BAD_REQUEST;
   field = util::toLowerStr(util::trimSpace(line.substr(0, pos)));
-  value = util::toLowerStr(util::trimSpace(line.substr(pos + 1)));
+  value = util::trimSpace(line.substr(pos + 1));
 
   return std::make_pair(field, value);
 }
 
+/*
+ * -------------------------- Getter -------------------------------
+ */
 
 std::string HttpRequest::getMethod() const { return this->method; }
 
@@ -105,13 +110,36 @@ std::string HttpRequest::getField(const std::string& field) const {
 
   return ret;
 }
-/*
- * -------------------------- Getter -------------------------------
- */
 
 std::string HttpRequest::getBody() const {
   return this->body;
 }
+
+const std::string HttpRequest::getMimeType(void) const {
+  std::string ret;
+  std::string filename = "./temp";
+
+  try {
+    util::writeFile(filename, this->body);
+    ret = util::getMimeType(filename);
+    std::remove(filename.c_str());
+  } catch (util::IOException& e) {
+    throw NOT_FOUND;
+  }
+
+  return ret;
+}
+
+const std::string HttpRequest::getContentType(void) const {
+  if (this->field.find(header_field::CONTENT_TYPE) != this->field.end())
+    return this->field.at(header_field::CONTENT_TYPE);
+
+  return this->getMimeType();
+}
+
+/*
+ * -------------------------- Setter -------------------------------
+ */
 
 void  HttpRequest::setBody(const std::string& body) { this->body = body; }
 
