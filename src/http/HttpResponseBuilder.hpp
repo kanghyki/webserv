@@ -15,7 +15,8 @@ class HttpResponseBuilder {
     HttpResponseBuilder&        statusCode(const HttpStatus code);
 
     HttpResponseBuilder&        header(const std::string &key, const std::string &value);
-    HttpResponseBuilder&        body(std::string body);
+//    HttpResponseBuilder&        body(const std::string& body);
+    HttpResponseBuilder&        body(const std::string& body, const std::string& mimeType);
     HttpResponse                build();
 
 

@@ -34,7 +34,7 @@ std::string HttpResponse::toString() {
   std::string ret;
 
   this->statusText = getStatusText(this->statusCode);
-  setHeader(request_field::CONTENT_LENGTH, util::itoa(body.length()));
+  setHeader(header_field::CONTENT_LENGTH, util::itoa(body.length()));
   ret = makeStatusLine();
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
     ret += makeHeaderField(it->first, it->second);

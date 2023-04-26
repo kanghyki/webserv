@@ -28,11 +28,11 @@ HttpResponse Http::processing(std::string s) {
 HttpResponse Http::getMethod(HttpRequest& req) {
   std::cout << "GET" << std::endl;
   HttpDataFecther fetcher(req, this->config);
-  std::string data = fetcher.fetch();
+//  std::string data = fetcher.fetch();
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(data)
+    .body(fetcher.getData(), fetcher.getMimeType())
     .build();
 }
 
@@ -49,7 +49,7 @@ HttpResponse Http::postMethod(HttpRequest& req) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(CREATED)
     .header("date", getNowStr())
-    .body(req.getBody())
+    .body(req.getBody(), req.getContentType())
     .build();
 }
 
@@ -83,7 +83,7 @@ HttpResponse Http::putMethod(HttpRequest& req) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(req.getBody())
+    .body(req.getBody(), req.getContentType())
     .build();
 }
 
@@ -91,15 +91,16 @@ HttpResponse Http::getErrorPage(HttpStatus status) {
   std::string                                 data;
   std::map<int, std::string>                  m = this->config.getErrorPage();
   std::map<int, std::string>::const_iterator  it;
+  std::string                                 path;
  
   if ((it = m.find(status)) != m.end()) {
-    std::string path = it->second;
+    path = it->second;
     data = HttpDataFecther::readFile(path);
   }
 
   return HttpResponseBuilder::getBuilder()
     .statusCode(status)
     .header("date", getNowStr())
-    .body(data)
+    .body(data, util::getMimeType("." +path))
     .build();
 }
