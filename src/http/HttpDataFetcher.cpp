@@ -1,8 +1,19 @@
 #include "HttpDataFetcher.hpp"
+#include "HttpStatus.hpp"
 
 HttpDataFecther::HttpDataFecther(HttpRequest request, ServerConfig config): request(request), config(config) {}
 
 HttpDataFecther::~HttpDataFecther() {}
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
 
 std::string HttpDataFecther::fetch() const {
   std::string data;
@@ -10,32 +21,37 @@ std::string HttpDataFecther::fetch() const {
   std::cout << "Root: " << this->config.getRoot() << std::endl;
   std::cout << "Request path: " << this->request.getPath() << std::endl;
 
-  data = readFile(this->request.getPath());
+  if (is_regular_file(("." + this->request.getPath()).c_str()))
+    data = readFile(this->request.getPath());
+  else 
+    data = readDirectory();
 
   return data;
 }
 
+
 std::string HttpDataFecther::readDirectory() const {
-  std::string dirpath = "." + this->config.getRoot() + this->request.getPath();
+  std::string dirpath = "." + this->request.getPath();
+  std::cout << "dirpaht" <<  dirpath << std::endl;
   DIR* directory = opendir(dirpath.c_str());
   if (directory == NULL) {
-    return "";
+    throw NOT_FOUND;
   }
 
   struct dirent* entry;
   std::string datastr = \
-                        "<html>\n\
-                        <head>\n\
-                        <title>Index of " + this->request.getPath()\
-                        + "</title>\n\
-                        </head>\n\
-                        <body>\n\
-                        <h1>Index of " + this->request.getPath()\
-                        + "</h1>\n\
-                        <table>\n\
-                        <tr><th align=\"left\">Name</th><th>Type</th><th>Size</th></tr>\
-                        \n\
-                        ";
+ "<html>\n\
+ <head>\n\
+ <title>Index of " + this->request.getPath()\
+ + "</title>\n\
+ </head>\n\
+ <body>\n\
+ <h1>Index of " + this->request.getPath()\
+ + "</h1>\n\
+ <table>\n\
+ <tr><th align=\"left\">Name</th><th>Type</th><th>Size</th></tr>\
+ \n\
+ ";
   while ((entry = readdir(directory)) != NULL) {
     datastr += "<tr>";
     datastr += "<td><a href=\"";
@@ -64,16 +80,47 @@ std::string HttpDataFecther::readDirectory() const {
 
     datastr += "</tr>\n";
   }
-  datastr += "</table>";
+  datastr += "</table>\
+</body>\
+</html>";
   closedir (directory);
   return datastr;
 }
 
-std::string HttpDataFecther::excuteCGI(const std::string &path) const {
-  return "5";
+std::string HttpDataFecther::excuteCGI(const std::string& path) const {
+  std::string ret;
+  int pid;
+  int fd[2];
+  int status;
+  
+  if (access(path.c_str(), X_OK) == 0) throw NOT_FOUND;
+  try {
+    util::ftPipe(fd);
+    pid = util::ftFork();
+  } catch (util::SystemFunctionException& e) {
+    throw INTERNAL_SERVER_ERROR;
+  }
+  
+  if (pid == 0) {
+    close(fd[READ]);
+    dup2(fd[WRITE], STDOUT_FILENO);
+    close(fd[WRITE]);
+    char* const p = (char* const)path.c_str();
+    char * const args[] = {"python3", p, nullptr};
+    if (execve("/usr/bin/python3", args, 0) < 0)
+      throw INTERNAL_SERVER_ERROR;
+    exit(0);
+  }
+  close(fd[WRITE]);
+  waitpid(pid, &status, 0);
+  ret = util::readFd(fd[READ]);
+
+  std::cout << "ret : " << ret << std::endl;
+
+  return ret;
 }
 
-std::string HttpDataFecther::readFile(const std::string &path) {
+std::string HttpDataFecther::readFile(const std::string& path) {
   std::string ret;
 
   try {

@@ -1,6 +1,5 @@
 #include "Util.hpp"
 
-#include <iostream>
 namespace util {
   std::vector<std::string> split(const std::string& str, char delim) {
     std::vector<std::string> ret;
@@ -59,8 +58,9 @@ namespace util {
 
     if (!in.is_open()) throw util::IOException();
     while (std::getline(in, line))
-      ret += line;
+      ret += line + "\n";
 
+    in.close();
     return ret;
   }
 
@@ -110,11 +110,41 @@ namespace util {
     if (out.fail() || out.bad() || out.eof()) throw util::IOException();
   }
 
+  int ftFork(void) {
+    int pid = fork();
+
+    if (pid == -1) throw util::SystemFunctionException();
+
+    return pid;
+  }
+
+  std::string readFd(int fd) {
+    std::string ret;
+    int readSize;
+    int bufSize = 128;
+    char buf[bufSize + 1];
+
+    while ((readSize = read(fd, buf, bufSize)) > 0) {
+      buf[readSize] = 0;
+      ret += buf;
+    }
+
+    return ret;
+  }
+
+  void ftPipe(int* fd) {
+    if (pipe(fd) == -1)  throw util::SystemFunctionException();
+  }
+
   const char* StringFoundException::what() const throw() {
     return "Target not found";
   }
 
   const char* IOException::what() const throw() {
     return "File open failed";
+  }
+
+  const char* SystemFunctionException::what() const throw() {
+    return "System fuction failed";
   }
 }

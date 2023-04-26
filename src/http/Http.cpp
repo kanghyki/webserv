@@ -28,11 +28,11 @@ HttpResponse Http::processing(std::string s) {
 HttpResponse Http::getMethod(HttpRequest& req) {
   std::cout << "GET" << std::endl;
   HttpDataFecther fetcher(req, this->config);
-//  std::string data = fetcher.fetch();
+  std::string data = fetcher.fetch();
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(fetcher.getData(), fetcher.getMimeType())
+    .body(data, fetcher.getMimeType())
     .build();
 }
 

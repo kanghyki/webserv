@@ -5,6 +5,8 @@
 # include <sstream>
 # include <vector>
 # include <map>
+# include <iostream>
+# include <unistd.h>
 
 namespace util {
   std::vector<std::string> split(const std::string& str, char delim);
@@ -16,6 +18,9 @@ namespace util {
   std::string itoa(int n);
   const std::string getMimeType(const std::string& filename);
   void writeFile(const std::string& filename, const std::string& data);
+  int ftFork(void);
+  void ftPipe(int* fd);
+  std::string readFd(int fd);
 
   class StringFoundException : public std::exception
   {
@@ -24,6 +29,12 @@ namespace util {
   };
 
   class IOException : public std::exception
+  {
+    public:
+      const char* what(void) const throw();
+  };
+
+  class SystemFunctionException : public std::exception
   {
     public:
       const char* what(void) const throw();

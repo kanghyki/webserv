@@ -188,8 +188,14 @@ void Server::receiveData(int fd) {
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;
-  if (recv_size <= 0) {
+  if (recv_size < 0)
     throw "error";
+  if (recv_size == 0) {
+    std::cout << "recv_size:0" << std::endl;
+    FD_CLR(fd, &this->reads);
+    clearReceived(fd);
+    close(fd);
+    return ;
   }
   buf[recv_size] = 0;
   addData(fd, buf);
