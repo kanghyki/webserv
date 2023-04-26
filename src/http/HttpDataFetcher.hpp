@@ -24,7 +24,6 @@ class HttpDataFecther {
     HttpRequest         request;
     ServerConfig        config;
 
-    std::string         readDirectory() const;
     std::string         excuteCGI(const std::string &path) const;
 };
 
