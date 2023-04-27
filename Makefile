@@ -32,7 +32,8 @@ SRCS			=	main.cpp\
 						HttpDataFetcher.cpp\
 						HttpResponseBuilder.cpp\
 						HttpStatus.cpp\
-						Http.cpp
+						Http.cpp\
+						MimeType.cpp
 
 
 OBJS_DIR	=	./obj

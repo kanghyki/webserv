@@ -79,29 +79,6 @@ namespace util {
     return ss.str();
   }
 
-  const std::string getMimeType(const std::string& filename) {
-    int BUF_SIZE = 128;
-    std::string ret;
-    char buf[BUF_SIZE + 1];
-    std::string cmd = "file --brief --mime-type " + filename;
-    FILE*       pipe = popen(cmd.c_str(), "r");
-    int readSize;
-
-    if (!pipe) throw util::IOException();
-
-    while (!feof(pipe)) {
-      readSize = fread(buf, 1, BUF_SIZE, pipe);
-      buf[readSize] = 0;
-      if (readSize != 0)
-        ret += buf;
-    }
-
-    pclose(pipe);
-    ret.erase(ret.find_last_not_of("\n\r") + 1);
- 
-    return ret;
-  }
-
   void  writeFile(const std::string& filename, const std::string& data) {
     std::ofstream out(filename, std::ofstream::out);
     if (!out.is_open()) throw util::IOException();

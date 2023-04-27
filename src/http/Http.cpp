@@ -32,7 +32,7 @@ HttpResponse Http::getMethod(HttpRequest& req) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(data, fetcher.getMimeType())
+    .body(data, req.getContentType())
     .build();
 }
 
@@ -101,6 +101,6 @@ HttpResponse Http::getErrorPage(HttpStatus status) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(status)
     .header("date", getNowStr())
-    .body(data, util::getMimeType("." +path))
+    .body(data, "text/html")
     .build();
 }

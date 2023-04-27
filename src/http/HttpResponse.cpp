@@ -1,4 +1,5 @@
 #include "HttpResponse.hpp"
+#include "HttpHeaderField.hpp"
 
 const std::string HttpResponse::version = "HTTP/1.1";
 

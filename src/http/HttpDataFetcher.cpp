@@ -135,15 +135,3 @@ std::string HttpDataFecther::readFile(const std::string& path) {
 const std::string HttpDataFecther::getData(void) const {
   return readFile(this->request.getPath());
 }
-
-const std::string HttpDataFecther::getMimeType(void) const {
-  std::string ret;
-
-  try {
-    ret = util::getMimeType("." + this->request.getPath());
-  } catch (util::IOException& e) {
-    throw NOT_FOUND;
-  }
-
-  return ret;
-}
