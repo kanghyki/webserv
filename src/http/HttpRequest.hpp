@@ -20,7 +20,7 @@ namespace request_method {
 
 class HttpRequest {
   public:
-    HttpRequest(std::string request, const ServerConfig& config);
+    HttpRequest(std::string request, const ServerConfig& sc);
     ~HttpRequest();
 
     void                                parseHeader(const std::string &h) throw(HttpStatus);
@@ -32,7 +32,7 @@ class HttpRequest {
     std::string                         getField(const std::string& field) const;
     std::string                         getBody() const;
     const std::string                   getContentType(void) const;
-    const ServerConfig&                 getConfig() const;
+    const LocationConfig&               getConfig() const;
 
     void                                setBody(const std::string& body);
 
@@ -46,7 +46,7 @@ class HttpRequest {
     std::string                         version;
     std::string                         body;
     std::map<std::string, std::string>  field;
-    const ServerConfig&                 config;
+    LocationConfig                      config;
 
     void                                setURI(const std::string& URI);
     void                                setMethod(const std::string& method);

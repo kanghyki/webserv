@@ -38,6 +38,17 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
   return *this;
 }
 
+const LocationConfig ServerConfig::findLocationConfig(const std::string& path) const {
+  LocationConfig ret(*this);
+
+  for (int i = 0; i < this->locations.size(); ++i) {
+    if (this->locations[i].getPath() == path) {
+      return this->locations[i];
+    }
+  }
+  return LocationConfig(*this);
+}
+
 // getter
 
 short ServerConfig::getPort() const {

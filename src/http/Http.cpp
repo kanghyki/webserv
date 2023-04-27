@@ -85,7 +85,7 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
     .build();
 }
 
-HttpResponse Http::getErrorPage(HttpStatus s, const ServerConfig& config) {
+HttpResponse Http::getErrorPage(HttpStatus s, const LocationConfig& config) {
   std::string                                 data;
   std::map<int, std::string>                  m = config.getErrorPage();
   std::map<int, std::string>::const_iterator  it;

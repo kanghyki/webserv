@@ -18,7 +18,7 @@ class Http {
     ~Http();
 
     HttpResponse  processing(const HttpRequest& req) throw (HttpStatus);
-    HttpResponse  getErrorPage(HttpStatus s, const ServerConfig& config);
+    HttpResponse  getErrorPage(HttpStatus s, const LocationConfig& config);
 
   private:
     HttpResponse  getMethod(const HttpRequest& req);

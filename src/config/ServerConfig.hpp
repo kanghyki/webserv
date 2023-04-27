@@ -17,6 +17,8 @@ class ServerConfig: public CommonConfig {
     ServerConfig(const ServerConfig& obj);
     ServerConfig& operator=(const ServerConfig& obj);
 
+    const LocationConfig        findLocationConfig(const std::string& path) const;
+
     short                       getPort() const;
     std::string                 getHost() const;
     std::string                 getServerName() const;

@@ -3,12 +3,14 @@
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
 const std::string HttpRequest::CRLF = "\r\n";
 
-HttpRequest::HttpRequest(std::string request, const ServerConfig& config): config(config) {
-  std::vector<std::string>            vs;
+HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
+  std::vector<std::string> vs;
+
 
   vs = util::split(request, CRLF + CRLF);
   parseHeader(vs[0]);
   setBody(vs[1]);
+  this->config = sc.findLocationConfig(this->getPath());
 }
 
 HttpRequest::~HttpRequest() {}
@@ -130,7 +132,7 @@ const std::string HttpRequest::getContentType(void) const {
   return this->getMimeType();
 }
 
-const ServerConfig&  HttpRequest::getConfig() const {
+const LocationConfig& HttpRequest::getConfig() const {
   return this->config;
 }
 
