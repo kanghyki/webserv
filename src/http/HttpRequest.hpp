@@ -3,7 +3,6 @@
 
 # include "./HttpHeaderField.hpp"
 # include "./HttpStatus.hpp"
-# include "./UriParser.hpp"
 # include "../Util.hpp"
 
 # include <stdexcept>
@@ -12,10 +11,10 @@
 # include <map>
 
 namespace request_method {
-  const std::string GET                   =   "GET";
-  const std::string POST                  =   "POST";
-  const std::string DELETE                =   "DELETE";
-  const std::string PUT                   =   "PUT";
+  const std::string GET    = "GET";
+  const std::string POST   = "POST";
+  const std::string DELETE = "DELETE";
+  const std::string PUT    = "PUT";
 }
 
 class HttpRequest {
@@ -28,6 +27,7 @@ class HttpRequest {
 
     std::string                         getMethod() const;
     std::string                         getPath() const;
+    std::string                         getQueryString() const;
     std::string                         getVersion() const;
     std::string                         getField(const std::string& field) const;
     std::string                         getBody() const;
@@ -41,16 +41,20 @@ class HttpRequest {
 
     std::string                         method;
     std::string                         path;
+    std::string                         queryString;
     std::string                         version;
     std::string                         body;
     std::map<std::string, std::string>  field;
-    std::map<std::string, std::string>  query;
+
+    void                                setURI(const std::string& URI);
+    void                                setMethod(const std::string& method);
+    void                                setVersion(const std::string& version);
 
     void                                parseStatusLine(const std::string &line);
 
     void                                validateMethod(const std::string &method);
     void                                validateVersion(const std::string &path);
-    void                                validatePath(const std::string &version);
+    void                                validateURI(const std::string &version);
 
     std::pair<std::string, std::string> splitField(const std::string& line);
 

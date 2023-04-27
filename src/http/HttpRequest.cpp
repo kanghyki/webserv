@@ -32,17 +32,9 @@ void HttpRequest::parseStatusLine(const std::string& line) {
   std::vector<std::string> vs = util::split(line, " ");
   if (vs.size() != 3) throw BAD_REQUEST;
 
-  validateMethod(vs[0]);
-  validatePath(vs[1]);
-  validateVersion(vs[2]);
-
-  this->method = vs[0]; 
-
-  UriParser up(vs[1]);
-  this->path = up.getPath();
-  this->query = up.getQuery();
-
-  this->version = vs[2];
+  setMethod(vs[0]);
+  setURI(vs[1]);
+  setVersion(vs[2]);
 }
 
 void HttpRequest::validateMethod(const std::string &method) {
@@ -54,7 +46,7 @@ void HttpRequest::validateMethod(const std::string &method) {
   this->method = method;
 }
 
-void HttpRequest::validatePath(const std::string &path) {
+void HttpRequest::validateURI(const std::string &path) {
   int i;
 
   i = 0;
@@ -62,7 +54,7 @@ void HttpRequest::validatePath(const std::string &path) {
   if (path[i++] != '/')                   throw BAD_REQUEST;
 
   while (i < path.length()) {
-    if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=", path[i]))
+    if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=-", path[i]))
       throw BAD_REQUEST;
     ++i;
   }
@@ -99,6 +91,8 @@ std::pair<std::string, std::string> HttpRequest::splitField(const std::string& l
 std::string HttpRequest::getMethod() const { return this->method; }
 
 std::string HttpRequest::getPath() const { return this->path; }
+
+std::string HttpRequest::getQueryString() const { return this->queryString; }
 
 std::string HttpRequest::getVersion() const { return this->version; }
 
@@ -143,6 +137,26 @@ const std::string HttpRequest::getContentType(void) const {
  */
 
 void  HttpRequest::setBody(const std::string& body) { this->body = body; }
+
+void HttpRequest::setURI(const std::string& URI) {
+  validateURI(URI);
+
+  int pos = (URI.find('?'));
+  this->path = URI.substr(0, pos);
+  if (pos != std::string::npos) this->queryString = URI.substr(pos + 1);
+}
+
+void HttpRequest::setMethod(const std::string& method) {
+  validateMethod(method);
+
+  this->method = method;
+}
+
+void HttpRequest::setVersion(const std::string& version) {
+  validateVersion(version);
+
+  this->version = version;
+}
 
 //void HttpRequest::parseCacheControl(const std::string &s) {
 //}

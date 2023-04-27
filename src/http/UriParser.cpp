@@ -1,15 +1,6 @@
 #include "./UriParser.hpp"
 
 UriParser::UriParser(const std::string& req) {
-  int pos = (req.find('?'));
-
-  if (pos == std::string::npos) {
-    this->path = req.substr(0, pos);
-  }
-  else {
-    this->path = req.substr(0, pos);
-    parseQuery(req.substr(pos + 1));
-  }
 }
 
 UriParser::~UriParser() {}
