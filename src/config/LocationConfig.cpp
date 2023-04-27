@@ -24,9 +24,7 @@ LocationConfig::~LocationConfig() {}
 LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
-    this->clientBodyTimeout = obj.getClientBodyTimeout();
-    this->clientHeaderTimeout = obj.getClientHeaderTimeout();
-    this->sendTimeout = obj.getSendTimeout();
+    this->timeout = obj.getTimeout();
     this->root = obj.getRoot();
     this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();

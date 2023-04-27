@@ -115,6 +115,7 @@ void Server::appendTimeRecord(int fd) {
   this->timeout.insert(std::make_pair(fd, initTime));
 }
 
+// TODO: MUTIPLE CGI ? RESOURCE RECOVERY
 void Server::DisconnectTimeoutClient() {
   const std::map<int, time_t>&  record = getTimeRecord();
   std::vector<int>              removeList;
@@ -124,7 +125,7 @@ void Server::DisconnectTimeoutClient() {
     time_t curTime;
 
     time(&curTime);
-    if (curTime - reqTime > TIMEOUT_MAX) {
+    if (curTime - reqTime > this->config.getTimeout()) {
       int fd = it->first;
 
       // 408 error

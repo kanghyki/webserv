@@ -1,26 +1,20 @@
 #include "./CommonConfig.hpp"
 
 const int         CommonConfig::DEFAULT_CLIENT_BODY_SIZE = 8192;
-const int         CommonConfig::DEFAULT_CLIENT_BODY_TIMEOUT = 60;
-const int         CommonConfig::DEFAULT_CLIENT_HEADER_TIMEOUT = 60;
-const int         CommonConfig::DEFAULT_SEND_TIMEOUT = 60;
+const int         CommonConfig::DEFAULT_TIMEOUT = 60;
 const std::string CommonConfig::DEFAULT_ROOT = "/html";
 const std::string CommonConfig::DEFAULT_INDEX = "index.html";
 
 CommonConfig::CommonConfig():
   clientBodySize(DEFAULT_CLIENT_BODY_SIZE),
-  clientBodyTimeout(DEFAULT_CLIENT_BODY_TIMEOUT),
-  clientHeaderTimeout(DEFAULT_CLIENT_HEADER_TIMEOUT),
-  sendTimeout(DEFAULT_SEND_TIMEOUT),
+  timeout(DEFAULT_TIMEOUT),
   root(DEFAULT_ROOT),
   errorPage(),
   index() {}
 
 CommonConfig::CommonConfig(const CommonConfig& obj):
   clientBodySize(obj.getClientBodySize()),
-  clientBodyTimeout(obj.getClientBodyTimeout()),
-  clientHeaderTimeout(obj.getClientHeaderTimeout()),
-  sendTimeout(obj.getSendTimeout()),
+  timeout(obj.getTimeout()),
   root(obj.getRoot()),
   errorPage(obj.getErrorPage()),
   index(obj.getIndex()) {}
@@ -30,9 +24,7 @@ CommonConfig::~CommonConfig() {}
 CommonConfig &CommonConfig::operator=(const CommonConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
-    this->clientBodyTimeout = obj.getClientBodyTimeout();
-    this->clientHeaderTimeout = obj.getClientHeaderTimeout();
-    this->sendTimeout = obj.getSendTimeout();
+    this->timeout = obj.getTimeout();
     this->root = obj.getRoot();
     this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
@@ -44,11 +36,7 @@ CommonConfig &CommonConfig::operator=(const CommonConfig& obj) {
 
 int CommonConfig::getClientBodySize() const { return this->clientBodySize; }
 
-int CommonConfig::getClientBodyTimeout() const { return this->clientBodyTimeout; }
-
-int CommonConfig::getClientHeaderTimeout() const { return this->clientHeaderTimeout; }
-
-int CommonConfig::getSendTimeout() const { return this->sendTimeout; }
+int CommonConfig::getTimeout() const { return this->timeout; }
 
 std::string CommonConfig::getRoot() const { return this->root; }
 
@@ -69,11 +57,7 @@ std::vector<std::string> CommonConfig::getIndex() const {
 
 void CommonConfig::setClientBodySize(int n) { this->clientBodySize = n; }
 
-void CommonConfig::setClientBodyTimeout(int n) { this->clientBodyTimeout = n; }
-
-void CommonConfig::setClientHeaderTimeout(int n) { this->clientHeaderTimeout = n; }
-
-void CommonConfig::setSendTimeout(int n) { this->sendTimeout = n; }
+void CommonConfig::setTimeout(int n) { this->timeout = n; }
 
 void CommonConfig::setRoot(std::string root) { this->root = root; }
 
