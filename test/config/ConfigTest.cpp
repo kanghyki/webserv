@@ -63,3 +63,12 @@ void ConfigTest::defaultConfig() {
   AssertEqual(8192, result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getClientBodySize());
   AssertEqual(std::string("/html"), result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getRoot());
 }
+
+void ConfigTest::location() {
+  ConfigParser cp;
+  Config result = cp.parse("./location.conf");
+
+  LocationConfig lc = result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0];
+
+  AssertEqual(std::string("/usr/bin/python3"), lc.getCGI());
+}
