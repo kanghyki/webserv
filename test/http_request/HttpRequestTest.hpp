@@ -7,6 +7,7 @@
 class HttpRequestTest {
   public:
     static void test();
+    static void test1();
   private:
 };
 

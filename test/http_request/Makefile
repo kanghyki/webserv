@@ -9,8 +9,7 @@ TEST_LIB_SRC	=	kunit.cpp
 
 # SRCS
 SRC_DIR				=	../../src/http
-SRC						=	HttpRequest.cpp\
-								UriParser.cpp
+SRC						=	HttpRequest.cpp
 
 UTIL_DIR			=	../../src
 UTIL_SRC			=	Util.cpp
@@ -18,8 +17,7 @@ UTIL_SRC			=	Util.cpp
 # TEST_SRCS
 TEST_SRC_DIR	=	.
 TEST_SRC			=	main.cpp\
-								HttpRequestTest.cpp\
-								UriParserTest.cpp
+								HttpRequestTest.cpp
 
 # OBJS
 OBJ						=	$(addprefix $(SRC_DIR)/, $(SRC:.cpp=.o))\
