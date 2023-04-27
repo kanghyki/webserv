@@ -61,6 +61,7 @@ LocationConfig ConfigParser::parseLocation(ServerConfig& serverConf) {
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
+    else if (curToken().is(Token::CGI)) parseCGI(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoIndex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
     else throwBadSyntax();
@@ -81,6 +82,7 @@ LocationConfig ConfigParser::parseLocation(LocationConfig& locationConf) {
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
+    else if (curToken().is(Token::CGI)) parseCGI(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoIndex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
     else throwBadSyntax();
@@ -99,7 +101,6 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
 
 // server
 
-#include <iostream>
 void ConfigParser::parseListen(ServerConfig& conf) {
   nextToken();
   // HOST:PORT
@@ -109,13 +110,7 @@ void ConfigParser::parseListen(ServerConfig& conf) {
     if (sp.size() != 2) throw std::runtime_error("Listen error");
     // TODO: check arguments
     conf.setHost(sp[0]);
-    srand(time(0));
-    int r = rand() % 30000;
-    if (r < 1023)
-      r += 1023;
-    std::cout << "[ http://localhost:" << r << "/html/index.html ]" << std::endl;
-//    conf.setPort(std::atoi(sp[1].c_str()));
-    conf.setPort(r);
+    conf.setPort(std::atoi(sp[1].c_str()));
   }
   // PORT
   else if (curToken().is(Token::INT)) {
@@ -141,6 +136,12 @@ void ConfigParser::parseAlias(LocationConfig& conf) {
 void ConfigParser::parseLimitExcept(LocationConfig& conf) {
   expectNextToken(Token::IDENT);
   conf.setLimitExcept(curToken().getLiteral());
+  expectNextToken(Token::SEMICOLON);
+}
+
+void ConfigParser::parseCGI(LocationConfig& conf) {
+  expectNextToken(Token::IDENT);
+  conf.setCGI(curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }
 

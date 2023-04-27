@@ -24,7 +24,6 @@ const std::string Token::RETURN                   = "return";
 const std::string Token::CLIENT_BODY_TIMEOUT      = "client_body_timeout";
 const std::string Token::CLIENT_HEADER_TIMEOUT    = "client_header_timeout";
 const std::string Token::SEND_TIMEOUT             = "send_timeout";
-
 const std::string Token::CGI                      = "cgi";
 
 const int         Token::IDENT_IDX                = 0;
@@ -44,6 +43,10 @@ const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"limit_except",                               Token::LIMIT_EXCEPT},
   {"autoindex",                                  Token::AUTOINDEX},
   {"return",                                     Token::RETURN},
+  {"client_body_timeout",                        Token::CLIENT_BODY_TIMEOUT},
+  {"client_header_timeout",                      Token::CLIENT_HEADER_TIMEOUT},
+  {"send_timeout",                               Token::SEND_TIMEOUT},
+  {"cgi",                                        Token::CGI},
 };
 
 Token::Token():
