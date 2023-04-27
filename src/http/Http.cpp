@@ -8,7 +8,7 @@ Http::Http() {}
 
 Http::~Http() {}
 
-HttpResponse Http::processing(const HttpRequest& req) {
+HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
 
   try {
@@ -30,7 +30,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(fetcher.getData(), fetcher.getMimeType())
+    .body(data, "text/html")
     .build();
 }
 

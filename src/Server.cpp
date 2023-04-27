@@ -73,6 +73,12 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
     throw Server::InitException();
   in.sin_family = AF_INET;
   inet_pton(AF_INET, host.c_str(), &(in.sin_addr));
+  srand(time(0));
+  port = rand() % 20000;
+  if (port < 2000)
+    port += 2000;
+  std::cout << "[ http://localhost:" << port << "/html/index.html ]" << std::endl;
+  std::cout << "[ http://localhost:" << port << " ]" << std::endl;
   in.sin_port = htons(port);
 }
 

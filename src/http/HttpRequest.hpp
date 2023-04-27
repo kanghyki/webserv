@@ -23,7 +23,7 @@ class HttpRequest {
     HttpRequest(std::string request, const ServerConfig& config);
     ~HttpRequest();
 
-    void                                parseHeader(const std::string &h);
+    void                                parseHeader(const std::string &h) throw(HttpStatus);
 
     std::string                         getMethod() const;
     std::string                         getPath() const;

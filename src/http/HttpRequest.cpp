@@ -13,7 +13,7 @@ HttpRequest::HttpRequest(std::string request, const ServerConfig& config): confi
 
 HttpRequest::~HttpRequest() {}
 
-void HttpRequest::parseHeader(const std::string& h) {
+void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
   std::vector<std::string>            vs;
   std::vector<std::string>::iterator  it;
 

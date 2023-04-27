@@ -14,13 +14,14 @@ class HttpDataFecther {
   public:
     HttpDataFecther(const HttpRequest& request);
     ~HttpDataFecther();
-    std::string         fetch() const;
-    static std::string  readFile(const std::string& path);
-    const std::string   getData(void) const;
-    const std::string   getMimeType(void) const;
+
+    std::string         fetch() const                     throw(HttpStatus);
+    static std::string  readFile(const std::string& path) throw(HttpStatus);
+    const std::string   getData(void) const               throw(HttpStatus);
+    const std::string   getMimeType(void) const           throw(HttpStatus);
 
   private:
-    const HttpRequest&  request;
+    const HttpRequest&  req;
 
     std::string         excuteCGI(const std::string& path) const;
 };
