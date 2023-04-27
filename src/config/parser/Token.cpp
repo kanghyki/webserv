@@ -1,29 +1,34 @@
 #include "./Token.hpp"
 
-const std::string Token::ILLEGAL                 = "ILLEGAL";
-const std::string Token::END_OF_FILE             = "EOF";
-const std::string Token::IDENT                   = "IDENT";
-const std::string Token::INT                     = "int";
-const std::string Token::SEMICOLON               = ";";
-const std::string Token::LBRACE                  = "{";
-const std::string Token::RBRACE                  = "}";
+const std::string Token::ILLEGAL                  = "ILLEGAL";
+const std::string Token::END_OF_FILE              = "EOF";
+const std::string Token::IDENT                    = "IDENT";
+const std::string Token::INT                      = "int";
+const std::string Token::SEMICOLON                = ";";
+const std::string Token::LBRACE                   = "{";
+const std::string Token::RBRACE                   = "}";
 // Keyword
-const std::string Token::HTTP                    = "http";
-const std::string Token::SERVER                  = "server";
-const std::string Token::LOCATION                = "location";
-const std::string Token::LISTEN                  = "listen";
-const std::string Token::SERVER_NAME             = "server_name";
-const std::string Token::ROOT                    = "root";
-const std::string Token::ERROR_PAGE              = "error_page";
-const std::string Token::CLIENT_BODY_BUFFER_SIZE = "client_body_buffer_size";
-const std::string Token::INDEX                   = "index";
-const std::string Token::ALIAS                   = "alias";
-const std::string Token::LIMIT_EXCEPT            = "limit_except";
-const std::string Token::AUTOINDEX               = "autoindex";
-const std::string Token::RETURN                  = "return";
+const std::string Token::HTTP                     = "http";
+const std::string Token::SERVER                   = "server";
+const std::string Token::LOCATION                 = "location";
+const std::string Token::LISTEN                   = "listen";
+const std::string Token::SERVER_NAME              = "server_name";
+const std::string Token::ROOT                     = "root";
+const std::string Token::ERROR_PAGE               = "error_page";
+const std::string Token::CLIENT_BODY_BUFFER_SIZE  = "client_body_buffer_size";
+const std::string Token::INDEX                    = "index";
+const std::string Token::ALIAS                    = "alias";
+const std::string Token::LIMIT_EXCEPT             = "limit_except";
+const std::string Token::AUTOINDEX                = "autoindex";
+const std::string Token::RETURN                   = "return";
+const std::string Token::CLIENT_BODY_TIMEOUT      = "client_body_timeout";
+const std::string Token::CLIENT_HEADER_TIMEOUT    = "client_header_timeout";
+const std::string Token::SEND_TIMEOUT             = "send_timeout";
 
-const int         Token::IDENT_IDX                       = 0;
-const int         Token::TYPE_IDX                        = 1;
+const std::string Token::CGI                      = "cgi";
+
+const int         Token::IDENT_IDX                = 0;
+const int         Token::TYPE_IDX                 = 1;
 
 const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"http",                                       Token::HTTP},
