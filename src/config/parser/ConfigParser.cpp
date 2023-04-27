@@ -6,7 +6,7 @@ ConfigParser::ConfigParser() {
 
 ConfigParser::~ConfigParser() {};
 
-Config ConfigParser::parse(const std::string& fileName) {
+Config ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
   Config conf;
 
   generateToken(fileName);
@@ -287,7 +287,7 @@ void ConfigParser::expectError(const std::string& expected) const {
     + ":" + itoa(curToken().getPos())
     + " expected \'" + expected + "\' but \'" + curToken().getLiteral() + "\'";
 
-  throw std::invalid_argument(errorMsg);
+  throw std::runtime_error(errorMsg);
 }
 
 void ConfigParser::throwBadSyntax() const {
@@ -298,5 +298,5 @@ void ConfigParser::throwBadSyntax() const {
     + ":" + std::to_string(curToken().getPos())
     + " bad syntax \'" + curToken().getLiteral() + "\'";
 
-  throw std::invalid_argument(errorMsg);
+  throw std::runtime_error(errorMsg);
 }

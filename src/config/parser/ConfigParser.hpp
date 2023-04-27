@@ -16,7 +16,7 @@ class ConfigParser {
     ConfigParser();
     ~ConfigParser();
 
-    Config                    parse(const std::string &fileName);
+    Config                    parse(const std::string &fileName) throw(std::runtime_error);
 
   private:
     unsigned long             pos;
