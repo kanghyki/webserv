@@ -49,19 +49,25 @@ void ConfigTest::defaultConfig() {
   Config result = cp.parse("./test2.conf");
 
   //http
-  AssertEqual(8192, result.getHttpConfig()[0].getClientBodySize());
-  AssertEqual(std::string("/html"), result.getHttpConfig()[0].getRoot());
+  HttpConfig hc = result.getHttpConfig()[0];
+  AssertEqual(8192, hc.getClientBodySize());
+  AssertEqual(std::string("/html"), hc.getRoot());
 
   //server
-  AssertEqual(std::string("127.0.0.1"), result.getHttpConfig()[0].getServerConfig()[0].getHost());
-  AssertEqual(8192, result.getHttpConfig()[0].getServerConfig()[0].getClientBodySize());
-  AssertEqual(std::string("/html"), result.getHttpConfig()[0].getServerConfig()[0].getRoot());
+  ServerConfig sc = result.getHttpConfig()[0].getServerConfig()[0];
+  AssertEqual(std::string("127.0.0.1"), sc.getHost());
+  AssertEqual(8192, sc.getClientBodySize());
+  AssertEqual(std::string("/html"), sc.getRoot());
 
   // location
-  AssertEqual(std::string("/hello"), result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getPath());
-  AssertEqual(false, result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].isAutoIndex());
-  AssertEqual(8192, result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getClientBodySize());
-  AssertEqual(std::string("/html"), result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0].getRoot());
+  LocationConfig lc = result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0];
+  AssertEqual(std::string("/hello"), lc.getPath());
+  AssertEqual(false, lc.isAutoIndex());
+  AssertEqual(8192, lc.getClientBodySize());
+  AssertEqual(std::string("/html"), lc.getRoot());
+  AssertEqual(60, lc.getClientBodyTimeout());
+  AssertEqual(60, lc.getClientHeaderTimeout());
+  AssertEqual(60, lc.getSendTimeout());
 }
 
 void ConfigTest::location() {
@@ -71,4 +77,7 @@ void ConfigTest::location() {
   LocationConfig lc = result.getHttpConfig()[0].getServerConfig()[0].getLocationConfig()[0];
 
   AssertEqual(std::string("/usr/bin/python3"), lc.getCGI());
+  AssertEqual(40, lc.getClientBodyTimeout());
+  AssertEqual(41, lc.getClientHeaderTimeout());
+  AssertEqual(42, lc.getSendTimeout());
 }
