@@ -21,7 +21,9 @@ std::string HttpDataFecther::fetch() const {
   std::cout << "Root: " << this->config.getRoot() << std::endl;
   std::cout << "Request path: " << this->request.getPath() << std::endl;
 
-  if (is_regular_file(("." + this->request.getPath()).c_str()))
+  if (this->request.getPath().rfind(".py") != std::string::npos)
+    data = excuteCGI("." + this->request.getPath());
+  else if (is_regular_file(("." + this->request.getPath()).c_str()))
     data = readFile(this->request.getPath());
   else 
     data = readDirectory();

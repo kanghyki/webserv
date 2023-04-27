@@ -41,5 +41,5 @@ const std::string MimeType::getMimeType(const std::string& filename) const {
       return this->mimeTypes.at(extension);
   }
 
-  return "text/plain";
+  return "text/html";
 }
