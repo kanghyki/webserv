@@ -4,31 +4,29 @@
 #include <sys/select.h>
 #include <unistd.h>
 
-Http::Http(ServerConfig config): config(config) {}
+Http::Http() {}
 
 Http::~Http() {}
 
-HttpResponse Http::processing(std::string s) {
+HttpResponse Http::processing(const HttpRequest& req) {
   HttpResponse ret;
 
   try {
-    HttpRequest req(s);
-
     if (req.getMethod() == request_method::GET) ret = getMethod(req);
     else if (req.getMethod() == request_method::POST) ret = postMethod(req);
     else if (req.getMethod() == request_method::DELETE) ret = deleteMethod(req);
     else if (req.getMethod() == request_method::PUT) ret = putMethod(req);
   } catch (HttpStatus status) {
-    ret = getErrorPage(status);
+    ret = getErrorPage(status, req.getConfig());
   }
 
   return ret;
 }
 
-HttpResponse Http::getMethod(HttpRequest& req) {
+HttpResponse Http::getMethod(const HttpRequest& req) {
   std::cout << "GET" << std::endl;
-  HttpDataFecther fetcher(req, this->config);
-//  std::string data = fetcher.fetch();
+  HttpDataFecther fetcher(req);
+  std::string data = fetcher.fetch();
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
@@ -36,7 +34,7 @@ HttpResponse Http::getMethod(HttpRequest& req) {
     .build();
 }
 
-HttpResponse Http::postMethod(HttpRequest& req) {
+HttpResponse Http::postMethod(const HttpRequest& req) {
   std::cout << "POST" << std::endl;
   if (access(("." + req.getPath()).c_str(), F_OK) == 0) throw BAD_REQUEST;
 
@@ -53,7 +51,7 @@ HttpResponse Http::postMethod(HttpRequest& req) {
     .build();
 }
 
-HttpResponse Http::deleteMethod(HttpRequest& req) {
+HttpResponse Http::deleteMethod(const HttpRequest& req) {
   std::cout << "DELETE" << std::endl;
   DIR* dir = opendir(("." + req.getPath()).c_str());
   if (dir) {
@@ -67,7 +65,7 @@ HttpResponse Http::deleteMethod(HttpRequest& req) {
     .build();
 }
 
-HttpResponse Http::putMethod(HttpRequest& req) {
+HttpResponse Http::putMethod(const HttpRequest& req) {
   std::cout << "PUT" << std::endl;
   DIR* dir = opendir(("." + req.getPath()).c_str());
   if (dir) {
@@ -87,19 +85,19 @@ HttpResponse Http::putMethod(HttpRequest& req) {
     .build();
 }
 
-HttpResponse Http::getErrorPage(HttpStatus status) {
+HttpResponse Http::getErrorPage(HttpStatus s, const ServerConfig& config) {
   std::string                                 data;
-  std::map<int, std::string>                  m = this->config.getErrorPage();
+  std::map<int, std::string>                  m = config.getErrorPage();
   std::map<int, std::string>::const_iterator  it;
   std::string                                 path;
- 
-  if ((it = m.find(status)) != m.end()) {
+
+  if ((it = m.find(s)) != m.end()) {
     path = it->second;
     data = HttpDataFecther::readFile(path);
   }
 
   return HttpResponseBuilder::getBuilder()
-    .statusCode(status)
+    .statusCode(s)
     .header("date", getNowStr())
     .body(data, util::getMimeType("." +path))
     .build();

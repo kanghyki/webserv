@@ -1,13 +1,13 @@
 #include "HttpDataFetcher.hpp"
 
-HttpDataFecther::HttpDataFecther(HttpRequest request, ServerConfig config): request(request), config(config) {}
+HttpDataFecther::HttpDataFecther(const HttpRequest& request): request(request) {}
 
 HttpDataFecther::~HttpDataFecther() {}
 
 std::string HttpDataFecther::fetch() const {
   std::string data;
 
-  std::cout << "Root: " << this->config.getRoot() << std::endl;
+  std::cout << "Root: " << this->request.getConfig().getRoot() << std::endl;
   std::cout << "Request path: " << this->request.getPath() << std::endl;
 
   data = readFile(this->request.getPath());
@@ -15,11 +15,11 @@ std::string HttpDataFecther::fetch() const {
   return data;
 }
 
-std::string HttpDataFecther::excuteCGI(const std::string &path) const {
+std::string HttpDataFecther::excuteCGI(const std::string& path) const {
   return "5";
 }
 
-std::string HttpDataFecther::readFile(const std::string &path) {
+std::string HttpDataFecther::readFile(const std::string& path) {
   std::string ret;
 
   try {

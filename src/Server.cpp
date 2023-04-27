@@ -202,14 +202,14 @@ bool Server::checkContentLength(int fd) {
     recvHeader(fd);
 
   if (getStatus(fd) == HEADER_RECV) {
-    size_t start = util::toLowerStr(getData(fd)).find("content-length: "); 
+    size_t start = util::toLowerStr(getData(fd)).find("content-length: ");
     if (start != std::string::npos) {
       int len = parseContentLength(fd, start);
       if (len == 0) return true;
       else {
         setStatus(fd, BODY_RECV);
         setContentLength(fd, len);
-      } 
+      }
     }
     else return true;
   }
@@ -224,21 +224,22 @@ bool Server::checkContentLength(int fd) {
 
 void Server::sendData(int fd) {
   std::string   s;
-  Http          http(this->config);
+  Http          http;
   HttpResponse  response;
 
   FD_SET(fd, &this->getWrites());
   try {
-    response = http.processing(getData(fd));
+    HttpRequest hr(getData(fd), this->config);
+    response = http.processing(hr);
     clearReceived(fd);
     s = response.toString();
   } catch (HttpStatus status) {
-    response = http.getErrorPage(status);
+    response = http.getErrorPage(status, this->config);
   }
 
   if (send(fd, s.c_str(), s.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
-  else 
+  else
     std::cout << "[Log] send data\n";
   removeTimeRecord(fd);
 }
@@ -325,7 +326,7 @@ void              Server::recvHeader(int fd) {
 
 int              Server::parseContentLength(int fd, size_t start) {
   size_t end = getData(fd).find("\r\n", start);
-  
+
   return std::atoi(getData(fd).substr(start + 16, end - start + 1).c_str());
 }
 

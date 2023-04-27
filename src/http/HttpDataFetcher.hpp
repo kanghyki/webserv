@@ -7,24 +7,22 @@
 
 # include <string>
 # include <string.h>
-# include <dirent.h>
 # include <iostream>
 # include <utility>
 
 class HttpDataFecther {
   public:
-    HttpDataFecther(HttpRequest request, ServerConfig config);
+    HttpDataFecther(const HttpRequest& request);
     ~HttpDataFecther();
     std::string         fetch() const;
-    static std::string  readFile(const std::string &path);
+    static std::string  readFile(const std::string& path);
     const std::string   getData(void) const;
     const std::string   getMimeType(void) const;
 
   private:
-    HttpRequest         request;
-    ServerConfig        config;
+    const HttpRequest&  request;
 
-    std::string         excuteCGI(const std::string &path) const;
+    std::string         excuteCGI(const std::string& path) const;
 };
 
 #endif

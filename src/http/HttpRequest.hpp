@@ -1,6 +1,7 @@
 #ifndef HTTP_REQUEST_HPP
 # define HTTP_REQUEST_HPP
 
+# include "../config/ServerConfig.hpp"
 # include "./HttpHeaderField.hpp"
 # include "./HttpStatus.hpp"
 # include "../Util.hpp"
@@ -19,8 +20,7 @@ namespace request_method {
 
 class HttpRequest {
   public:
-    HttpRequest();
-    HttpRequest(std::string request);
+    HttpRequest(std::string request, const ServerConfig& config);
     ~HttpRequest();
 
     void                                parseHeader(const std::string &h);
@@ -32,6 +32,7 @@ class HttpRequest {
     std::string                         getField(const std::string& field) const;
     std::string                         getBody() const;
     const std::string                   getContentType(void) const;
+    const ServerConfig&                 getConfig() const;
 
     void                                setBody(const std::string& body);
 
@@ -45,6 +46,7 @@ class HttpRequest {
     std::string                         version;
     std::string                         body;
     std::map<std::string, std::string>  field;
+    const ServerConfig&                 config;
 
     void                                setURI(const std::string& URI);
     void                                setMethod(const std::string& method);

@@ -2,6 +2,7 @@
 # define HTTP_HPP
 
 # include "../config/ServerConfig.hpp"
+# include "./HttpStatus.hpp"
 # include "./HttpDataFetcher.hpp"
 # include "./HttpRequest.hpp"
 # include "./HttpResponse.hpp"
@@ -9,22 +10,21 @@
 
 # include <vector>
 # include <utility>
+# include <dirent.h>
 
 class Http {
   public:
-    Http(ServerConfig config);
+    Http();
     ~Http();
 
-    HttpResponse  processing(std::string request);
-    HttpResponse  getErrorPage(HttpStatus status);
+    HttpResponse  processing(const HttpRequest& req);
+    HttpResponse  getErrorPage(HttpStatus s, const ServerConfig& config);
 
   private:
-    ServerConfig  config;
-
-    HttpResponse  getMethod(HttpRequest& req);
-    HttpResponse  postMethod(HttpRequest& req);
-    HttpResponse  deleteMethod(HttpRequest& req);
-    HttpResponse  putMethod(HttpRequest& req);
+    HttpResponse  getMethod(const HttpRequest& req);
+    HttpResponse  postMethod(const HttpRequest& req);
+    HttpResponse  deleteMethod(const HttpRequest& req);
+    HttpResponse  putMethod(const HttpRequest& req);
 };
 
 #endif
