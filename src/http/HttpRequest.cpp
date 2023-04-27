@@ -13,6 +13,28 @@ HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
   this->config = sc.findLocationConfig(this->getPath());
 }
 
+HttpRequest::HttpRequest(const HttpRequest& obj):
+  method(obj.method),
+  path(obj.path),
+  queryString(obj.queryString),
+  version(obj.version),
+  body(obj.body),
+  field(obj.field),
+  config(obj.config) {}
+
+HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
+  if (this != &obj) {
+    this->method = obj.method;
+    this->path = obj.path;
+    this->queryString = obj.queryString;
+    this->version = obj.version;
+    this->body = obj.body;
+    this->field = obj.field;
+    this->config = obj.config;
+  }
+  return *this;
+}
+
 HttpRequest::~HttpRequest() {}
 
 void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
@@ -91,6 +113,12 @@ std::pair<std::string, std::string> HttpRequest::splitField(const std::string& l
 std::string HttpRequest::getMethod() const { return this->method; }
 
 std::string HttpRequest::getPath() const { return this->path; }
+
+std::string HttpRequest::getRelativePath() const {
+  if (getConfig().getRoot() == "/")
+    return "." + this->path;
+  return "." + getConfig().getRoot() + this->path;
+}
 
 std::string HttpRequest::getQueryString() const { return this->queryString; }
 

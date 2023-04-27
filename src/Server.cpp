@@ -194,8 +194,14 @@ void Server::receiveData(int fd) {
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;
-  if (recv_size <= 0) {
+  if (recv_size < 0)
     throw "error";
+  else if (recv_size == 0) {
+    std::cout << "recv_size:0" << std::endl;
+    FD_CLR(fd, &this->reads);
+    clearReceived(fd);
+    close(fd);
+    return ;
   }
   buf[recv_size] = 0;
   addData(fd, buf);
@@ -230,17 +236,16 @@ bool Server::checkContentLength(int fd) {
 
 void Server::sendData(int fd) {
   std::string   s;
-  Http          http;
   HttpResponse  response;
 
   FD_SET(fd, &this->getWrites());
   try {
     HttpRequest hr(getData(fd), this->config);
-    response = http.processing(hr);
+    response = Http::processing(hr);
     clearReceived(fd);
     s = response.toString();
   } catch (HttpStatus status) {
-    response = http.getErrorPage(status, this->config);
+    response = Http::getErrorPage(status, this->config);
   }
 
   if (send(fd, s.c_str(), s.length(), 0) == SOCK_ERROR)

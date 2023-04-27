@@ -4,22 +4,27 @@ HttpDataFecther::HttpDataFecther(const HttpRequest& req): req(req) {}
 
 HttpDataFecther::~HttpDataFecther() {}
 
-#include <dirent.h>
-#include "./DirectoryList.hpp"
 std::string HttpDataFecther::fetch() const throw(HttpStatus) {
   std::string data;
 
-  std::cout << "Root: " << this->req.getConfig().getRoot() << std::endl;
-  std::cout << "Request path: " << this->req.getPath() << std::endl;
+  std::cout << "relative path: " << this->req.getRelativePath() << std::endl;
 
-  DIR* dir = opendir(("." + this->req.getPath()).c_str());
-  if (dir) {
-    std::cout << "is dir" << std::endl;
-    closedir(dir);
-    data = DirectoryList::generate(this->req);
+  if (this->req.getConfig().isAutoIndex()) {
+    std::cout << "autoIndex : true" << std::endl;
+    DIR* dir = opendir(this->req.getRelativePath().c_str());
+    if (dir) {
+      std::cout << "@is dir" << std::endl;
+      closedir(dir);
+      data = DirectoryList::generate(this->req);
+    }
+    else {
+      std::cout << "@is file" << std::endl;
+      data = getData();
+    }
   }
   else {
-    std::cout << "is file" << std::endl;
+    std::cout << "autoIndex : false" << std::endl;
+    // FIXME :: 폴더 읽어도 에러 안남.., 데이터는 0 임
     data = getData();
   }
 
@@ -34,7 +39,7 @@ std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus)
   std::string ret;
 
   try {
-    ret = util::readFile("." + path);
+    ret = util::readFile(path);
   } catch (util::IOException& e) {
     throw NOT_FOUND;
   }
@@ -43,14 +48,14 @@ std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus)
 }
 
 const std::string HttpDataFecther::getData(void) const throw(HttpStatus) {
-  return readFile(this->req.getPath());
+  return readFile(this->req.getRelativePath());
 }
 
 const std::string HttpDataFecther::getMimeType(void) const throw(HttpStatus) {
   std::string ret;
 
   try {
-    ret = util::getMimeType("." + this->req.getPath());
+    ret = util::getMimeType(this->req.getRelativePath());
   } catch (util::IOException& e) {
     throw NOT_FOUND;
   }

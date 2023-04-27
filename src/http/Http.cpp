@@ -8,9 +8,10 @@ Http::Http() {}
 
 Http::~Http() {}
 
-HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
+HttpResponse Http::processing(const HttpRequest req) throw(HttpStatus) {
   HttpResponse ret;
 
+  std::cout << req.getRelativePath() << std::endl;
   try {
     if (req.getMethod() == request_method::GET) ret = getMethod(req);
     else if (req.getMethod() == request_method::POST) ret = postMethod(req);
@@ -36,9 +37,9 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 
 HttpResponse Http::postMethod(const HttpRequest& req) {
   std::cout << "POST" << std::endl;
-  if (access(("." + req.getPath()).c_str(), F_OK) == 0) throw BAD_REQUEST;
+  if (access(req.getRelativePath().c_str(), F_OK) == 0) throw BAD_REQUEST;
 
-  std::ofstream out("." + req.getPath(), std::ofstream::out);
+  std::ofstream out(req.getRelativePath(), std::ofstream::out);
   if (!out.is_open()) throw NOT_FOUND;
 
   out.write(req.getBody().c_str(), req.getBody().length());
@@ -53,12 +54,12 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
 
 HttpResponse Http::deleteMethod(const HttpRequest& req) {
   std::cout << "DELETE" << std::endl;
-  DIR* dir = opendir(("." + req.getPath()).c_str());
+  DIR* dir = opendir(req.getRelativePath().c_str());
   if (dir) {
     closedir(dir);
     throw BAD_REQUEST;
   }
-  if (std::remove(("." + req.getPath()).c_str()) == -1) throw NOT_FOUND;
+  if (std::remove(req.getRelativePath().c_str()) == -1) throw NOT_FOUND;
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
@@ -67,12 +68,12 @@ HttpResponse Http::deleteMethod(const HttpRequest& req) {
 
 HttpResponse Http::putMethod(const HttpRequest& req) {
   std::cout << "PUT" << std::endl;
-  DIR* dir = opendir(("." + req.getPath()).c_str());
+  DIR* dir = opendir(req.getRelativePath().c_str());
   if (dir) {
     closedir(dir);
     throw BAD_REQUEST;
   }
-  std::ofstream out("." + req.getPath(), std::ofstream::out);
+  std::ofstream out(req.getRelativePath(), std::ofstream::out);
   if (!out.is_open()) throw NOT_FOUND;
 
   out.write(req.getBody().c_str(), req.getBody().length());
@@ -85,20 +86,26 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
     .build();
 }
 
-HttpResponse Http::getErrorPage(HttpStatus s, const LocationConfig& config) {
+HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config) {
   std::string                                 data;
   std::map<int, std::string>                  m = config.getErrorPage();
   std::map<int, std::string>::const_iterator  it;
   std::string                                 path;
 
-  if ((it = m.find(s)) != m.end()) {
-    path = it->second;
-    data = HttpDataFecther::readFile(path);
+  std::cout << "Http error occured: " << status << std::endl;
+  if ((it = m.find(status)) != m.end()) {
+    path = "." + it->second;
+    try {
+      data = HttpDataFecther::readFile(path);
+    } catch (HttpStatus status) {
+      std::cout << "ERROR OF ERROR" << std::endl;
+    }
   }
 
+  // FIXME: erorr of error?
   return HttpResponseBuilder::getBuilder()
-    .statusCode(s)
+    .statusCode(status)
     .header("date", getNowStr())
-    .body(data, util::getMimeType("." +path))
+    .body(data, util::getMimeType(path))
     .build();
 }

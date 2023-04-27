@@ -2,8 +2,7 @@
 
 std::string DirectoryList::generate(const HttpRequest& req) throw(HttpStatus) {
   std::string     ret;
-  std::string     dirpath = "." + req.getPath();
-  DIR*            directory = opendir(dirpath.c_str());
+  DIR*            directory = opendir(req.getRelativePath().c_str());
   struct dirent*  entry;
 
   if (directory == NULL) throw NOT_FOUND;

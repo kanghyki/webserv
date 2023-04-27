@@ -1,10 +1,12 @@
 #ifndef HTTP_DATA_FETCHER_HPP
 # define HTTP_DATA_FETCHER_HPP
 
+# include "./DirectoryList.hpp"
 # include "./HttpRequest.hpp"
-# include "../config/ServerConfig.hpp"
 # include "../Util.hpp"
+# include "../config/ServerConfig.hpp"
 
+# include <dirent.h>
 # include <string>
 # include <string.h>
 # include <iostream>

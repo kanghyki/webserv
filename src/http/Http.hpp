@@ -17,14 +17,14 @@ class Http {
     Http();
     ~Http();
 
-    HttpResponse  processing(const HttpRequest& req) throw (HttpStatus);
-    HttpResponse  getErrorPage(HttpStatus s, const LocationConfig& config);
+    static HttpResponse processing(const HttpRequest req) throw (HttpStatus);
+    static HttpResponse getErrorPage(HttpStatus s, const LocationConfig& config);
 
   private:
-    HttpResponse  getMethod(const HttpRequest& req);
-    HttpResponse  postMethod(const HttpRequest& req);
-    HttpResponse  deleteMethod(const HttpRequest& req);
-    HttpResponse  putMethod(const HttpRequest& req);
+    static HttpResponse getMethod(const HttpRequest& req);
+    static HttpResponse postMethod(const HttpRequest& req);
+    static HttpResponse deleteMethod(const HttpRequest& req);
+    static HttpResponse putMethod(const HttpRequest& req);
 };
 
 #endif

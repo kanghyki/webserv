@@ -21,12 +21,15 @@ namespace request_method {
 class HttpRequest {
   public:
     HttpRequest(std::string request, const ServerConfig& sc);
+    HttpRequest(const HttpRequest& obj);
+    HttpRequest& operator=(const HttpRequest& obj);
     ~HttpRequest();
 
     void                                parseHeader(const std::string &h) throw(HttpStatus);
 
     std::string                         getMethod() const;
     std::string                         getPath() const;
+    std::string                         getRelativePath() const;
     std::string                         getQueryString() const;
     std::string                         getVersion() const;
     std::string                         getField(const std::string& field) const;

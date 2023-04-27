@@ -61,6 +61,8 @@ namespace util {
     while (std::getline(in, line))
       ret += line;
 
+    in.close();
+
     return ret;
   }
 
