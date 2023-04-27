@@ -96,6 +96,9 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
   if (curToken().is(Token::ROOT)) parseRoot(conf);
   else if (curToken().is(Token::ERROR_PAGE)) parseErrorPage(conf);
   else if (curToken().is(Token::CLIENT_BODY_BUFFER_SIZE)) parseClientBodyBufferSize(conf);
+  else if (curToken().is(Token::CLIENT_BODY_TIMEOUT)) parseClientBodyTimeout(conf);
+  else if (curToken().is(Token::CLIENT_HEADER_TIMEOUT)) parseClientHeaderTimeout(conf);
+  else if (curToken().is(Token::SEND_TIMEOUT)) parseSendTimeout(conf);
   else if (curToken().is(Token::INDEX)) parseIndex(conf);
 }
 
@@ -190,6 +193,24 @@ void ConfigParser::parseErrorPage(CommonConfig& conf) {
 void ConfigParser::parseClientBodyBufferSize(CommonConfig& conf) {
   expectNextToken(Token::INT);
   conf.setClientBodySize(std::atoi(curToken().getLiteral().c_str()));
+  expectNextToken(Token::SEMICOLON);
+}
+
+void ConfigParser::parseClientBodyTimeout(CommonConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setClientBodyTimeout(std::atoi(curToken().getLiteral().c_str()));
+  expectNextToken(Token::SEMICOLON);
+}
+
+void ConfigParser::parseClientHeaderTimeout(CommonConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setClientHeaderTimeout(std::atoi(curToken().getLiteral().c_str()));
+  expectNextToken(Token::SEMICOLON);
+}
+
+void ConfigParser::parseSendTimeout(CommonConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setSendTimeout(std::atoi(curToken().getLiteral().c_str()));
   expectNextToken(Token::SEMICOLON);
 }
 

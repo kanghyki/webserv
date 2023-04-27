@@ -92,7 +92,13 @@ bool Token::isNot(const std::string& type) const {
 }
 
 bool Token::isCommon() const {
-  if (is(ROOT) || is(CLIENT_BODY_BUFFER_SIZE) || is(ERROR_PAGE) || is(INDEX))
+  if (is(ROOT) ||
+      is(CLIENT_BODY_BUFFER_SIZE) ||
+      is(CLIENT_BODY_TIMEOUT) ||
+      is(CLIENT_HEADER_TIMEOUT) ||
+      is(SEND_TIMEOUT) ||
+      is(ERROR_PAGE) ||
+      is(INDEX))
     return true;
   return false;
 }

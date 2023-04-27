@@ -9,6 +9,9 @@ HttpConfig::HttpConfig(const HttpConfig& obj): CommonConfig(obj), servers(obj.ge
 HttpConfig& HttpConfig::operator=(const HttpConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
+    this->clientBodyTimeout = obj.getClientBodyTimeout();
+    this->clientHeaderTimeout = obj.getClientHeaderTimeout();
+    this->sendTimeout = obj.getSendTimeout();
     this->root = obj.getRoot();
     this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
