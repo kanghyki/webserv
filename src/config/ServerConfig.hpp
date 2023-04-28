@@ -19,20 +19,24 @@ class ServerConfig: public CommonConfig {
 
     const LocationConfig        findLocationConfig(const std::string& path) const;
 
+    int                         getTimeout() const;
     short                       getPort() const;
     std::string                 getHost() const;
     std::string                 getServerName() const;
     std::vector<LocationConfig> getLocationConfig() const;
 
+    void                        setTimeout(int n);
     void                        setPort(short port);
     void                        setHost(std::string host);
     void                        setServerName(std::string serverName);
     void                        addLocationConfig(LocationConfig location);
 
   private:
+    static const int            DEFAULT_TIMEOUT;
     static const short          DEFAULT_PORT;
     static const std::string    DEFAULT_HOST;
 
+    int                         timeout;
     short                       port;
     std::string                 host;
     std::string                 serverName;

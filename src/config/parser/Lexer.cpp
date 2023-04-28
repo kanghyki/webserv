@@ -99,7 +99,7 @@ Token Lexer::nextToken() {
   size_t  beginPosition;
 
   skipWhitespace();
-  beginPosition = getPosition();
+  beginPosition = getPosition() + 1;
   switch (ch) {
     case ';':
       ret = Token(Token::SEMICOLON, std::string(1, ch));

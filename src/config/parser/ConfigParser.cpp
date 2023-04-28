@@ -41,6 +41,7 @@ ServerConfig ConfigParser::parseServer(HttpConfig& httpConf) {
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
+    else if (curToken().is(Token::TIMEOUT)) parseTimeout(conf);
     else if (curToken().is(Token::LISTEN)) parseListen(conf);
     else if (curToken().is(Token::SERVER_NAME)) parseServerName(conf);
     else throwBadSyntax();
@@ -96,11 +97,16 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
   if (curToken().is(Token::ROOT)) parseRoot(conf);
   else if (curToken().is(Token::ERROR_PAGE)) parseErrorPage(conf);
   else if (curToken().is(Token::CLIENT_BODY_BUFFER_SIZE)) parseClientBodyBufferSize(conf);
-  else if (curToken().is(Token::TIMEOUT)) parseTimeout(conf);
   else if (curToken().is(Token::INDEX)) parseIndex(conf);
 }
 
 // server
+
+void ConfigParser::parseTimeout(ServerConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setTimeout(std::atoi(curToken().getLiteral().c_str()));
+  expectNextToken(Token::SEMICOLON);
+}
 
 void ConfigParser::parseListen(ServerConfig& conf) {
   nextToken();
@@ -193,12 +199,6 @@ void ConfigParser::parseErrorPage(CommonConfig& conf) {
 void ConfigParser::parseClientBodyBufferSize(CommonConfig& conf) {
   expectNextToken(Token::INT);
   conf.setClientBodySize(std::atoi(curToken().getLiteral().c_str()));
-  expectNextToken(Token::SEMICOLON);
-}
-
-void ConfigParser::parseTimeout(CommonConfig& conf) {
-  expectNextToken(Token::INT);
-  conf.setTimeout(std::atoi(curToken().getLiteral().c_str()));
   expectNextToken(Token::SEMICOLON);
 }
 

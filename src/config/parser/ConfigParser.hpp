@@ -31,6 +31,7 @@ class ConfigParser {
     void                      parseCommon(CommonConfig& conf);
 
     // server
+    void                      parseTimeout(ServerConfig& conf);
     void                      parseListen(ServerConfig& conf);
     void                      parseServerName(ServerConfig& conf);
     // location
@@ -43,7 +44,6 @@ class ConfigParser {
     void                      parseRoot(CommonConfig& conf);
     void                      parseErrorPage(CommonConfig& conf);
     void                      parseClientBodyBufferSize(CommonConfig& conf);
-    void                      parseTimeout(CommonConfig& conf);
     void                      parseIndex(CommonConfig& conf);
 
     void                      generateToken(std::string fileName);
