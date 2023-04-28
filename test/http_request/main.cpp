@@ -4,4 +4,5 @@
 
 int main(void) {
   Run("test", HttpRequestTest::test);
+  Run("test1", HttpRequestTest::test1);
 }

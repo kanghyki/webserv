@@ -46,10 +46,10 @@ class Token {
     static const std::string  LIMIT_EXCEPT;
     static const std::string  AUTOINDEX;
     static const std::string  RETURN;
+    static const std::string  TIMEOUT;
+    static const std::string  CGI;
 
-    enum {
-      KEYWORD_SIZE = 13
-    };
+    enum { KEYWORD_SIZE = 15 };
     static const int          IDENT_IDX;
     static const int          TYPE_IDX;
     static const std::string  keyword[KEYWORD_SIZE][2];

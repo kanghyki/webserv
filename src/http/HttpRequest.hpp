@@ -1,6 +1,8 @@
 #ifndef HTTP_REQUEST_HPP
 # define HTTP_REQUEST_HPP
 
+# include "../config/ServerConfig.hpp"
+# include "./HttpHeaderField.hpp"
 # include "./HttpStatus.hpp"
 # include "../Util.hpp"
 
@@ -10,55 +12,30 @@
 # include <map>
 
 namespace request_method {
-  const std::string GET                   =   "GET";
-  const std::string POST                  =   "POST";
-  const std::string DELETE                =   "DELETE";
-  const std::string PUT                   =   "PUT";
-}
-
-namespace request_field {
-  const std::string CONTENT_LENGTH        =   "Content-Length";
-
-  const std::string CACHE_CONTROL         =   "Cache-control";
-  const std::string HOST                  =   "Host";
-  const std::string PRAGMA                =   "Pragma";
-  const std::string RANGE                 =   "Range";
-  const std::string TE                    =   "TE";
-  const std::string EXPECT                =   "Expect";
-  const std::string MAX_FORWARDS          =   "Max-forwards";
-
-  const std::string IF_MATCH              =   "If-Match";
-  const std::string IF_NONE_MATCH         =   "If-None-Match";
-  const std::string IF_MODIFIED_SINCE     =   "If-Modified-Since";
-  const std::string IF_UNMODIFIED_SINCE   =   "If-Unmodified-Since";
-  const std::string IF_RANGE              =   "If-Range";
-
-  const std::string ACCEPT                =   "Accept";
-  const std::string ACCEPT_CHARSET        =   "Accept-Charset";
-  const std::string ACCEPT_ENCODING       =   "Accept-Encoding";
-  const std::string ACCEPT_LANGUAGE       =   "Accept-Language";
-
-  const std::string AUTHORIZATION         =   "Authorization";
-  const std::string PROXY_AUTHORIZATION   =   "Proxy-Authorization";
-
-  const std::string FROM                  =   "From";
-  const std::string REFERER               =   "Referer";
-  const std::string USER_AGENT            =   "User-Agent";
+  const std::string GET    = "GET";
+  const std::string POST   = "POST";
+  const std::string DELETE = "DELETE";
+  const std::string PUT    = "PUT";
 }
 
 class HttpRequest {
   public:
-    HttpRequest();
-    HttpRequest(std::string request);
+    HttpRequest(std::string request, const ServerConfig& sc);
+    HttpRequest(const HttpRequest& obj);
+    HttpRequest& operator=(const HttpRequest& obj);
     ~HttpRequest();
 
-    void                                parseHeader(const std::string &h);
+    void                                parseHeader(const std::string &h) throw(HttpStatus);
 
     std::string                         getMethod() const;
     std::string                         getPath() const;
+    std::string                         getRelativePath() const;
+    std::string                         getQueryString() const;
     std::string                         getVersion() const;
     std::string                         getField(const std::string& field) const;
     std::string                         getBody() const;
+    const std::string                   getContentType(void) const;
+    const LocationConfig&               getConfig() const;
 
     void                                setBody(const std::string& body);
 
@@ -68,17 +45,25 @@ class HttpRequest {
 
     std::string                         method;
     std::string                         path;
+    std::string                         queryString;
     std::string                         version;
-    std::map<std::string, std::string>  field;
     std::string                         body;
+    std::map<std::string, std::string>  field;
+    LocationConfig                      config;
+
+    void                                setURI(const std::string& URI);
+    void                                setMethod(const std::string& method);
+    void                                setVersion(const std::string& version);
 
     void                                parseStatusLine(const std::string &line);
 
     void                                validateMethod(const std::string &method);
     void                                validateVersion(const std::string &path);
-    void                                validatePath(const std::string &version);
+    void                                validateURI(const std::string &version);
 
     std::pair<std::string, std::string> splitField(const std::string& line);
+
+    const std::string                   getMimeType(void) const;
 
 //    std::map<std::string, void (*)(const std::string &)> fieldMethod;
 

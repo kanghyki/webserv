@@ -1,31 +1,31 @@
 #ifndef HTTP_DATA_FETCHER_HPP
 # define HTTP_DATA_FETCHER_HPP
 
+# include "./DirectoryList.hpp"
 # include "./HttpRequest.hpp"
+# include "../Util.hpp"
 # include "../config/ServerConfig.hpp"
 
+# include <dirent.h>
 # include <string>
 # include <string.h>
-# include <dirent.h>
 # include <iostream>
 # include <utility>
 
 class HttpDataFecther {
   public:
-    HttpDataFecther(HttpRequest request, ServerConfig config);
+    HttpDataFecther(const HttpRequest& request);
     ~HttpDataFecther();
-    std::string         fetch() const;
-    static std::string  readFile(const std::string &path);
+
+    std::string         fetch() const                     throw(HttpStatus);
+    static std::string  readFile(const std::string& path) throw(HttpStatus);
+    const std::string   getData(void) const               throw(HttpStatus);
+    const std::string   getMimeType(void) const           throw(HttpStatus);
 
   private:
-    HttpRequest   request;
-    ServerConfig  config;
+    const HttpRequest&  req;
 
-    std::string   readDirectory() const;
-    std::string   excuteCGI(const std::string &path) const;
-
-    std::string   getContentType(const std::string &path) const;
-    std::string   mergeURL(std::string u1, std::string u2) const;
+    std::string         excuteCGI(const std::string& path) const;
 };
 
 #endif

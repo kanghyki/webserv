@@ -6,7 +6,7 @@ ConfigParser::ConfigParser() {
 
 ConfigParser::~ConfigParser() {};
 
-Config ConfigParser::parse(const std::string& fileName) {
+Config ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
   Config conf;
 
   generateToken(fileName);
@@ -61,6 +61,7 @@ LocationConfig ConfigParser::parseLocation(ServerConfig& serverConf) {
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
+    else if (curToken().is(Token::CGI)) parseCGI(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoIndex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
     else throwBadSyntax();
@@ -81,6 +82,7 @@ LocationConfig ConfigParser::parseLocation(LocationConfig& locationConf) {
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
+    else if (curToken().is(Token::CGI)) parseCGI(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoIndex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
     else throwBadSyntax();
@@ -94,12 +96,12 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
   if (curToken().is(Token::ROOT)) parseRoot(conf);
   else if (curToken().is(Token::ERROR_PAGE)) parseErrorPage(conf);
   else if (curToken().is(Token::CLIENT_BODY_BUFFER_SIZE)) parseClientBodyBufferSize(conf);
+  else if (curToken().is(Token::TIMEOUT)) parseTimeout(conf);
   else if (curToken().is(Token::INDEX)) parseIndex(conf);
 }
 
 // server
 
-#include <iostream>
 void ConfigParser::parseListen(ServerConfig& conf) {
   nextToken();
   // HOST:PORT
@@ -109,13 +111,7 @@ void ConfigParser::parseListen(ServerConfig& conf) {
     if (sp.size() != 2) throw std::runtime_error("Listen error");
     // TODO: check arguments
     conf.setHost(sp[0]);
-    srand(time(0));
-    int r = rand() % 30000;
-    if (r < 1023)
-      r += 1023;
-    std::cout << "[ http://localhost:" << r << "/html/index.html ]" << std::endl;
-//    conf.setPort(std::atoi(sp[1].c_str()));
-    conf.setPort(r);
+    conf.setPort(std::atoi(sp[1].c_str()));
   }
   // PORT
   else if (curToken().is(Token::INT)) {
@@ -141,6 +137,12 @@ void ConfigParser::parseAlias(LocationConfig& conf) {
 void ConfigParser::parseLimitExcept(LocationConfig& conf) {
   expectNextToken(Token::IDENT);
   conf.setLimitExcept(curToken().getLiteral());
+  expectNextToken(Token::SEMICOLON);
+}
+
+void ConfigParser::parseCGI(LocationConfig& conf) {
+  expectNextToken(Token::IDENT);
+  conf.setCGI(curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }
 
@@ -189,6 +191,12 @@ void ConfigParser::parseErrorPage(CommonConfig& conf) {
 void ConfigParser::parseClientBodyBufferSize(CommonConfig& conf) {
   expectNextToken(Token::INT);
   conf.setClientBodySize(std::atoi(curToken().getLiteral().c_str()));
+  expectNextToken(Token::SEMICOLON);
+}
+
+void ConfigParser::parseTimeout(CommonConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setTimeout(std::atoi(curToken().getLiteral().c_str()));
   expectNextToken(Token::SEMICOLON);
 }
 
@@ -265,7 +273,7 @@ void ConfigParser::expectError(const std::string& expected) const {
     + ":" + itoa(curToken().getPos())
     + " expected \'" + expected + "\' but \'" + curToken().getLiteral() + "\'";
 
-  throw std::invalid_argument(errorMsg);
+  throw std::runtime_error(errorMsg);
 }
 
 void ConfigParser::throwBadSyntax() const {
@@ -276,5 +284,5 @@ void ConfigParser::throwBadSyntax() const {
     + ":" + std::to_string(curToken().getPos())
     + " bad syntax \'" + curToken().getLiteral() + "\'";
 
-  throw std::invalid_argument(errorMsg);
+  throw std::runtime_error(errorMsg);
 }

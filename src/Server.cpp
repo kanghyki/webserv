@@ -73,6 +73,12 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
     throw Server::InitException();
   in.sin_family = AF_INET;
   inet_pton(AF_INET, host.c_str(), &(in.sin_addr));
+  srand(time(0));
+  port = rand() % 20000;
+  if (port < 2000)
+    port += 2000;
+  std::cout << "[ http://localhost:" << port << "/html/index.html ]" << std::endl;
+  std::cout << "[ http://localhost:" << port << " ]" << std::endl;
   in.sin_port = htons(port);
 }
 
@@ -109,6 +115,7 @@ void Server::appendTimeRecord(int fd) {
   this->timeout.insert(std::make_pair(fd, initTime));
 }
 
+// TODO: MUTIPLE CGI ? RESOURCE RECOVERY
 void Server::DisconnectTimeoutClient() {
   const std::map<int, time_t>&  record = getTimeRecord();
   std::vector<int>              removeList;
@@ -118,7 +125,7 @@ void Server::DisconnectTimeoutClient() {
     time_t curTime;
 
     time(&curTime);
-    if (curTime - reqTime > TIMEOUT_MAX) {
+    if (curTime - reqTime > this->config.getTimeout()) {
       int fd = it->first;
 
       // 408 error
@@ -188,8 +195,14 @@ void Server::receiveData(int fd) {
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;
-  if (recv_size <= 0) {
+  if (recv_size < 0)
     throw "error";
+  else if (recv_size == 0) {
+    std::cout << "recv_size:0" << std::endl;
+    FD_CLR(fd, &this->reads);
+    clearReceived(fd);
+    close(fd);
+    return ;
   }
   buf[recv_size] = 0;
   addData(fd, buf);
@@ -202,14 +215,14 @@ bool Server::checkContentLength(int fd) {
     recvHeader(fd);
 
   if (getStatus(fd) == HEADER_RECV) {
-    size_t start = util::toLowerStr(getData(fd)).find("content-length: "); 
+    size_t start = util::toLowerStr(getData(fd)).find("content-length: ");
     if (start != std::string::npos) {
       int len = parseContentLength(fd, start);
       if (len == 0) return true;
       else {
         setStatus(fd, BODY_RECV);
         setContentLength(fd, len);
-      } 
+      }
     }
     else return true;
   }
@@ -222,26 +235,23 @@ bool Server::checkContentLength(int fd) {
   return false;
 }
 
-#include "./http/Http.hpp"
-#include "./http/HttpStatus.hpp"
-
 void Server::sendData(int fd) {
-  std::string         s;
-  Http                http(this->config);
-  HttpResponseBuilder response;
+  std::string   s;
+  HttpResponse  response;
 
   FD_SET(fd, &this->getWrites());
   try {
-    response = http.processing(getData(fd));
+    HttpRequest hr(getData(fd), this->config);
+    response = Http::processing(hr);
     clearReceived(fd);
-    s = response.build().toString();
+    s = response.toString();
   } catch (HttpStatus status) {
-    response = http.getErrorPage(status);
+    response = Http::getErrorPage(status, this->config);
   }
 
   if (send(fd, s.c_str(), s.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
-  else 
+  else
     std::cout << "[Log] send data\n";
   removeTimeRecord(fd);
 }
@@ -328,7 +338,7 @@ void              Server::recvHeader(int fd) {
 
 int              Server::parseContentLength(int fd, size_t start) {
   size_t end = getData(fd).find("\r\n", start);
-  
+
   return std::atoi(getData(fd).substr(start + 16, end - start + 1).c_str());
 }
 

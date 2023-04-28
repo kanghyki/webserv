@@ -20,8 +20,15 @@ HttpResponseBuilder& HttpResponseBuilder::header(const std::string &key, const s
   return *this;
 }
 
-HttpResponseBuilder& HttpResponseBuilder::body(std::string body) {
+//HttpResponseBuilder& HttpResponseBuilder::body(const std::string& body) {
+//  this->response.setBody(body);
+//
+//  return *this;
+//}
+
+HttpResponseBuilder& HttpResponseBuilder::body(const std::string& body, const std::string& mimeType) {
   this->response.setBody(body);
+  this->response.setHeader(header_field::CONTENT_TYPE, mimeType);
 
   return *this;
 }

@@ -5,6 +5,8 @@
 # include "./Util.hpp"
 # include "./http/HttpRequest.hpp"
 # include "./http/HttpResponse.hpp"
+# include "./http/Http.hpp"
+# include "./http/HttpStatus.hpp"
 
 # include <arpa/inet.h>
 # include <fcntl.h>

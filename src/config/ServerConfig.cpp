@@ -23,6 +23,7 @@ ServerConfig::ServerConfig(const ServerConfig& obj):
 ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
+    this->timeout = obj.getTimeout();
     this->root = obj.getRoot();
     this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
@@ -33,6 +34,17 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
     this->locations = obj.getLocationConfig();
   }
   return *this;
+}
+
+const LocationConfig ServerConfig::findLocationConfig(const std::string& path) const {
+  LocationConfig ret(*this);
+
+  for (int i = 0; i < this->locations.size(); ++i) {
+    if (this->locations[i].getPath() == path) {
+      return this->locations[i];
+    }
+  }
+  return LocationConfig(*this);
 }
 
 // getter

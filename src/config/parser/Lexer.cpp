@@ -70,7 +70,7 @@ std::string Lexer::readWord() {
 }
 
 bool Lexer::isWord(char ch) const {
-  if (std::isalnum(ch) || std::strchr("_.:/", ch))
+  if (ch != '\0' && (std::isalnum(ch) || std::strchr("_.:/-", ch)))
     return true;
   return false;
 }
