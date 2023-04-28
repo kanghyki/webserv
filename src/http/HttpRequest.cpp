@@ -12,6 +12,11 @@ HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
   setBody(vs[1]);
   this->serverConfig = sc;
   this->locationConfig = sc.findLocationConfig(this->getPath());
+  std::cout << "this->locationConfig.getCGIPath()" << std::endl;
+  std::cout << "this->locationConfig.getCGIPath()" << std::endl;
+  std::cout << this->locationConfig.getCGIPath() << std::endl;
+  std::cout << "this->locationConfig.getCGIPath()" << std::endl;
+  std::cout << "this->locationConfig.getCGIPath()" << std::endl;
 }
 
 HttpRequest::HttpRequest(const HttpRequest& obj):

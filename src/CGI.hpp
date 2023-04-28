@@ -37,7 +37,7 @@ class CGI {
     const std::string getCgiPath(void) const;
 
     static const int READ = 0;
-    static const int WRITE = 0;
+    static const int WRITE = 1;
 };
 
 namespace cgi_env {

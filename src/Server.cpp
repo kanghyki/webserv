@@ -242,7 +242,9 @@ void Server::sendData(int fd) {
   FD_SET(fd, &this->getWrites());
   try {
     HttpRequest hr(getData(fd), this->config);
-    if (hr.getPath().find(".py") != std::string::npos)
+    std::cout << "cgi path : " << hr.getLocationConfig().getCGIPath() << std::endl;
+    std::cout << "script path : " << hr.getLocationConfig().getCGIScriptPath() << std::endl;
+    if (!hr.getLocationConfig().getCGIPath().empty())
       response = Http::executeCGI(hr, this->reads, this->fdMax);
     else
       response = Http::processing(hr);

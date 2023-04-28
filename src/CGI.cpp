@@ -49,7 +49,7 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, ""));
   // config, uri 파싱 필요
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, ""));
-  ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, this->getQueryString(req.getPath())));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SCRIPT_NAME, req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_NAME, req.getServerConfig().getHost()));
@@ -62,13 +62,17 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
 
 char** CGI::getArgv(const HttpRequest& req) const {
   char** ret;
+  char* cur;
 
   ret = (char**)malloc(sizeof(char*) * 3);
   if (ret == NULL) throw INTERNAL_SERVER_ERROR;
 
   ret[0] = strdup(getCgiPath().c_str());
-  ret[1] = strdup(("." + getScriptPath()).c_str());
+  cur = getcwd(NULL, 0);
+  ret[1] = strdup((std::string(cur) + getScriptPath()).c_str());
   ret[2] = NULL;
+
+  free(cur);
 
   return ret;
 }
@@ -95,8 +99,8 @@ std::string CGI::execute(void) {
   int fd[2];
   int status;
   
-  if (access(this->cgiPath.c_str(), X_OK) == 0) throw INTERNAL_SERVER_ERROR;
-  if (access(this->scriptPath.c_str(), X_OK) == 0) throw INTERNAL_SERVER_ERROR;
+  if (access(this->cgiPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
+  if (access(("." + this->scriptPath).c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
   try {
     util::ftPipe(fd);
 //    fcntl(fd[READ], F_SETFL, O_NONBLOCK);
@@ -139,9 +143,10 @@ void CGI::changeWorkingDirectory(void) {
   char* cur = getcwd(NULL, 0);
   if (!cur) throw INTERNAL_SERVER_ERROR;
 
-  std::string tmp = cur;
   std::string tmp2 = getScriptPath().substr(0, getScriptPath().rfind("/"));
   std::string target = cur + tmp2;
+
+  free(cur);
 
   if (chdir(target.c_str()) == -1) throw INTERNAL_SERVER_ERROR;
 }
