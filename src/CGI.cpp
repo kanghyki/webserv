@@ -10,7 +10,7 @@ CGI::CGI(const HttpRequest& req, fd_set& reads, int& fdMax) : scriptPath(req.get
                                               cgiPath(req.getLocationConfig().getCGIPath()), reads(reads), fdMax(fdMax) {
   this->argv = this->getArgv(req);
   this->env = this->envMapToEnv(this->getEnvMap(req));
-  if (this->cgiPath.empty()) this->cgiPath = getCurrentPath() + this->scriptPath;
+  if (req.getLocationConfig().isExecutable()) this->cgiPath = getCurrentPath() + this->scriptPath;
 }
 
 /*
@@ -113,7 +113,7 @@ std::string CGI::execute(void) {
   
   if (pid == 0) {
     close(fd[READ]);
-//    dup2(fd[WRITE], STDOUT_FILENO);
+    dup2(fd[WRITE], STDOUT_FILENO);
     close(fd[WRITE]);
     changeWorkingDirectory();
     if (execve(this->cgiPath.c_str(), this->argv, this->env) < 0) throw INTERNAL_SERVER_ERROR;

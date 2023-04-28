@@ -2,12 +2,14 @@
 #include "./ServerConfig.hpp"
 
 const bool LocationConfig::DEFAULT_AUTOINDEX = false;
+const bool LocationConfig::DEFAULT_CGI = false;
 
-LocationConfig::LocationConfig(): autoIndex(DEFAULT_AUTOINDEX) {}
+LocationConfig::LocationConfig(): autoIndex(DEFAULT_AUTOINDEX), cgi(DEFAULT_CGI) {}
 
 LocationConfig::LocationConfig(const ServerConfig& config):
   CommonConfig(config),
-  autoIndex(DEFAULT_AUTOINDEX) {}
+  autoIndex(DEFAULT_AUTOINDEX),
+  cgi(DEFAULT_CGI) {}
 
 LocationConfig::LocationConfig(const LocationConfig& obj):
   CommonConfig(obj),
@@ -18,6 +20,8 @@ LocationConfig::LocationConfig(const LocationConfig& obj):
   limitExcept(obj.getLimitExcept()),
   returnRes(obj.getReturnRes()), 
   autoIndex(obj.isAutoIndex()),
+  cgi(obj.isCgi()),
+  executable(obj.isExecutable()),
   locations(obj.getLocationConfig()) {}
 
 LocationConfig::~LocationConfig() {}
@@ -36,6 +40,8 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
     this->limitExcept = obj.getLimitExcept();
     this->returnRes = obj.getReturnRes();
     this->autoIndex = obj.isAutoIndex();
+    this->cgi = obj.isCgi();
+    this->executable = obj.isExecutable();
     this->locations = obj.getLocationConfig();
   }
 
@@ -58,6 +64,10 @@ std::map<int, std::string> LocationConfig::getReturnRes() const { return this->r
 
 bool LocationConfig::isAutoIndex() const { return this->autoIndex; }
 
+bool LocationConfig::isCgi() const { return this->cgi; }
+
+bool LocationConfig::isExecutable() const { return this->executable; }
+
 const std::vector<LocationConfig>& LocationConfig::getLocationConfig() const { return this->locations; }
 
 // setter
@@ -77,3 +87,7 @@ void LocationConfig::addReturnRes(std::pair<int, std::string> returnRes) { this-
 void LocationConfig::setAutoIndex(bool autoIndex) { this->autoIndex = autoIndex; }
 
 void LocationConfig::addLocationConfig(LocationConfig location) { this->locations.push_back(location); }
+
+void LocationConfig::setCgi(bool cgi) { this->cgi = cgi; }
+
+void LocationConfig::setExecutable(bool executable) { this->executable = executable; }

@@ -78,7 +78,7 @@ class Server {
     int acceptConnect();
     void receiveData(int fd);
     bool checkContentLength(int fd);
-    void sendData(int fd);
+    void sendData(int fd, const std::string& data);
     void closeSocket(int fd);
     void receiveDone(int fd);
 

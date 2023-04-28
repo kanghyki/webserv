@@ -24,6 +24,8 @@ class LocationConfig: public CommonConfig {
     std::string                         getCGIScriptPath() const;
     std::map<int, std::string>          getReturnRes() const;
     bool                                isAutoIndex() const;
+    bool                                isCgi() const;
+    bool                                isExecutable() const;
     const std::vector<LocationConfig>&  getLocationConfig() const;
 
     void                                setPath(std::string path);
@@ -33,10 +35,14 @@ class LocationConfig: public CommonConfig {
     void                                setCGIScriptPath(std::string p);
     void                                addReturnRes(std::pair<int, std::string> returnRes);
     void                                setAutoIndex(bool autoIndex);
+    void                                setCgi(bool cgi);
+    void                                setExecutable(bool executable);
     void                                addLocationConfig(LocationConfig location);
 
   private:
     static const bool                   DEFAULT_AUTOINDEX;
+    static const bool                   DEFAULT_CGI;
+    
 
     std::string                         path;
     std::string                         alias;
@@ -46,6 +52,8 @@ class LocationConfig: public CommonConfig {
     std::map<int, std::string>          returnRes;
     bool                                autoIndex;
     std::vector<LocationConfig>         locations;
+    bool                                cgi;
+    bool                                executable;
 };
 
 #endif
