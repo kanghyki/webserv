@@ -16,7 +16,6 @@ class HttpDataFecther {
   public:
     HttpDataFecther(const HttpRequest& request);
     ~HttpDataFecther();
-
     std::string         fetch() const                     throw(HttpStatus);
     static std::string  readFile(const std::string& path) throw(HttpStatus);
     const std::string   getData(void) const               throw(HttpStatus);
@@ -24,8 +23,6 @@ class HttpDataFecther {
 
   private:
     const HttpRequest&  req;
-
-    std::string         excuteCGI(const std::string& path) const;
 };
 
 #endif

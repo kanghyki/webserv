@@ -1,6 +1,5 @@
 #include "Util.hpp"
 
-#include <iostream>
 namespace util {
   std::vector<std::string> split(const std::string& str, char delim) {
     std::vector<std::string> ret;
@@ -59,10 +58,9 @@ namespace util {
 
     if (!in.is_open()) throw util::IOException();
     while (std::getline(in, line))
-      ret += line;
+      ret += line + "\n";
 
     in.close();
-
     return ret;
   }
 
@@ -81,29 +79,6 @@ namespace util {
     return ss.str();
   }
 
-  const std::string getMimeType(const std::string& filename) {
-    int BUF_SIZE = 128;
-    std::string ret;
-    char buf[BUF_SIZE + 1];
-    std::string cmd = "file --brief --mime-type " + filename;
-    FILE*       pipe = popen(cmd.c_str(), "r");
-    int readSize;
-
-    if (!pipe) throw util::IOException();
-
-    while (!feof(pipe)) {
-      readSize = fread(buf, 1, BUF_SIZE, pipe);
-      buf[readSize] = 0;
-      if (readSize != 0)
-        ret += buf;
-    }
-
-    pclose(pipe);
-    ret.erase(ret.find_last_not_of("\n\r") + 1);
- 
-    return ret;
-  }
-
   void  writeFile(const std::string& filename, const std::string& data) {
     std::ofstream out(filename, std::ofstream::out);
     if (!out.is_open()) throw util::IOException();
@@ -112,11 +87,41 @@ namespace util {
     if (out.fail() || out.bad() || out.eof()) throw util::IOException();
   }
 
+  int ftFork(void) {
+    int pid = fork();
+
+    if (pid == -1) throw util::SystemFunctionException();
+
+    return pid;
+  }
+
+  std::string readFd(int fd) {
+    std::string ret;
+    int readSize;
+    int bufSize = 128;
+    char buf[bufSize + 1];
+
+    while ((readSize = read(fd, buf, bufSize)) > 0) {
+      buf[readSize] = 0;
+      ret += buf;
+    }
+
+    return ret;
+  }
+
+  void ftPipe(int* fd) {
+    if (pipe(fd) == -1)  throw util::SystemFunctionException();
+  }
+
   const char* StringFoundException::what() const throw() {
     return "Target not found";
   }
 
   const char* IOException::what() const throw() {
     return "File open failed";
+  }
+
+  const char* SystemFunctionException::what() const throw() {
+    return "System fuction failed";
   }
 }

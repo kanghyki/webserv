@@ -31,7 +31,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   return HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(data, "text/html")
+    .body(data, req.getContentType())
     .build();
 }
 
@@ -106,6 +106,6 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   return HttpResponseBuilder::getBuilder()
     .statusCode(status)
     .header("date", getNowStr())
-    .body(data, util::getMimeType(path))
+    .body(data, "text/html")
     .build();
 }

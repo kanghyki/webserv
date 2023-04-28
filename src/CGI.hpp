@@ -1,0 +1,51 @@
+#ifndef CGI_HPP
+# define CGI_HPP
+
+# include <string>
+# include <map>
+# include <cstring>
+
+# include "./http/HttpRequest.hpp"
+# include "./Util.hpp"
+
+static const std::string CGI_VERSION = "CGI/1.1";
+static const std::string SOFTWARE_NAME = "NGINX MINUS";
+
+class CGI {
+  public:
+    CGI(HttpRequest& req);
+    ~CGI(void);
+    std::string execute(void);
+
+  private:
+    char** argv;
+    char** env;
+    std::string scriptPath;
+    std::string cgiPath;
+
+    const std::map<std::string, std::string> getEnvMap(HttpRequest& req) const;
+    char** getArgv(HttpRequest& req) const;
+    char** envMapToEnv(const std::map<std::string, std::string>& envMap) const;
+
+    const std::string getQueryString(const std::string& path) const;
+
+    static const int READ = 0;
+    static const int WRITE = 0;
+};
+
+namespace cgi_env {
+  static const std::string CONTENT_LENGTH           = "CONTENT_LENGTH";
+  static const std::string CONTENT_TYPE             = "CONTENT_TYPE";
+  static const std::string GATEWAY_INTERFACE        = "GATEWAY_INTERFACE";
+  static const std::string PATH_INFO                = "PATH_INFO";
+  static const std::string PATH_TRANSLATED          = "PATH_TRANSLATED";
+  static const std::string QUERY_STRING             = "QUERY_STRING";
+  static const std::string REQUEST_METHOD           = "REQUEST_METHOD";
+  static const std::string SCRIPT_NAME              = "SCRIPT_NAME";
+  static const std::string SERVER_NAME              = "SERVER_NAME";
+  static const std::string SERVER_PORT              = "SERVER_PORT";
+  static const std::string SERVER_PROTOCOL          = "SERVER_PROTOCOL";
+  static const std::string SERVER_SOFTWARE          = "SERVER_NAME";
+}
+
+#endif

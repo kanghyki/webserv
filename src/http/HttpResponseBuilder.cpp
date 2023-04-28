@@ -1,4 +1,5 @@
 #include "./HttpResponseBuilder.hpp"
+#include "HttpHeaderField.hpp"
 
 HttpResponseBuilder::HttpResponseBuilder() {}
 

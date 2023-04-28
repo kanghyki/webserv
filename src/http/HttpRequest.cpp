@@ -138,26 +138,12 @@ std::string HttpRequest::getBody() const {
   return this->body;
 }
 
-const std::string HttpRequest::getMimeType(void) const {
-  std::string ret;
-  std::string filename = "./temp";
-
-  try {
-    util::writeFile(filename, this->body);
-    ret = util::getMimeType(filename);
-    std::remove(filename.c_str());
-  } catch (util::IOException& e) {
-    throw NOT_FOUND;
-  }
-
-  return ret;
-}
-
 const std::string HttpRequest::getContentType(void) const {
   if (this->field.find(header_field::CONTENT_TYPE) != this->field.end())
     return this->field.at(header_field::CONTENT_TYPE);
 
-  return this->getMimeType();
+  MimeType mt;
+  return mt.getMimeType(getPath());
 }
 
 const LocationConfig& HttpRequest::getConfig() const {

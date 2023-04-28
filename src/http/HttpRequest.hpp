@@ -5,6 +5,8 @@
 # include "./HttpHeaderField.hpp"
 # include "./HttpStatus.hpp"
 # include "../Util.hpp"
+# include "./HttpHeaderField.hpp"
+# include "../MimeType.hpp"
 
 # include <stdexcept>
 # include <string>
@@ -62,8 +64,6 @@ class HttpRequest {
     void                                validateURI(const std::string &version);
 
     std::pair<std::string, std::string> splitField(const std::string& line);
-
-    const std::string                   getMimeType(void) const;
 
 //    std::map<std::string, void (*)(const std::string &)> fieldMethod;
 

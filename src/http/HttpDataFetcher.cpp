@@ -1,64 +1,37 @@
 #include "HttpDataFetcher.hpp"
+#include "HttpStatus.hpp"
 
 HttpDataFecther::HttpDataFecther(const HttpRequest& req): req(req) {}
 
 HttpDataFecther::~HttpDataFecther() {}
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
 
 std::string HttpDataFecther::fetch() const throw(HttpStatus) {
   std::string data;
 
   std::cout << "relative path: " << this->req.getRelativePath() << std::endl;
 
-  if (this->req.getConfig().isAutoIndex()) {
-    std::cout << "autoIndex : true" << std::endl;
-    DIR* dir = opendir(this->req.getRelativePath().c_str());
-    if (dir) {
-      std::cout << "@is dir" << std::endl;
-      closedir(dir);
-      data = DirectoryList::generate(this->req);
-    }
-    else {
-      std::cout << "@is file" << std::endl;
-      data = getData();
-    }
-  }
-  else {
-    std::cout << "autoIndex : false" << std::endl;
-    // FIXME :: 폴더 읽어도 에러 안남.., 데이터는 0 임
-    data = getData();
-  }
+  if (this->request.getPath().rfind(".py") != std::string::npos)
+    data = excuteCGI("." + this->request.getPath());
+  else if (is_regular_file(("." + this->request.getPath()).c_str()))
+    data = readFile(this->request.getPath());
+  else 
+    data = readDirectory();
 
   return data;
 }
 
-std::string HttpDataFecther::excuteCGI(const std::string& path) const {
-  return "5";
-}
+//TODO: readFile 되살리기
 
-std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus) {
-  std::string ret;
-
-  try {
-    ret = util::readFile(path);
-  } catch (util::IOException& e) {
-    throw NOT_FOUND;
-  }
-
-  return ret;
-}
-
-const std::string HttpDataFecther::getData(void) const throw(HttpStatus) {
-  return readFile(this->req.getRelativePath());
-}
-
-const std::string HttpDataFecther::getMimeType(void) const throw(HttpStatus) {
-  std::string ret;
-
-  try {
-    ret = util::getMimeType(this->req.getRelativePath());
-  } catch (util::IOException& e) {
-    throw NOT_FOUND;
-  }
-
-  return ret;
+const std::string HttpDataFecther::getData(void) const {
+  return readFile(this->request.getPath());
 }
