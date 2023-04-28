@@ -13,7 +13,8 @@ LocationConfig::LocationConfig(const LocationConfig& obj):
   CommonConfig(obj),
   path(obj.getPath()),
   alias(obj.getAlias()),
-  cgi(obj.getCGI()),
+  cgiPath(obj.getCGIPath()),
+  cgiScriptPath(obj.getCGIScriptPath()),
   limitExcept(obj.getLimitExcept()),
   returnRes(obj.getReturnRes()), 
   autoIndex(obj.isAutoIndex()),
@@ -31,7 +32,8 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
 
     this->path = obj.getPath();
     this->alias = obj.getAlias();
-    this->cgi = obj.getCGI();
+    this->cgiPath = obj.getCGIPath();
+    this->cgiScriptPath = obj.getCGIScriptPath();
     this->limitExcept = obj.getLimitExcept();
     this->returnRes = obj.getReturnRes();
     this->autoIndex = obj.isAutoIndex();
@@ -47,7 +49,9 @@ std::string LocationConfig::getPath() const { return this->path; }
 
 std::string LocationConfig::getAlias() const { return this->alias; }
 
-std::string LocationConfig::getCGI() const { return this->cgi; }
+std::string LocationConfig::getCGIPath() const { return this->cgiPath; }
+
+std::string LocationConfig::getCGIScriptPath() const { return this->cgiScriptPath; }
 
 std::string LocationConfig::getLimitExcept() const { return this->limitExcept; }
 
@@ -65,7 +69,9 @@ void LocationConfig::setAlias(std::string alias) { this->alias = alias; }
 
 void LocationConfig::setLimitExcept(std::string limitExcept) { this->limitExcept = limitExcept; }
 
-void LocationConfig::setCGI(std::string cgi) { this->cgi = cgi; }
+void LocationConfig::setCGIPath(std::string p) { this->cgiPath = p; }
+
+void LocationConfig::setCGIScriptPath(std::string p) { this->cgiScriptPath = p; }
 
 void LocationConfig::addReturnRes(std::pair<int, std::string> returnRes) { this->returnRes.insert(returnRes); }
 

@@ -142,7 +142,9 @@ void ConfigParser::parseLimitExcept(LocationConfig& conf) {
 
 void ConfigParser::parseCGI(LocationConfig& conf) {
   expectNextToken(Token::IDENT);
-  conf.setCGI(curToken().getLiteral());
+  conf.setCGIScriptPath(curToken().getLiteral());
+  expectNextToken(Token::IDENT);
+  conf.setCGIPath(curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }
 
