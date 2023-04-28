@@ -4,6 +4,7 @@
 # include <string>
 # include <map>
 # include <cstring>
+# include <fcntl.h>
 
 # include "./http/HttpRequest.hpp"
 # include "./Util.hpp"
@@ -13,7 +14,7 @@ static const std::string SOFTWARE_NAME = "NGINX MINUS";
 
 class CGI {
   public:
-    CGI(HttpRequest& req);
+    CGI(const HttpRequest& req, fd_set& reads, int& fdMax);
     ~CGI(void);
     std::string execute(void);
 
@@ -22,12 +23,18 @@ class CGI {
     char** env;
     std::string scriptPath;
     std::string cgiPath;
+    fd_set& reads;
+    int& fdMax;
 
-    const std::map<std::string, std::string> getEnvMap(HttpRequest& req) const;
-    char** getArgv(HttpRequest& req) const;
+    const std::map<std::string, std::string> getEnvMap(const HttpRequest& req) const;
+    char** getArgv(const HttpRequest& req) const;
     char** envMapToEnv(const std::map<std::string, std::string>& envMap) const;
 
     const std::string getQueryString(const std::string& path) const;
+    void changeWorkingDirectory(void);
+
+    const std::string getScriptPath(void) const;
+    const std::string getCgiPath(void) const;
 
     static const int READ = 0;
     static const int WRITE = 0;

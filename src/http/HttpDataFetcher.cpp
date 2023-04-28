@@ -9,7 +9,7 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
 
   std::cout << "relative path: " << this->req.getRelativePath() << std::endl;
 
-  if (this->req.getConfig().isAutoIndex()) {
+  if (this->req.getLocationConfig().isAutoIndex()) {
     std::cout << "autoIndex : true" << std::endl;
     DIR* dir = opendir(this->req.getRelativePath().c_str());
     if (dir) {

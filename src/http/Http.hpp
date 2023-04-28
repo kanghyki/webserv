@@ -7,6 +7,7 @@
 # include "./HttpRequest.hpp"
 # include "./HttpResponse.hpp"
 # include "./HttpResponseBuilder.hpp"
+# include "../CGI.hpp"
 
 # include <vector>
 # include <utility>
@@ -19,6 +20,7 @@ class Http {
 
     static HttpResponse processing(const HttpRequest req) throw (HttpStatus);
     static HttpResponse getErrorPage(HttpStatus s, const LocationConfig& config);
+    static HttpResponse executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax) throw (HttpStatus);
 
   private:
     static HttpResponse getMethod(const HttpRequest& req);

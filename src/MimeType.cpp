@@ -34,7 +34,7 @@ const std::string MimeType::getMimeType(const std::string& filename) const {
   size_t pos = filename.rfind(".");
 
   if (pos == std::string::npos)
-    return "text/plain";
+    return "text/html";
   else {
     std::string extension = filename.substr(pos);
     if (this->mimeTypes.find(extension) != this->mimeTypes.end())

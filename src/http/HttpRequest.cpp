@@ -10,7 +10,8 @@ HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
   vs = util::split(request, CRLF + CRLF);
   parseHeader(vs[0]);
   setBody(vs[1]);
-  this->config = sc.findLocationConfig(this->getPath());
+  this->serverConfig = sc;
+  this->locationConfig = sc.findLocationConfig(this->getPath());
 }
 
 HttpRequest::HttpRequest(const HttpRequest& obj):
@@ -20,7 +21,8 @@ HttpRequest::HttpRequest(const HttpRequest& obj):
   version(obj.version),
   body(obj.body),
   field(obj.field),
-  config(obj.config) {}
+  locationConfig(obj.locationConfig),
+  serverConfig(obj.serverConfig) {}
 
 HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
   if (this != &obj) {
@@ -30,7 +32,8 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
     this->version = obj.version;
     this->body = obj.body;
     this->field = obj.field;
-    this->config = obj.config;
+    this->locationConfig = obj.locationConfig;
+    this->serverConfig = obj.serverConfig;
   }
   return *this;
 }
@@ -115,9 +118,9 @@ std::string HttpRequest::getMethod() const { return this->method; }
 std::string HttpRequest::getPath() const { return this->path; }
 
 std::string HttpRequest::getRelativePath() const {
-  if (getConfig().getRoot() == "/")
+  if (getLocationConfig().getRoot() == "/")
     return "." + this->path;
-  return "." + getConfig().getRoot() + this->path;
+  return "." + getLocationConfig().getRoot() + this->path;
 }
 
 std::string HttpRequest::getQueryString() const { return this->queryString; }
@@ -146,8 +149,12 @@ const std::string HttpRequest::getContentType(void) const {
   return mt.getMimeType(getPath());
 }
 
-const LocationConfig& HttpRequest::getConfig() const {
-  return this->config;
+const LocationConfig& HttpRequest::getLocationConfig() const {
+  return this->locationConfig;
+}
+
+const ServerConfig& HttpRequest::getServerConfig() const {
+  return this->serverConfig;
 }
 
 /*

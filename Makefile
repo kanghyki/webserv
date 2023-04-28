@@ -34,7 +34,8 @@ SRCS			=	main.cpp\
 						HttpStatus.cpp\
 						Http.cpp\
 						MimeType.cpp\
-						DirectoryList.cpp
+						DirectoryList.cpp\
+						CGI.cpp
 
 
 OBJS_DIR	=	./obj

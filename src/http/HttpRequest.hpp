@@ -37,7 +37,8 @@ class HttpRequest {
     std::string                         getField(const std::string& field) const;
     std::string                         getBody() const;
     const std::string                   getContentType(void) const;
-    const LocationConfig&               getConfig() const;
+    const LocationConfig&               getLocationConfig() const;
+    const ServerConfig&                 getServerConfig() const;
 
     void                                setBody(const std::string& body);
 
@@ -51,7 +52,8 @@ class HttpRequest {
     std::string                         version;
     std::string                         body;
     std::map<std::string, std::string>  field;
-    LocationConfig                      config;
+    LocationConfig                      locationConfig;
+    ServerConfig                        serverConfig;
 
     void                                setURI(const std::string& URI);
     void                                setMethod(const std::string& method);

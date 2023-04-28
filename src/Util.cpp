@@ -113,6 +113,20 @@ namespace util {
     if (pipe(fd) == -1)  throw util::SystemFunctionException();
   }
 
+  void ftFree(char** data) {
+    int i = 0;
+
+    if (!data)
+      return ;
+    while (data[i]) {
+      if (data[i])
+        free(data[i]);
+      i++;
+    }
+    if (data[i])
+      free(data);
+  }
+
   const char* StringFoundException::what() const throw() {
     return "Target not found";
   }

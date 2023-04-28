@@ -23,6 +23,9 @@ class Server {
     Server(ServerConfig config);
     ~Server(void);
 
+    const int getFdMax(void) const;
+    void setFdMax(int fdMax);
+
     void run();
 
   private:
@@ -63,11 +66,8 @@ class Server {
     sock in;
 
     const int getServFd(void) const;
-    const int getFdMax(void) const;
     fd_set& getReads(void);
     fd_set& getWrites(void);
-
-    void setFdMax(int fdMax);
 
     inline int socketInit(void);
     inline void socketaddrInit(const std::string& host, int port, sock& in);
