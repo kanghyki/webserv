@@ -17,35 +17,35 @@ class LocationConfig: public CommonConfig {
     LocationConfig(const LocationConfig& obj);
     LocationConfig& operator=(const LocationConfig& obj);
 
-    std::string                 getPath() const;
-    std::string                 getAlias() const;
-    std::string                 getLimitExcept() const;
-    std::string                 getCGIPath() const;
-    std::string                 getCGIScriptPath() const;
-    std::map<int, std::string>  getReturnRes() const;
-    bool                        isAutoIndex() const;
-    std::vector<LocationConfig> getLocationConfig() const;
+    std::string                         getPath() const;
+    std::string                         getAlias() const;
+    std::string                         getLimitExcept() const;
+    std::string                         getCGIPath() const;
+    std::string                         getCGIScriptPath() const;
+    std::map<int, std::string>          getReturnRes() const;
+    bool                                isAutoIndex() const;
+    const std::vector<LocationConfig>&  getLocationConfig() const;
 
-    void                        setPath(std::string path);
-    void                        setAlias(std::string alias);
-    void                        setLimitExcept(std::string limitExcept);
-    void                        setCGIPath(std::string p);
-    void                        setCGIScriptPath(std::string p);
-    void                        addReturnRes(std::pair<int, std::string> returnRes);
-    void                        setAutoIndex(bool autoIndex);
-    void                        addLocationConfig(LocationConfig location);
+    void                                setPath(std::string path);
+    void                                setAlias(std::string alias);
+    void                                setLimitExcept(std::string limitExcept);
+    void                                setCGIPath(std::string p);
+    void                                setCGIScriptPath(std::string p);
+    void                                addReturnRes(std::pair<int, std::string> returnRes);
+    void                                setAutoIndex(bool autoIndex);
+    void                                addLocationConfig(LocationConfig location);
 
   private:
-    static const bool           DEFAULT_AUTOINDEX;
+    static const bool                   DEFAULT_AUTOINDEX;
 
-    std::string                 path;
-    std::string                 alias;
-    std::string                 limitExcept;
-    std::string                 cgiScriptPath;
-    std::string                 cgiPath;
-    std::map<int, std::string>  returnRes;
-    bool                        autoIndex;
-    std::vector<LocationConfig> locations;
+    std::string                         path;
+    std::string                         alias;
+    std::string                         limitExcept;
+    std::string                         cgiScriptPath;
+    std::string                         cgiPath;
+    std::map<int, std::string>          returnRes;
+    bool                                autoIndex;
+    std::vector<LocationConfig>         locations;
 };
 
 #endif

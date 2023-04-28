@@ -44,15 +44,36 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
   return *this;
 }
 
-const LocationConfig ServerConfig::findLocationConfig(const std::string& path) const {
-  LocationConfig ret(*this);
+const LocationConfig ServerConfig::findLocationConfig(std::string path) const {
+  int pos;
 
-  for (int i = 0; i < this->locations.size(); ++i) {
-    if (this->locations[i].getPath() == path) {
-      return this->locations[i];
+  std::string origin = path;
+  while ((pos = path.rfind('/')) != std::string::npos) {
+    for (std::vector<LocationConfig>::const_iterator it = this->locations.begin(); it != this->locations.end(); ++it) {
+      if (path == it->getPath()) {
+        origin.erase(0, path.length());
+        return findLocationConfigRoop(*it, origin);
+      }
     }
+    path.erase(pos);
   }
   return LocationConfig(*this);
+}
+
+const LocationConfig ServerConfig::findLocationConfigRoop(const LocationConfig config, std::string path) const {
+  int pos;
+
+  std::string origin = path;
+  while ((pos = path.rfind('/')) != std::string::npos) {
+    for (std::vector<LocationConfig>::const_iterator it = config.getLocationConfig().begin(); it != config.getLocationConfig().end(); ++it) {
+      if (path == it->getPath()) {
+        origin.erase(0, path.length());
+        return findLocationConfigRoop(*it, origin);
+      }
+    }
+    path.erase(pos);
+  }
+  return config;
 }
 
 // getter
@@ -65,7 +86,7 @@ std::string ServerConfig::getHost() const { return this->host; }
 
 std::string ServerConfig::getServerName() const { return this->serverName; }
 
-std::vector<LocationConfig> ServerConfig::getLocationConfig() const { return this->locations; }
+const std::vector<LocationConfig>& ServerConfig::getLocationConfig() const { return this->locations; }
 
 // setter
 

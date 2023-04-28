@@ -18,7 +18,7 @@ HttpConfig& HttpConfig::operator=(const HttpConfig& obj) {
   return *this;
 }
 
-std::vector<ServerConfig> HttpConfig::getServerConfig() const {
+const std::vector<ServerConfig>& HttpConfig::getServerConfig() const {
   return this->servers;
 }
 

@@ -58,7 +58,7 @@ std::map<int, std::string> LocationConfig::getReturnRes() const { return this->r
 
 bool LocationConfig::isAutoIndex() const { return this->autoIndex; }
 
-std::vector<LocationConfig> LocationConfig::getLocationConfig() const { return this->locations; }
+const std::vector<LocationConfig>& LocationConfig::getLocationConfig() const { return this->locations; }
 
 // setter
 

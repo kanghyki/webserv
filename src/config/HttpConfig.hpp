@@ -13,8 +13,8 @@ class HttpConfig: public CommonConfig {
     HttpConfig(const HttpConfig& obj);
     HttpConfig& operator=(const HttpConfig& obj);
 
-    std::vector<ServerConfig> getServerConfig() const;
-    void                      addServerConfig(ServerConfig server);
+    const std::vector<ServerConfig>& getServerConfig() const;
+    void                             addServerConfig(ServerConfig server);
 
   private:
     std::vector<ServerConfig> servers;
