@@ -28,6 +28,10 @@ class CGI {
     char** envMapToEnv(const std::map<std::string, std::string>& envMap) const;
 
     const std::string getQueryString(const std::string& path) const;
+    void changeWorkingDirectory(void);
+
+    const std::string getScriptPath(void) const;
+    const std::string getCgiPath(void) const;
 
     static const int READ = 0;
     static const int WRITE = 0;

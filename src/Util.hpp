@@ -21,6 +21,7 @@ namespace util {
   int ftFork(void);
   void ftPipe(int* fd);
   std::string readFd(int fd);
+  void ftFree(char** data);
 
   class StringFoundException : public std::exception
   {

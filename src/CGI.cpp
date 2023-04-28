@@ -6,7 +6,7 @@
  * -------------------------- Constructor --------------------------
  */
 
-CGI::CGI(HttpRequest& req) {
+CGI::CGI(HttpRequest& req) : scriptPath(req.getLocationConfig().getCGIScriptPath()), cgiPath(req.getLocationConfig().getCGIPath()) {
   this->argv = this->getArgv(req);
   this->env = this->envMapToEnv(this->getEnvMap(req));
 }
@@ -16,7 +16,8 @@ CGI::CGI(HttpRequest& req) {
  */
 
 CGI::~CGI(void) {
-
+  util::ftFree(this->argv);
+  util::ftFree(this->env);
 }
 
 /*
@@ -49,12 +50,9 @@ const std::map<std::string, std::string> CGI::getEnvMap(HttpRequest& req) const 
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, ""));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, this->getQueryString(req.getPath())));
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod()));
-  // config, uri 파싱 필요
-  ret.insert(std::pair<std::string, std::string>(cgi_env::SCRIPT_NAME, ""));
-  // req에 config 추가되면 getHost로 가져와
-  ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_NAME, ""));
-  // getPort로 가져와
-  ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_PORT, ""));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::SCRIPT_NAME, req.getPath()));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_NAME, req.getServerConfig().getHost()));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_PORT, util::itoa(req.getServerConfig().getPort())));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_PROTOCOL, req.getVersion()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_SOFTWARE, SOFTWARE_NAME));
 
@@ -62,7 +60,16 @@ const std::map<std::string, std::string> CGI::getEnvMap(HttpRequest& req) const 
 }
 
 char** CGI::getArgv(HttpRequest& req) const {
-  // config, uri 파싱 필요
+  char** ret;
+
+  ret = (char**)malloc(sizeof(char*) * 3);
+  if (ret == NULL) throw INTERNAL_SERVER_ERROR;
+
+  ret[0] = strdup(getCgiPath().c_str());
+  ret[1] = strdup(("." + getScriptPath()).c_str());
+  ret[2] = NULL;
+
+  return ret;
 }
 
 char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const {
@@ -100,6 +107,7 @@ std::string CGI::execute(void) {
     close(fd[READ]);
     dup2(fd[WRITE], STDOUT_FILENO);
     close(fd[WRITE]);
+    changeWorkingDirectory();
     if (execve(this->cgiPath.c_str(), this->argv, this->env) < 0)
       throw INTERNAL_SERVER_ERROR;
     exit(0);
@@ -120,6 +128,25 @@ const std::string CGI::getQueryString(const std::string& path) const {
     ret += path.substr(pos);
 
   return ret;
+}
+
+void CGI::changeWorkingDirectory(void) {
+  char* cur = getcwd(NULL, 0);
+  if (!cur) throw INTERNAL_SERVER_ERROR;
+
+  std::string tmp = cur;
+  std::string tmp2 = getScriptPath().substr(0, getScriptPath().rfind("/"));
+  std::string target = cur + tmp2;
+
+  if (chdir(target.c_str()) == -1) throw INTERNAL_SERVER_ERROR;
+}
+
+const std::string CGI::getScriptPath(void) const {
+  return this->scriptPath;
+}
+
+const std::string CGI::getCgiPath(void) const {
+  return this->cgiPath;
 }
 
 /*
