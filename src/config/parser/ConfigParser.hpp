@@ -16,7 +16,7 @@ class ConfigParser {
     ConfigParser();
     ~ConfigParser();
 
-    Config                    parse(const std::string &fileName);
+    Config                    parse(const std::string &fileName) throw(std::runtime_error);
 
   private:
     unsigned long             pos;
@@ -36,12 +36,14 @@ class ConfigParser {
     // location
     void                      parseAlias(LocationConfig& conf);
     void                      parseLimitExcept(LocationConfig& conf);
+    void                      parseCGI(LocationConfig& conf);
     void                      parseAutoIndex(LocationConfig& conf);
     void                      parseReturn(LocationConfig& conf);
     // common
     void                      parseRoot(CommonConfig& conf);
     void                      parseErrorPage(CommonConfig& conf);
     void                      parseClientBodyBufferSize(CommonConfig& conf);
+    void                      parseTimeout(CommonConfig& conf);
     void                      parseIndex(CommonConfig& conf);
 
     void                      generateToken(std::string fileName);

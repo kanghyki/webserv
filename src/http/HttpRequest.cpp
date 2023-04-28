@@ -1,24 +1,43 @@
 #include "./HttpRequest.hpp"
-#include "HttpHeaderField.hpp"
-#include "HttpStatus.hpp"
-#include <iostream>
 
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
 const std::string HttpRequest::CRLF = "\r\n";
 
-HttpRequest::HttpRequest(std::string request) {
-  std::vector<std::string>            vs;
+HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
+  std::vector<std::string> vs;
+
 
   vs = util::split(request, CRLF + CRLF);
   parseHeader(vs[0]);
   setBody(vs[1]);
+  this->config = sc.findLocationConfig(this->getPath());
 }
 
-HttpRequest::HttpRequest() {}
+HttpRequest::HttpRequest(const HttpRequest& obj):
+  method(obj.method),
+  path(obj.path),
+  queryString(obj.queryString),
+  version(obj.version),
+  body(obj.body),
+  field(obj.field),
+  config(obj.config) {}
+
+HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
+  if (this != &obj) {
+    this->method = obj.method;
+    this->path = obj.path;
+    this->queryString = obj.queryString;
+    this->version = obj.version;
+    this->body = obj.body;
+    this->field = obj.field;
+    this->config = obj.config;
+  }
+  return *this;
+}
 
 HttpRequest::~HttpRequest() {}
 
-void HttpRequest::parseHeader(const std::string& h) {
+void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
   std::vector<std::string>            vs;
   std::vector<std::string>::iterator  it;
 
@@ -35,13 +54,9 @@ void HttpRequest::parseStatusLine(const std::string& line) {
   std::vector<std::string> vs = util::split(line, " ");
   if (vs.size() != 3) throw BAD_REQUEST;
 
-  validateMethod(vs[0]);
-  validatePath(vs[1]);
-  validateVersion(vs[2]);
-
-  this->method = vs[0]; 
-  this->path = vs[1];
-  this->version = vs[2];
+  setMethod(vs[0]);
+  setURI(vs[1]);
+  setVersion(vs[2]);
 }
 
 void HttpRequest::validateMethod(const std::string &method) {
@@ -53,7 +68,7 @@ void HttpRequest::validateMethod(const std::string &method) {
   this->method = method;
 }
 
-void HttpRequest::validatePath(const std::string &path) {
+void HttpRequest::validateURI(const std::string &path) {
   int i;
 
   i = 0;
@@ -61,7 +76,7 @@ void HttpRequest::validatePath(const std::string &path) {
   if (path[i++] != '/')                   throw BAD_REQUEST;
 
   while (i < path.length()) {
-    if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=", path[i]))
+    if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=-", path[i]))
       throw BAD_REQUEST;
     ++i;
   }
@@ -99,6 +114,14 @@ std::string HttpRequest::getMethod() const { return this->method; }
 
 std::string HttpRequest::getPath() const { return this->path; }
 
+std::string HttpRequest::getRelativePath() const {
+  if (getConfig().getRoot() == "/")
+    return "." + this->path;
+  return "." + getConfig().getRoot() + this->path;
+}
+
+std::string HttpRequest::getQueryString() const { return this->queryString; }
+
 std::string HttpRequest::getVersion() const { return this->version; }
 
 std::string HttpRequest::getField(const std::string& field) const {
@@ -123,11 +146,35 @@ const std::string HttpRequest::getContentType(void) const {
   return mt.getMimeType(getPath());
 }
 
+const LocationConfig& HttpRequest::getConfig() const {
+  return this->config;
+}
+
 /*
  * -------------------------- Setter -------------------------------
  */
 
 void  HttpRequest::setBody(const std::string& body) { this->body = body; }
+
+void HttpRequest::setURI(const std::string& URI) {
+  validateURI(URI);
+
+  int pos = (URI.find('?'));
+  this->path = URI.substr(0, pos);
+  if (pos != std::string::npos) this->queryString = URI.substr(pos + 1);
+}
+
+void HttpRequest::setMethod(const std::string& method) {
+  validateMethod(method);
+
+  this->method = method;
+}
+
+void HttpRequest::setVersion(const std::string& version) {
+  validateVersion(version);
+
+  this->version = version;
+}
 
 //void HttpRequest::parseCacheControl(const std::string &s) {
 //}

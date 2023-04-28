@@ -8,6 +8,7 @@ class ConfigTest {
   public:
     static void parseTest1();
     static void defaultConfig();
+    static void location();
   private:
 };
 

@@ -31,7 +31,7 @@ void HttpResponse::setBody(const std::string& body) {
   this->body = body;
 }
 
-std::string HttpResponse::toString() {
+std::string HttpResponse::toString() throw() {
   std::string ret;
 
   this->statusText = getStatusText(this->statusCode);
