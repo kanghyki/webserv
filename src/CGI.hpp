@@ -30,11 +30,12 @@ class CGI {
     char** getArgv(const HttpRequest& req) const;
     char** envMapToEnv(const std::map<std::string, std::string>& envMap) const;
 
-    const std::string getQueryString(const std::string& path) const;
+    const std::string getPathInfo(const HttpRequest& req) const;
     void changeWorkingDirectory(void);
 
     const std::string getScriptPath(void) const;
     const std::string getCgiPath(void) const;
+    const std::string getCurrentPath(void) const;
 
     static const int READ = 0;
     static const int WRITE = 1;

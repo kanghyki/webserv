@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include "Util.hpp"
-/* * -------------------------- Constructor --------------------------
+
+/*
+ * -------------------------- Constructor --------------------------
  */
 
 Server::Server(ServerConfig config) : recvTable(MANAGE_FD_MAX), host(config.getHost()), port(config.getPort()), \
@@ -79,6 +81,7 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
     port += 2000;
   std::cout << "[ http://localhost:" << port << "/html/index.html ]" << std::endl;
   std::cout << "[ http://localhost:" << port << " ]" << std::endl;
+  std::cout << "[ http://localhost:" << port << "/cgi/cgi_tester ]" << std::endl;
   in.sin_port = htons(port);
 }
 
@@ -242,9 +245,7 @@ void Server::sendData(int fd) {
   FD_SET(fd, &this->getWrites());
   try {
     HttpRequest hr(getData(fd), this->config);
-    std::cout << "cgi path : " << hr.getLocationConfig().getCGIPath() << std::endl;
-    std::cout << "script path : " << hr.getLocationConfig().getCGIScriptPath() << std::endl;
-    if (!hr.getLocationConfig().getCGIPath().empty())
+    if (!hr.getLocationConfig().getCGIScriptPath().empty())
       response = Http::executeCGI(hr, this->reads, this->fdMax);
     else
       response = Http::processing(hr);

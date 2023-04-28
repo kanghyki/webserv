@@ -10,6 +10,7 @@ CGI::CGI(const HttpRequest& req, fd_set& reads, int& fdMax) : scriptPath(req.get
                                               cgiPath(req.getLocationConfig().getCGIPath()), reads(reads), fdMax(fdMax) {
   this->argv = this->getArgv(req);
   this->env = this->envMapToEnv(this->getEnvMap(req));
+  if (this->cgiPath.empty()) this->cgiPath = getCurrentPath() + this->scriptPath;
 }
 
 /*
@@ -45,34 +46,32 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_TYPE, req.getContentType()));
   }
   ret.insert(std::pair<std::string, std::string>(cgi_env::GATEWAY_INTERFACE, CGI_VERSION));
-  // config, uri 파싱 필요
-  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, ""));
-  // config, uri 파싱 필요
-  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, ""));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, getPathInfo(req)));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
-  ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod()));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod())); 
   ret.insert(std::pair<std::string, std::string>(cgi_env::SCRIPT_NAME, req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_NAME, req.getServerConfig().getHost()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_PORT, util::itoa(req.getServerConfig().getPort())));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_PROTOCOL, req.getVersion()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_SOFTWARE, SOFTWARE_NAME));
 
+  for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
+    std::cout << it->first << " : " << it->second << std::endl;
+  }
+
   return ret;
 }
 
 char** CGI::getArgv(const HttpRequest& req) const {
   char** ret;
-  char* cur;
 
   ret = (char**)malloc(sizeof(char*) * 3);
   if (ret == NULL) throw INTERNAL_SERVER_ERROR;
 
   ret[0] = strdup(getCgiPath().c_str());
-  cur = getcwd(NULL, 0);
-  ret[1] = strdup((std::string(cur) + getScriptPath()).c_str());
+  ret[1] = strdup((getCurrentPath() + getScriptPath()).c_str());
   ret[2] = NULL;
-
-  free(cur);
 
   return ret;
 }
@@ -114,11 +113,10 @@ std::string CGI::execute(void) {
   
   if (pid == 0) {
     close(fd[READ]);
-    dup2(fd[WRITE], STDOUT_FILENO);
+//    dup2(fd[WRITE], STDOUT_FILENO);
     close(fd[WRITE]);
     changeWorkingDirectory();
-    if (execve(this->cgiPath.c_str(), this->argv, this->env) < 0)
-      throw INTERNAL_SERVER_ERROR;
+    if (execve(this->cgiPath.c_str(), this->argv, this->env) < 0) throw INTERNAL_SERVER_ERROR;
     exit(0);
   }
 
@@ -129,26 +127,28 @@ std::string CGI::execute(void) {
   return ret;
 }
 
-const std::string CGI::getQueryString(const std::string& path) const {
-  std::string ret = "";
-
-  size_t pos = path.find("?");
-  if (pos != std::string::npos)
-    ret += path.substr(pos);
-
+const std::string CGI::getPathInfo(const HttpRequest& req) const {
+  size_t pos = req.getPath().find(req.getLocationConfig().getPath());
+  std::string ret = req.getPath().substr(pos + req.getLocationConfig().getPath().length());
+//  if (ret.empty())
+//    ret += "/";
   return ret;
 }
 
 void CGI::changeWorkingDirectory(void) {
+  std::string target = getCurrentPath() + getScriptPath().substr(0, getScriptPath().rfind("/"));
+
+  if (chdir(target.c_str()) == -1) throw INTERNAL_SERVER_ERROR;
+}
+
+const std::string CGI::getCurrentPath(void) const {
   char* cur = getcwd(NULL, 0);
   if (!cur) throw INTERNAL_SERVER_ERROR;
 
-  std::string tmp2 = getScriptPath().substr(0, getScriptPath().rfind("/"));
-  std::string target = cur + tmp2;
-
+  std::string ret = cur;
   free(cur);
 
-  if (chdir(target.c_str()) == -1) throw INTERNAL_SERVER_ERROR;
+  return ret;
 }
 
 const std::string CGI::getScriptPath(void) const {
