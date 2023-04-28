@@ -242,7 +242,10 @@ void Server::sendData(int fd) {
   FD_SET(fd, &this->getWrites());
   try {
     HttpRequest hr(getData(fd), this->config);
-    response = Http::processing(hr);
+    if (hr.getPath().find(".py") != std::string::npos)
+      response = Http::executeCGI(hr, this->reads, this->fdMax);
+    else
+      response = Http::processing(hr);
     clearReceived(fd);
     s = response.toString();
   } catch (HttpStatus status) {

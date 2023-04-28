@@ -6,7 +6,8 @@
  * -------------------------- Constructor --------------------------
  */
 
-CGI::CGI(HttpRequest& req) : scriptPath(req.getLocationConfig().getCGIScriptPath()), cgiPath(req.getLocationConfig().getCGIPath()) {
+CGI::CGI(const HttpRequest& req, fd_set& reads, int& fdMax) : scriptPath(req.getLocationConfig().getCGIScriptPath()), \
+                                              cgiPath(req.getLocationConfig().getCGIPath()), reads(reads), fdMax(fdMax) {
   this->argv = this->getArgv(req);
   this->env = this->envMapToEnv(this->getEnvMap(req));
 }
@@ -36,7 +37,7 @@ CGI::~CGI(void) {
  * ----------------------- Member Function -------------------------
  */
 
-const std::map<std::string, std::string> CGI::getEnvMap(HttpRequest& req) const {
+const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) const {
   std::map<std::string, std::string> ret;
 
   if (!req.getBody().empty()) {
@@ -59,7 +60,7 @@ const std::map<std::string, std::string> CGI::getEnvMap(HttpRequest& req) const 
   return ret;
 }
 
-char** CGI::getArgv(HttpRequest& req) const {
+char** CGI::getArgv(const HttpRequest& req) const {
   char** ret;
 
   ret = (char**)malloc(sizeof(char*) * 3);
@@ -98,6 +99,10 @@ std::string CGI::execute(void) {
   if (access(this->scriptPath.c_str(), X_OK) == 0) throw INTERNAL_SERVER_ERROR;
   try {
     util::ftPipe(fd);
+//    fcntl(fd[READ], F_SETFL, O_NONBLOCK);
+//    FD_SET(fd[READ], &this->reads);
+//    if (fd[READ] > fdMax)
+//      fdMax = fd[READ];
     pid = util::ftFork();
   } catch (util::SystemFunctionException& e) {
     throw INTERNAL_SERVER_ERROR;

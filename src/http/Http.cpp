@@ -24,6 +24,26 @@ HttpResponse Http::processing(const HttpRequest req) throw(HttpStatus) {
   return ret;
 }
 
+HttpResponse Http::executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax) throw (HttpStatus) {
+  std::string str;
+  HttpResponse ret;
+
+  try {
+    CGI cgi(req, reads, fdMax);
+    str = cgi.execute();
+  } catch (HttpStatus status) {
+    ret = getErrorPage(status, req.getLocationConfig());
+  }
+
+  ret = HttpResponseBuilder::getBuilder()
+    .statusCode(OK)
+    .header("date", getNowStr())
+    .body(str, req.getContentType())
+    .build();
+
+  return ret;
+}
+
 HttpResponse Http::getMethod(const HttpRequest& req) {
   std::cout << "GET" << std::endl;
   HttpDataFecther fetcher(req);
