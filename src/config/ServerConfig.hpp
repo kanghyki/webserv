@@ -18,7 +18,7 @@ class ServerConfig: public CommonConfig {
     ServerConfig& operator=(const ServerConfig& obj);
 
     const LocationConfig                findLocationConfig(std::string path) const;
-    const LocationConfig                findLocationConfigRoop(const LocationConfig config, std::string path) const;
+    const LocationConfig&               findLocationConfigRoop(const LocationConfig& config, std::string path) const;
 
     int                                       getTimeout() const;
     short                                     getPort() const;
