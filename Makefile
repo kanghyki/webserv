@@ -28,7 +28,6 @@ SRCS			=	main.cpp\
 						HttpRequest.cpp\
 						HttpResponse.cpp\
 						HttpDataFetcher.cpp\
-						HttpResponseBuilder.cpp\
 						HttpStatus.cpp\
 						Http.cpp\
 						MimeType.cpp\
