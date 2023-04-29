@@ -7,8 +7,7 @@
  * -------------------------- Constructor --------------------------
  */
 
-CGI::CGI(const HttpRequest& req, fd_set& reads, int& fdMax) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()),
-                                                              pathInfo(req.getPathInfo()), reads(reads), fdMax(fdMax) {
+CGI::CGI(const HttpRequest& req) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()), pathInfo(req.getPathInfo()) {
   if (!req.getBody().empty()) this->body = req.getBody();
   this->argv = this->getArgv(req);
   this->env = this->envMapToEnv(this->getEnvMap(req));

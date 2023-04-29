@@ -14,7 +14,7 @@ static const std::string SOFTWARE_NAME = "NGINX MINUS";
 
 class CGI {
   public:
-    CGI(const HttpRequest& req, fd_set& reads, int& fdMax);
+    CGI(const HttpRequest& req);
     ~CGI(void);
     std::string execute(void);
 
@@ -25,8 +25,6 @@ class CGI {
     std::string cgiPath;
     std::string pathInfo;
     std::string body;
-    fd_set& reads;
-    int& fdMax;
 
     const std::map<std::string, std::string> getEnvMap(const HttpRequest& req) const;
     char** getArgv(const HttpRequest& req) const;

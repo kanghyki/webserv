@@ -125,7 +125,7 @@ HttpResponse Http::processing(const HttpRequest req) throw(HttpStatus) {
   return ret;
 }
 
-HttpResponse Http::executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax) throw (HttpStatus) {
+HttpResponse Http::executeCGI(const HttpRequest& req) throw (HttpStatus) {
   std::string str;
   HttpResponse ret;
   std::string body;
@@ -133,7 +133,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax)
   std::string ct;
 
   try {
-    CGI cgi(req, reads, fdMax);
+    CGI cgi(req);
     str = cgi.execute();
     std::pair<std::string, std::string> p = util::splitHeaderBody(str, CRLF + CRLF);
     header = util::parseCGIHeader(p.first);
