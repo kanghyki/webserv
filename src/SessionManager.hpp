@@ -16,7 +16,7 @@ class SessionManager {
   public:
     static const unsigned int     INTERVAL_TIME;
 
-    SessionManager(unsigned int SESSION_EXPIRED);
+    SessionManager(unsigned int expired_max);
     ~SessionManager(void);
 
     void                          cleanUpExpired(void);
