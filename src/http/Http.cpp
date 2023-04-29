@@ -1,4 +1,6 @@
 #include "./Http.hpp"
+#include "HttpHeaderField.hpp"
+#include <exception>
 
 Http::Http() {}
 
@@ -128,21 +130,26 @@ HttpResponse Http::executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax)
   HttpResponse ret;
   std::string body;
   std::map<std::string, std::string> header;
+  std::string ct;
 
   try {
     CGI cgi(req, reads, fdMax);
     str = cgi.execute();
-    std::pair<std::string, std::string> p = util::splitTwo(str, CRLF + CRLF);
+    std::pair<std::string, std::string> p = util::splitHeaderBody(str, CRLF + CRLF);
     header = util::parseCGIHeader(p.first);
     body = p.second;
-    std::cout << "header : " << p.first << std::endl;
-    std::cout << "body : " << body << std::endl;
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
+  try {
+    ct = header.at("content-type");
+  } catch (std::exception& e) {}
 
   ret.setStatusCode(OK);
-  ret.addHeader(header_field::CONTENT_TYPE, header.at("content-type"));
+  if (!ct.empty()) 
+    ret.addHeader(header_field::CONTENT_TYPE, ct);
+  else
+    ret.addHeader(header_field::CONTENT_TYPE, util::itoa(body.length()));
   ret.setBody(body);
 
   return ret;

@@ -264,6 +264,7 @@ void Server::receiveDone(int fd) {
 }
 
 void Server::sendData(int fd, const std::string& data) {
+  FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else

@@ -3,6 +3,12 @@
 import cgi
 import os
 
+def createDirectory(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print("Error: Failed to create the directory.")
 
 form = cgi.FieldStorage()
 
@@ -10,6 +16,7 @@ fileitem = form['file']
 
 if fileitem.filename:
     file = os.environ['PATH_INFO'] + "/" + os.path.basename(fileitem.filename)
+    createDirectory('../upload')
     if os.path.exists(file):
         message = 'File already exists'
     else:
