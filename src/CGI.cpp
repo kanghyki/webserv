@@ -1,6 +1,7 @@
 #include "CGI.hpp"
 #include "Util.hpp"
 #include "http/HttpStatus.hpp"
+#include <utility>
 
 /*
  * -------------------------- Constructor --------------------------
@@ -8,6 +9,9 @@
 
 CGI::CGI(const HttpRequest& req, fd_set& reads, int& fdMax) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()),
                                                               pathInfo(req.getPathInfo()), reads(reads), fdMax(fdMax) {
+  if (!req.getBody().empty()) this->body = req.getBody();
+  if (this->pathInfo.empty()) this->pathInfo = getUploadDir();
+  else this->pathInfo = "./" + this->pathInfo;
   this->argv = this->getArgv(req);
   this->env = this->envMapToEnv(this->getEnvMap(req));
 }
@@ -40,6 +44,11 @@ const std::string CGI::getCgiPath(void) const {
 const std::string CGI::getPathInfo(void) const {
   return this->pathInfo;
 }
+
+const std::string CGI::getBody(void) const {
+  return this->body;
+}
+
 
 /*
  * -------------------------- Setter -------------------------------
@@ -106,16 +115,15 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
 std::string CGI::execute(void) {
   std::string ret;
   int pid;
-  int fd[2];
+  int fd1[2];
+  int fd2[2];
   int status;
 
-  std::cout << "cgi path : " << getCgiPath() << std::endl;
-  std::cout << "script path : " << getScriptPath() << std::endl;
-  
   if (access(this->cgiPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
   if (access(this->scriptPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
   try {
-    util::ftPipe(fd);
+    util::ftPipe(fd1);
+    util::ftPipe(fd2);
 //    fcntl(fd[READ], F_SETFL, O_NONBLOCK);
 //    FD_SET(fd[READ], &this->reads);
 //    if (fd[READ] > fdMax)
@@ -126,17 +134,23 @@ std::string CGI::execute(void) {
   }
   
   if (pid == 0) {
-    close(fd[READ]);
-    dup2(fd[WRITE], STDOUT_FILENO);
-    close(fd[WRITE]);
+    close(fd1[READ]);
+    close(fd2[WRITE]);
+//    dup2(fd1[WRITE], STDOUT_FILENO);
+    dup2(fd2[READ], STDIN_FILENO);
+    close(fd1[WRITE]);
+    close(fd2[READ]);
     changeWorkingDirectory();
     if (execve(this->cgiPath.c_str(), this->argv, this->env) < 0) throw INTERNAL_SERVER_ERROR;
     exit(0);
   }
 
-  close(fd[WRITE]);
+  close(fd1[WRITE]);
+  close(fd2[READ]);
+  write(fd2[WRITE], getBody().c_str(), getBody().length());
+  close(fd2[WRITE]);
   waitpid(pid, &status, 0);
-  ret = util::readFd(fd[READ]);
+  ret = util::readFd(fd1[READ]);
 
   return ret;
 }
@@ -163,6 +177,10 @@ const std::string CGI::getCurrentPath(void) const {
   free(cur);
 
   return ret;
+}
+
+const std::string CGI::getUploadDir(void) const {
+  return getCurrentPath() + UPLOAD_DIR;
 }
 
 /*

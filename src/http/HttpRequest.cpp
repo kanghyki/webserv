@@ -4,12 +4,9 @@ const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
 const std::string HttpRequest::CRLF = "\r\n";
 
 HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(false) {
-  std::vector<std::string> vs;
-
-
-  vs = util::split(request, CRLF + CRLF);
-  parseHeader(vs[0]);
-  setBody(vs[1]);
+  size_t pos = request.find(CRLF + CRLF);
+  parseHeader(request.substr(0, pos));
+  setBody(request.substr(pos + 1));
   this->serverConfig = sc;
   this->locationConfig = sc.findLocationConfig(this->getPath());
   checkCGI(getPath(), this->serverConfig);
@@ -27,7 +24,11 @@ HttpRequest::HttpRequest(const HttpRequest& obj):
   body(obj.body),
   field(obj.field),
   locationConfig(obj.locationConfig),
-  serverConfig(obj.serverConfig) {}
+  serverConfig(obj.serverConfig),
+  cgi(obj.isCGI()),
+  scriptPath(obj.getScriptPath()),
+  cgiPath(obj.getCGIPath()),
+  pathInfo(obj.pathInfo) {}
 
 HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
   if (this != &obj) {
@@ -39,6 +40,10 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
     this->field = obj.field;
     this->locationConfig = obj.locationConfig;
     this->serverConfig = obj.serverConfig;
+    this->cgi = obj.cgi;
+    this->scriptPath = obj.scriptPath;
+    this->cgiPath = obj.getCGIPath();
+    this->pathInfo = obj.pathInfo;
   }
   return *this;
 }

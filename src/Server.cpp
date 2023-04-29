@@ -82,6 +82,7 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
   std::cout << "[ http://localhost:" << port << "/html/index.html ]" << std::endl;
   std::cout << "[ http://localhost:" << port << " ]" << std::endl;
   std::cout << "[ http://localhost:" << port << "/cgi-bin/hello.py ]" << std::endl;
+  std::cout << "[ http://localhost:" << port << "/html/upload.html ]" << std::endl;
   in.sin_port = htons(port);
 }
 
