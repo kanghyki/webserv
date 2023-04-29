@@ -15,7 +15,7 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
     if (dir) {
       std::cout << "@is dir" << std::endl;
       closedir(dir);
-      data = DirectoryList::generate(this->req);
+      data = autoindex();
     }
     else {
       std::cout << "@is file" << std::endl;
@@ -45,4 +45,48 @@ std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus)
 
 const std::string HttpDataFecther::getData(void) const throw(HttpStatus) {
   return readFile(this->req.getRelativePath());
+}
+
+std::string HttpDataFecther::autoindex() const throw(HttpStatus) {
+  std::string     ret;
+  DIR*            dir;
+  struct dirent*  ent;
+
+  if ((dir = opendir(req.getRelativePath().c_str())) == NULL) {
+    if (errno == ENOTDIR)
+      throw (FORBIDDEN);
+    if (errno == ENOENT)
+      throw (NOT_FOUND);
+    else
+      throw (INTERNAL_SERVER_ERROR);
+  }
+  ret = "<!DOCTYPE html>\
+    <html>\
+    <head>\
+    <title>Index of " + req.getPath() + "</title>\
+    </head>\
+    <style>\
+    table { width: 300px; }\
+    th { height: 17px; }\
+    </style>\
+    <body>\
+    <h1>Index of " + req.getPath() + "</h1>\
+    <table>";
+
+  while ((ent = readdir(dir)) != NULL) {
+    std::string name(ent->d_name);
+    if (name == ".")
+      continue;
+    ret += "<tr><td>";
+    if (ent->d_type == DT_DIR) ret += "<a href=" + name + "/>" + name + "/<a></td><td align=\"right\">directory";
+    else if (ent->d_type == DT_REG) ret += "<a href=" + name + ">" + name + "<a></td><td align=\"right\">file";
+    ret += "</td></tr>\n";
+  }
+  ret += "</table>\
+          </body>\
+          </html>";
+
+  closedir(dir);
+
+  return ret;
 }

@@ -22,6 +22,7 @@ class HttpDataFecther {
 
   private:
     const HttpRequest&  req;
+    std::string         autoindex() const                 throw(HttpStatus);
 };
 
 #endif
