@@ -142,7 +142,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax)
   }
 
   ret.setStatusCode(OK);
-  ret.setHeader(header_field::CONTENT_TYPE, header.at("content-type"));
+  ret.addHeader(header_field::CONTENT_TYPE, header.at("content-type"));
   ret.setBody(body);
 
   return ret;
@@ -156,7 +156,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   std::string data = fetcher.fetch();
 
   res.setStatusCode(OK);
-  res.setHeader(header_field::CONTENT_TYPE, req.getContentType());
+  res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(data);
 
   return res;
@@ -175,7 +175,7 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
 
   res.setStatusCode(CREATED);
-  res.setHeader(header_field::CONTENT_TYPE, req.getContentType());
+  res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(req.getBody());
 
   return res;
@@ -213,7 +213,7 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
 
   res.setStatusCode(CREATED);
-  res.setHeader(header_field::CONTENT_TYPE, req.getContentType());
+  res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(req.getBody());
 
   return res;
@@ -238,7 +238,7 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
 
   // FIXME: erorr of error?
   res.setStatusCode(CREATED);
-  res.setHeader(header_field::CONTENT_TYPE, "text/html");
+  res.addHeader(header_field::CONTENT_TYPE, "text/html");
   res.setBody(data);
 
   return res;
