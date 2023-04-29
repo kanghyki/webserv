@@ -11,17 +11,13 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
 
   HttpRequest::SessionStatus ss = req.getSessionStatus();
 
-  if (ss == HttpRequest::EXPIRED) {
+  if (req.getPath() == "./favicon.ico") {
+  }
+  else if (ss == HttpRequest::EXPIRED) {
     req.getSession().erase(req.getSessionKey());
     ret.setStatusCode(FORBIDDEN);
     ret.addHeader(header_field::CONTENT_TYPE, "text/html");
     ret.setBody("<html><h1>Session expired!</h1></html>");
-    return ret;
-  }
-  else if (ss == HttpRequest::NORMAL) {
-    ret.setStatusCode(OK);
-    ret.addHeader(header_field::CONTENT_TYPE, "text/html");
-    ret.setBody("<html><h1>Session is work!</h1></html>");
     return ret;
   }
   else if (ss == HttpRequest::COOKIE_NOT_EXIST) {

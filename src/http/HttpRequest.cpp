@@ -64,7 +64,6 @@ void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
     std::pair<std::string, std::string> ret = splitField(*it);
     this->field.insert(ret);
   }
-  std::cout << "PARSE COOKIE" << std::endl;
   parseCookie(getField("Cookie"));
 }
 
@@ -78,7 +77,6 @@ void HttpRequest::parseStatusLine(const std::string& line) {
 }
 
 void HttpRequest::parseCookie(const std::string& cookie) {
-  std::cout << "PARSE COOKIE:" << cookie << std::endl;
   std::vector<std::string> vs;
 
   vs = util::split(cookie, ';');
@@ -90,11 +88,8 @@ void HttpRequest::parseCookie(const std::string& cookie) {
 
     key = util::trimSpace(vvs[0]);
     value = util::trimSpace(vvs[1]);
-    std::cout << key << "=" <<  value << std::endl;
-
     this->cookieMap.insert(std::make_pair(key, value));
   }
-  std::cout << this->cookieMap.size() << std::endl;
 }
 
 std::string HttpRequest::generateRandomString(int ch)
@@ -109,7 +104,6 @@ std::string HttpRequest::generateRandomString(int ch)
 }
 
 HttpRequest::SessionStatus HttpRequest::getSessionStatus() const {
-  std::cout << this->cookieMap.size() << std::endl;
   std::map<std::string, std::string>::const_iterator cookieIter = this->cookieMap.find(SESSION_KEY);
   if (cookieIter == cookieMap.end()) return COOKIE_NOT_EXIST;
 
@@ -117,7 +111,7 @@ HttpRequest::SessionStatus HttpRequest::getSessionStatus() const {
   if (sessionIter == this->session.end()) return SESSION_NOT_EXIST;
 
   time_t curTime = time(0);
-  int EXPIRED_TIME = 60;
+  int EXPIRED_TIME = 10;
   if (curTime - sessionIter->second > EXPIRED_TIME) return EXPIRED;
 
   return NORMAL;

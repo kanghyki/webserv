@@ -34,7 +34,6 @@ class Server {
     static const int FD_CLOSED = -1;
     static const int BUF_SIZE = 1024;
     static const int MANAGE_FD_MAX = 1024;
-    static const int TIMEOUT_MAX = 5;
 //    static const int HEADER_NOT_RECV = -1;
 //    static const int HEADER_RECV = 0;
 
