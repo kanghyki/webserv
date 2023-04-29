@@ -13,8 +13,8 @@ if fileitem.filename:
     if os.path.exists(file):
         message = 'File already exists'
     else:
-        open(os.environ['PATH_INFO'] + "/" + file, 'wb').write(fileitem.file.read())
-        message = 'The file "' + file + '" was uploaded successfully'
+        open(file, 'wb').write(fileitem.file.read())
+        message = 'The file "' + fileitem.filename + '" was uploaded successfully'
 else:
     message = "No file was uploaded"
 
