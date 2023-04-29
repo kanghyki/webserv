@@ -14,7 +14,7 @@ class ServerConfig: public CommonConfig {
     ServerConfig();
     ~ServerConfig();
     ServerConfig(const ServerConfig& obj);
-    ServerConfig& operator=(const ServerConfig& obj);
+//    ServerConfig& operator=(const ServerConfig& obj);
 
     const LocationConfig                findLocationConfig(std::string path) const;
     const LocationConfig&               findLocationConfigRoop(const LocationConfig& config, std::string path) const;

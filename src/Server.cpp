@@ -7,20 +7,19 @@
 
 Server::Server(ServerConfig config) :
   recvTable(MANAGE_FD_MAX),
+  config(config),
   host(config.getHost()),
   port(config.getPort()),
   servFd(SOCK_CLOSED),
   fdMax(FD_CLOSED),
   sessionManager(config.getSessionTimeout()),
-  connection(config.getTimeout())
-{
+  connection(config.getTimeout()) {
     this->servFd = socketInit();
     socketaddrInit(this->host, this->port, this->in);
     socketOpen(this->servFd, this->in);
     fdSetInit(this->reads, this->servFd);
     FD_ZERO(&this->writes);
     this->fdMax = this->servFd;
-    this->config = config;
 }
 
 /*
