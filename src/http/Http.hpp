@@ -1,13 +1,12 @@
 #ifndef HTTP_HPP
 # define HTTP_HPP
 
-# include "../config/ServerConfig.hpp"
 # include "./HttpStatus.hpp"
 # include "./HttpDataFetcher.hpp"
 # include "./HttpRequest.hpp"
 # include "./HttpResponse.hpp"
-# include "./HttpResponseBuilder.hpp"
 # include "../CGI.hpp"
+# include "../config/ServerConfig.hpp"
 
 # include <vector>
 # include <utility>

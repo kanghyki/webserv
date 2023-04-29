@@ -18,11 +18,9 @@ HTTP_DIR			= ./src/http
 
 SRCS			=	main.cpp\
 						Server.cpp\
-						Config.cpp\
 						CommonConfig.cpp\
-						HttpConfig.cpp\
-						LocationConfig.cpp\
 						ServerConfig.cpp\
+						LocationConfig.cpp\
 						Token.cpp\
 						Lexer.cpp\
 						ConfigParser.cpp\
@@ -30,7 +28,6 @@ SRCS			=	main.cpp\
 						HttpRequest.cpp\
 						HttpResponse.cpp\
 						HttpDataFetcher.cpp\
-						HttpResponseBuilder.cpp\
 						HttpStatus.cpp\
 						Http.cpp\
 						MimeType.cpp\

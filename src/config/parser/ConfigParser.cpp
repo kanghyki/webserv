@@ -6,36 +6,21 @@ ConfigParser::ConfigParser() {
 
 ConfigParser::~ConfigParser() {};
 
-Config ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
-  Config conf;
+ServerConfig ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
+  ServerConfig conf;
 
   generateToken(fileName);
-  while (curToken().isNot(Token::END_OF_FILE)) {
-    if (curToken().is(Token::HTTP)) conf.addHttpConfig(parseHttp());
-    else throwBadSyntax();
-    nextToken();
-  }
-  expectCurToken(Token::END_OF_FILE);
+
+  if (curToken().is(Token::SERVER)) conf = parseServer();
+  else throwBadSyntax();
+
+  expectNextToken(Token::END_OF_FILE);
 
   return conf;
 }
 
-HttpConfig ConfigParser::parseHttp() {
-  HttpConfig conf;
-
-  expectNextToken(Token::LBRACE);
-  for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
-    if (curToken().is(Token::SERVER)) conf.addServerConfig(parseServer(conf));
-    else if (curToken().isCommon()) parseCommon(conf);
-    else throwBadSyntax();
-  }
-  expectCurToken(Token::RBRACE);
-
-  return conf;
-}
-
-ServerConfig ConfigParser::parseServer(HttpConfig& httpConf) {
-  ServerConfig conf(httpConf);
+ServerConfig ConfigParser::parseServer() {
+  ServerConfig conf;
 
   expectNextToken(Token::LBRACE);
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
@@ -100,31 +85,27 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
 }
 
 // server
+// server
+// server
 
+// timeout [second(int)];
 void ConfigParser::parseTimeout(ServerConfig& conf) {
   expectNextToken(Token::INT);
-  conf.setTimeout(std::atoi(curToken().getLiteral().c_str()));
+  conf.setTimeout(atoi(curToken().getLiteral()));
   expectNextToken(Token::SEMICOLON);
 }
 
+// listen [host(ident)]:[port(int)];
 void ConfigParser::parseListen(ServerConfig& conf) {
-  nextToken();
-  // HOST:PORT
-  if (curToken().is(Token::IDENT)) {
-    std::vector<std::string> sp = util::split(curToken().getLiteral(), ":");
-    // FIXME: 포트만 들어오는 경우도 있음
-    if (sp.size() != 2) throw std::runtime_error("Listen error");
-    // TODO: check arguments
-    conf.setHost(sp[0]);
-    conf.setPort(std::atoi(sp[1].c_str()));
-  }
-  // PORT
-  else if (curToken().is(Token::INT)) {
-    conf.setPort(std::atoi(curToken().getLiteral().c_str()));
-  }
+  expectNextToken(Token::IDENT);
+  std::vector<std::string> sp = util::split(curToken().getLiteral(), ':');
+  if (sp.size() != 2) throw std::runtime_error("listen error");
+  conf.setHost(sp[0]);
+  conf.setPort(atoi(sp[1]));
   expectNextToken(Token::SEMICOLON);
 }
 
+// server_name [path(ident)];
 void ConfigParser::parseServerName(ServerConfig& conf) {
   expectNextToken(Token::IDENT);
   conf.setServerName(curToken().getLiteral());
@@ -132,19 +113,26 @@ void ConfigParser::parseServerName(ServerConfig& conf) {
 }
 
 // location
+// location
+// location
 
+// alias [path(ident)];
 void ConfigParser::parseAlias(LocationConfig& conf) {
   expectNextToken(Token::IDENT);
   conf.setAlias(curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }
 
+// limit_except [HTTP method(indent) ...] ;
 void ConfigParser::parseLimitExcept(LocationConfig& conf) {
-  expectNextToken(Token::IDENT);
-  conf.setLimitExcept(curToken().getLiteral());
+  while (peekToken().is(Token::IDENT)) {
+    nextToken();
+    conf.addLimitExcept(curToken().getLiteral());
+  }
   expectNextToken(Token::SEMICOLON);
 }
 
+// cgi [extension(indent)] [CGI path(ident)]
 void ConfigParser::parseCGI(ServerConfig& conf) {
   std::string ext;
   std::string path;
@@ -157,41 +145,45 @@ void ConfigParser::parseCGI(ServerConfig& conf) {
   expectNextToken(Token::SEMICOLON);
 }
 
+// autoindex [on(ident)/off(ident)]
 void ConfigParser::parseAutoIndex(LocationConfig& conf) {
   expectNextToken(Token::IDENT);
-  if (curToken().getLiteral() == "on")
-    conf.setAutoIndex(true);
-  else if (curToken().getLiteral() == "off")
-    conf.setAutoIndex(false);
-  else
-    throw std::runtime_error("AutoIndex error");
+  if (curToken().getLiteral() == "on") conf.setAutoIndex(true);
+  else if (curToken().getLiteral() == "off") conf.setAutoIndex(false);
+  else throw std::runtime_error("autoindex error");
   expectNextToken(Token::SEMICOLON);
 }
 
+// return [HTTP status code(int)] [URI(ident)]
 void ConfigParser::parseReturn(LocationConfig& conf) {
   expectNextToken(Token::INT);
-  int status_code = std::atoi(curToken().getLiteral().c_str());
+  int status_code = atoi(curToken().getLiteral());
   expectNextToken(Token::IDENT);
   conf.addReturnRes(std::pair<int, std::string>(status_code, curToken().getLiteral()));
   expectNextToken(Token::SEMICOLON);
 }
 
 // common
+// common
+// common
 
+// root [path(ident)]
 void ConfigParser::parseRoot(CommonConfig& conf) {
   expectNextToken(Token::IDENT);
   conf.setRoot(curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }
 
+// error_page [HTTP status code(int) ...] [path(ident)]
 void ConfigParser::parseErrorPage(CommonConfig& conf) {
   std::vector<int> statusList;
 
   while (peekToken().is(Token::INT)) {
     nextToken();
-    int status = std::atoi(curToken().getLiteral().c_str());
+    int status = atoi(curToken().getLiteral());
     statusList.push_back(status);
   }
+
   expectNextToken(Token::IDENT);
 
   for (int i = 0; i < statusList.size(); ++i)
@@ -199,17 +191,17 @@ void ConfigParser::parseErrorPage(CommonConfig& conf) {
   expectNextToken(Token::SEMICOLON);
 }
 
+// client_body_buffer_size [size(int)]
 void ConfigParser::parseClientBodyBufferSize(CommonConfig& conf) {
   expectNextToken(Token::INT);
-  conf.setClientBodySize(std::atoi(curToken().getLiteral().c_str()));
+  conf.setClientBodySize(atoi(curToken().getLiteral()));
   expectNextToken(Token::SEMICOLON);
 }
 
+// index [file_name(ident)]
 void ConfigParser::parseIndex(CommonConfig& conf) {
-  while (peekToken().is(Token::IDENT)) {
-    expectNextToken(Token::IDENT);
-    conf.addIndex(curToken().getLiteral());
-  }
+  expectNextToken(Token::IDENT);
+  conf.setIndex(curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }
 
@@ -244,7 +236,7 @@ Token ConfigParser::curToken() const {
 };
 
 Token ConfigParser::peekToken() const {
-  if (this->pos > this->tokens.size())
+  if (this->pos + 1 >= this->tokens.size())
     throw std::runtime_error("tokenization error");
   return this->tokens[this->pos + 1];
 }
@@ -253,41 +245,43 @@ void ConfigParser::expectNextToken(const std::string& expected) {
   nextToken();
 
   if (curToken().getType() != expected)
-    expectError(expected);
+    throwExpectError(expected);
 }
 
 void ConfigParser::expectCurToken(const std::string& expected) const {
   if (curToken().getType() != expected)
-    expectError(expected);
+    throwExpectError(expected);
 }
 
-// TODO:: move
-std::string itoa(int n) {
-  std::stringstream ss;
-
-  ss << n;
-
-  return ss.str();
-}
-
-void ConfigParser::expectError(const std::string& expected) const {
+void ConfigParser::throwExpectError(const std::string& expected) const throw (std::runtime_error) {
   std::string errorMsg =
     this->fileName
     + " "
     + std::to_string(curToken().getLineNumber())
-    + ":" + itoa(curToken().getPos())
+    + ":" + util::itoa(curToken().getPos())
     + " expected \'" + expected + "\' but \'" + curToken().getLiteral() + "\'";
 
   throw std::runtime_error(errorMsg);
 }
 
-void ConfigParser::throwBadSyntax() const {
+void ConfigParser::throwBadSyntax() const throw (std::runtime_error){
   std::string errorMsg =
     this->fileName
     + " "
     + std::to_string(curToken().getLineNumber())
-    + ":" + std::to_string(curToken().getPos())
+    + ":" + util::itoa(curToken().getPos())
     + " bad syntax \'" + curToken().getLiteral() + "\'";
 
   throw std::runtime_error(errorMsg);
+}
+
+int ConfigParser::atoi(const std::string& s) const {
+  int ret;
+
+  try {
+    ret = std::atoi(s.c_str());
+  } catch (std::exception& e) {
+    throwBadSyntax();
+  }
+  return ret;
 }

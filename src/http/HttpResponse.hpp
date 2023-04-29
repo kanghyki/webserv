@@ -14,10 +14,13 @@ class HttpResponse {
     HttpResponse();
     ~HttpResponse();
 
-    std::string toString() throw();
+    void                                setStatusCode(const HttpStatus statusCode);
+    void                                setHeader(const std::string& field, const std::string& value);
+    void                                setBody(const std::string& body);
+
+    std::string                         toString() throw();
 
   private:
-    friend class HttpResponseBuilder;
     static const std::string            version;
 
     HttpStatus                          statusCode;
@@ -25,12 +28,9 @@ class HttpResponse {
     std::map<std::string, std::string>  header;
     std::string                         body;
 
-    void                                setStatusCode(const HttpStatus statusCode);
-    void                                setHeader(const std::string& field, const std::string& value);
-    void                                setBody(const std::string& body);
-
     std::string                         makeStatusLine() const;
     std::string                         makeHeaderField(const std::string& fieldName, const std::string& value) const;
+    std::string                         getCurrentTimeStr() const;
 };
 
 // TODO: move

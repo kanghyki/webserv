@@ -54,13 +54,14 @@ std::string HttpResponse::makeHeaderField(const std::string& fieldName, const st
 }
 
 // TODO: move
-std::string getNowStr() {
-  // example: "Date: Sat, 9 Jul 2023 13:12:42 GMT"
+std::string HttpResponse::getCurrentTimeStr() const {
+  // example: "Date: Sat, 9 Jul 2023 13:12:42 UTC"
   time_t curr_time;
-  curr_time = time(NULL);
   char buf[100];
 
+  curr_time = time(NULL);
   tm *time = gmtime(&curr_time);
   strftime(buf, 100, "%a, %d %b %Y %X %Z", time);
+
   return buf;
 }

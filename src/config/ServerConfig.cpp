@@ -1,5 +1,4 @@
 #include "./ServerConfig.hpp"
-#include "./HttpConfig.hpp"
 
 const int         ServerConfig::DEFAULT_TIMEOUT = 60;
 const short       ServerConfig::DEFAULT_PORT = 80;
@@ -9,14 +8,6 @@ ServerConfig::ServerConfig():
   timeout(DEFAULT_TIMEOUT),
   port(DEFAULT_PORT),
   host(DEFAULT_HOST) {}
-
-ServerConfig::ServerConfig(const HttpConfig& config):
-  timeout(DEFAULT_TIMEOUT),
-  port(DEFAULT_PORT),
-  host(DEFAULT_HOST) {
-  this->clientBodySize = config.getClientBodySize();
-  this->root = config.getRoot();
-}
 
 ServerConfig::~ServerConfig() {}
 
@@ -47,34 +38,50 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
 }
 
 const LocationConfig ServerConfig::findLocationConfig(std::string path) const {
-  int pos;
-
+  int         pos;
   std::string origin = path;
+  bool        end = false;
+
   while ((pos = path.rfind('/')) != std::string::npos) {
+
     for (std::vector<LocationConfig>::const_iterator it = this->locations.begin(); it != this->locations.end(); ++it) {
-      if (path == it->getPath()) {
-        origin.erase(0, path.length());
-        return findLocationConfigRoop(*it, origin);
-      }
+      if (path == it->getPath()) return findLocationConfigRoop(*it, origin.substr(path.length()));
     }
-    path.erase(pos);
+
+    if (end == true) break;
+
+    path = path.erase(pos);
+
+    if (path.size() == 0) {
+      end = true;
+      path = "/";
+    }
   }
+
   return LocationConfig(*this);
 }
 
-const LocationConfig ServerConfig::findLocationConfigRoop(const LocationConfig config, std::string path) const {
-  int pos;
-
+const LocationConfig& ServerConfig::findLocationConfigRoop(const LocationConfig& config, std::string path) const {
+  int         pos;
   std::string origin = path;
+  bool        end = false;
+
   while ((pos = path.rfind('/')) != std::string::npos) {
+
     for (std::vector<LocationConfig>::const_iterator it = config.getLocationConfig().begin(); it != config.getLocationConfig().end(); ++it) {
-      if (path == it->getPath()) {
-        origin.erase(0, path.length());
-        return findLocationConfigRoop(*it, origin);
-      }
+      if (path == it->getPath()) return findLocationConfigRoop(*it, origin.substr(path.length()));
     }
-    path.erase(pos);
+
+    if (end == true) break;
+
+    path = path.erase(pos);
+
+    if (path.size() == 0) {
+      end = true;
+      path = "/";
+    }
   }
+
   return config;
 }
 

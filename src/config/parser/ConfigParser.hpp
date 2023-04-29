@@ -3,8 +3,9 @@
 
 # include "./Token.hpp"
 # include "./Lexer.hpp"
-# include "../Config.hpp"
 # include "../../Util.hpp"
+# include "../ServerConfig.hpp"
+# include "../LocationConfig.hpp"
 
 # include <fstream>
 # include <string>
@@ -16,15 +17,14 @@ class ConfigParser {
     ConfigParser();
     ~ConfigParser();
 
-    Config                    parse(const std::string &fileName) throw(std::runtime_error);
+    ServerConfig              parse(const std::string &fileName) throw(std::runtime_error);
 
   private:
     unsigned long             pos;
     std::vector<Token>        tokens;
     std::string               fileName;
 
-    HttpConfig                parseHttp();
-    ServerConfig              parseServer(HttpConfig& conf);
+    ServerConfig              parseServer();
     LocationConfig            parseLocation(ServerConfig& conf);
     LocationConfig            parseLocation(LocationConfig& conf);
     LocationConfig            parseLocation();
@@ -53,8 +53,9 @@ class ConfigParser {
     Token                     peekToken() const;
     void                      expectNextToken(const std::string& expected);
     void                      expectCurToken(const std::string& expected) const;
-    void                      expectError(const std::string& expected) const;
-    void                      throwBadSyntax() const;
+    void                      throwExpectError(const std::string& expected) const throw (std::runtime_error);
+    void                      throwBadSyntax() const throw (std::runtime_error);
+    int                       atoi(const std::string& s) const;
 };
 
 #endif
