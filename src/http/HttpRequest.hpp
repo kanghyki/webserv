@@ -22,7 +22,7 @@ namespace request_method {
 
 class HttpRequest {
   public:
-    HttpRequest(std::string request, const ServerConfig& sc, std::map<std::string, time_t>& session);
+    HttpRequest(std::string request, const ServerConfig& sc);
     HttpRequest(const HttpRequest& obj);
     HttpRequest& operator=(const HttpRequest& obj);
     ~HttpRequest();
@@ -43,24 +43,6 @@ class HttpRequest {
     const std::string                     getScriptPath() const;
     const std::string                     getCGIPath() const;
     const std::string                     getPathInfo() const;
-
-    // -- cookie, session
-    static const std::string              SESSION_KEY;
-
-    enum SessionStatus {
-      COOKIE_NOT_EXIST = 0,
-      SESSION_NOT_EXIST,
-      EXPIRED,
-      NORMAL,
-    };
-
-    static std::string                    generateRandomString(int ch);
-    SessionStatus                         getSessionStatus() const;
-    std::map<std::string, time_t>&        getSession()const;
-    std::string                           getSessionKey() const;
-    std::map<std::string, std::string>    cookieMap;
-    std::map<std::string, time_t>&        session;
-    // -- cookie, session
 
     void                                  setBody(const std::string& body);
 
@@ -85,7 +67,6 @@ class HttpRequest {
     void                                  setVersion(const std::string& version);
 
     void                                  parseStatusLine(const std::string &line);
-    void                                  parseCookie(const std::string& cookie);
 
     void                                  validateMethod(const std::string &method);
     void                                  validateVersion(const std::string &path);

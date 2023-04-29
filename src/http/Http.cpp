@@ -9,36 +9,6 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
 
-  HttpRequest::SessionStatus ss = req.getSessionStatus();
-
-  if (req.getPath() == "./favicon.ico") {
-  }
-  else if (ss == HttpRequest::EXPIRED) {
-    req.getSession().erase(req.getSessionKey());
-    ret.setStatusCode(FORBIDDEN);
-    ret.addHeader(header_field::CONTENT_TYPE, "text/html");
-    ret.setBody("<html><h1>Session expired!</h1></html>");
-    return ret;
-  }
-  else if (ss == HttpRequest::COOKIE_NOT_EXIST) {
-    std::string random = HttpRequest::generateRandomString(15);
-    req.getSession().insert(std::make_pair(random, time(0)));
-    ret.setStatusCode(FORBIDDEN);
-    ret.addHeader(header_field::CONTENT_TYPE, "text/html");
-    ret.addHeader("Set-Cookie", HttpRequest::SESSION_KEY + "=" + random);
-    ret.setBody("<html><h1>No cookie!</h1>\nnew cookie : " + random + "</html>");
-    return ret;
-  }
-  else if (ss == HttpRequest::SESSION_NOT_EXIST) {
-    std::string random = HttpRequest::generateRandomString(15);
-    req.getSession().insert(std::make_pair(random, time(0)));
-    ret.setStatusCode(FORBIDDEN);
-    ret.addHeader(header_field::CONTENT_TYPE, "text/html");
-    ret.addHeader("Set-Cookie", "_webserv_session=" + random);
-    ret.setBody("<html><h1>No session!</h1>\nnew cookie : " + random + "</html>");
-    return ret;
-  }
-
   std::cout << req.getRelativePath() << std::endl;
   try {
     if (req.getMethod() == request_method::GET) ret = getMethod(req);

@@ -26,6 +26,7 @@ ServerConfig ConfigParser::parseServer() {
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
+    else if (curToken().is(Token::SESSION_TIMEOUT)) parseSessionTimeout(conf);
     else if (curToken().is(Token::TIMEOUT)) parseTimeout(conf);
     else if (curToken().is(Token::LISTEN)) parseListen(conf);
     else if (curToken().is(Token::SERVER_NAME)) parseServerName(conf);
@@ -87,6 +88,13 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
 // server
 // server
 // server
+
+// session_timeout [second(int)];
+void ConfigParser::parseSessionTimeout(ServerConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setSessionTimeout(atoi(curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
+}
 
 // timeout [second(int)];
 void ConfigParser::parseTimeout(ServerConfig& conf) {

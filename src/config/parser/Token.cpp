@@ -20,6 +20,7 @@ const std::string Token::ALIAS                    = "alias";
 const std::string Token::LIMIT_EXCEPT             = "limit_except";
 const std::string Token::AUTOINDEX                = "autoindex";
 const std::string Token::RETURN                   = "return";
+const std::string Token::SESSION_TIMEOUT          = "session_timeout";
 const std::string Token::TIMEOUT                  = "timeout";
 const std::string Token::CGI                      = "cgi";
 
@@ -39,6 +40,7 @@ const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"limit_except",                               Token::LIMIT_EXCEPT},
   {"autoindex",                                  Token::AUTOINDEX},
   {"return",                                     Token::RETURN},
+  {"session_timeout",                            Token::SESSION_TIMEOUT},
   {"timeout",                                    Token::TIMEOUT},
   {"cgi",                                        Token::CGI},
 };

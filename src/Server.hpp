@@ -1,6 +1,7 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+# include "./SessionManager.hpp"
 # include "./config/ServerConfig.hpp"
 # include "./Util.hpp"
 # include "./http/HttpRequest.hpp"
@@ -109,9 +110,8 @@ class Server {
     void appendTimeRecord(int fd);
     void DisconnectTimeoutClient();
 
-    std::map<std::string, time_t> session;
-
     ServerConfig config;
+    SessionManager sessionManager;
 
   public:
     class InitException : public std::exception {

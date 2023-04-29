@@ -31,6 +31,7 @@ class ConfigParser {
     void                      parseCommon(CommonConfig& conf);
 
     // server
+    void                      parseSessionTimeout(ServerConfig& conf);
     void                      parseTimeout(ServerConfig& conf);
     void                      parseListen(ServerConfig& conf);
     void                      parseServerName(ServerConfig& conf);

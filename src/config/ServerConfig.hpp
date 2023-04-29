@@ -19,6 +19,7 @@ class ServerConfig: public CommonConfig {
     const LocationConfig                findLocationConfig(std::string path) const;
     const LocationConfig&               findLocationConfigRoop(const LocationConfig& config, std::string path) const;
 
+    int                                       getSessionTimeout() const;
     int                                       getTimeout() const;
     short                                     getPort() const;
     std::string                               getHost() const;
@@ -26,6 +27,7 @@ class ServerConfig: public CommonConfig {
     const std::map<std::string, std::string>& getCGI() const;
     const std::vector<LocationConfig>&        getLocationConfig() const;
 
+    void                                      setSessionTimeout(int n);
     void                                      setTimeout(int n);
     void                                      setPort(short port);
     void                                      setHost(std::string host);
@@ -34,10 +36,12 @@ class ServerConfig: public CommonConfig {
     void                                      addLocationConfig(LocationConfig location);
 
   private:
+    static const int                          DEFAULT_SESSION_TIMEOUT;
     static const int                          DEFAULT_TIMEOUT;
     static const short                        DEFAULT_PORT;
     static const std::string                  DEFAULT_HOST;
 
+    int                                       session_timeout;
     int                                       timeout;
     short                                     port;
     std::string                               host;

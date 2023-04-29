@@ -5,15 +5,20 @@
  * -------------------------- Constructor --------------------------
  */
 
-Server::Server(ServerConfig config) : recvTable(MANAGE_FD_MAX), host(config.getHost()), port(config.getPort()), \
-                                     servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
-  this->servFd = socketInit();
-  socketaddrInit(this->host, this->port, this->in);
-  socketOpen(this->servFd, this->in);
-  fdSetInit(this->reads, this->servFd);
-  FD_ZERO(&this->writes);
-  this->fdMax = this->servFd;
-  this->config = config;
+Server::Server(ServerConfig config) :
+  recvTable(MANAGE_FD_MAX),
+  host(config.getHost()),
+  port(config.getPort()),
+  servFd(SOCK_CLOSED),
+  fdMax(FD_CLOSED),
+  sessionManager(600) {
+    this->servFd = socketInit();
+    socketaddrInit(this->host, this->port, this->in);
+    socketOpen(this->servFd, this->in);
+    fdSetInit(this->reads, this->servFd);
+    FD_ZERO(&this->writes);
+    this->fdMax = this->servFd;
+    this->config = config;
 }
 
 /*
@@ -249,7 +254,7 @@ void Server::receiveDone(int fd) {
   std::cout << "@---" << std::endl;
 
   try {
-    HttpRequest req(getData(fd), this->config, this->session);
+    HttpRequest req(getData(fd), this->config);
     if (req.isCGI()) 
       res = Http::executeCGI(req);
     else

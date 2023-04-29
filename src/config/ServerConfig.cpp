@@ -1,10 +1,12 @@
 #include "./ServerConfig.hpp"
 
+const int         ServerConfig::DEFAULT_SESSION_TIMEOUT = 600;
 const int         ServerConfig::DEFAULT_TIMEOUT = 60;
 const short       ServerConfig::DEFAULT_PORT = 80;
 const std::string ServerConfig::DEFAULT_HOST = "127.0.0.1";
 
 ServerConfig::ServerConfig():
+  session_timeout(DEFAULT_SESSION_TIMEOUT),
   timeout(DEFAULT_TIMEOUT),
   port(DEFAULT_PORT),
   host(DEFAULT_HOST) {}
@@ -13,6 +15,7 @@ ServerConfig::~ServerConfig() {}
 
 ServerConfig::ServerConfig(const ServerConfig& obj):
   CommonConfig(obj),
+  session_timeout(obj.getSessionTimeout()),
   timeout(obj.getTimeout()),
   port(obj.getPort()),
   host(obj.getHost()),
@@ -23,6 +26,7 @@ ServerConfig::ServerConfig(const ServerConfig& obj):
 ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
+    this->session_timeout = obj.getSessionTimeout();
     this->timeout = obj.getTimeout();
     this->root = obj.getRoot();
     this->errorPage = obj.getErrorPage();
@@ -86,6 +90,8 @@ const LocationConfig& ServerConfig::findLocationConfigRoop(const LocationConfig&
 }
 
 // getter
+//
+int ServerConfig::getSessionTimeout() const { return this->session_timeout; }
 
 int ServerConfig::getTimeout() const { return this->timeout; }
 
@@ -100,6 +106,8 @@ const std::map<std::string, std::string>& ServerConfig::getCGI() const { return 
 const std::vector<LocationConfig>& ServerConfig::getLocationConfig() const { return this->locations; }
 
 // setter
+//
+void ServerConfig::setSessionTimeout(int n) { this->session_timeout = n; }
 
 void ServerConfig::setTimeout(int n) { this->timeout = n; }
 
