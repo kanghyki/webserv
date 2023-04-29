@@ -6,36 +6,21 @@ ConfigParser::ConfigParser() {
 
 ConfigParser::~ConfigParser() {};
 
-Config ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
-  Config conf;
+ServerConfig ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
+  ServerConfig conf;
 
   generateToken(fileName);
-  while (curToken().isNot(Token::END_OF_FILE)) {
-    if (curToken().is(Token::HTTP)) conf.addHttpConfig(parseHttp());
-    else throwBadSyntax();
-    nextToken();
-  }
-  expectCurToken(Token::END_OF_FILE);
+
+  if (curToken().is(Token::SERVER)) conf = parseServer();
+  else throwBadSyntax();
+
+  expectNextToken(Token::END_OF_FILE);
 
   return conf;
 }
 
-HttpConfig ConfigParser::parseHttp() {
-  HttpConfig conf;
-
-  expectNextToken(Token::LBRACE);
-  for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
-    if (curToken().is(Token::SERVER)) conf.addServerConfig(parseServer(conf));
-    else if (curToken().isCommon()) parseCommon(conf);
-    else throwBadSyntax();
-  }
-  expectCurToken(Token::RBRACE);
-
-  return conf;
-}
-
-ServerConfig ConfigParser::parseServer(HttpConfig& httpConf) {
-  ServerConfig conf(httpConf);
+ServerConfig ConfigParser::parseServer() {
+  ServerConfig conf;
 
   expectNextToken(Token::LBRACE);
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
@@ -198,6 +183,7 @@ void ConfigParser::parseErrorPage(CommonConfig& conf) {
     int status = atoi(curToken().getLiteral());
     statusList.push_back(status);
   }
+
   expectNextToken(Token::IDENT);
 
   for (int i = 0; i < statusList.size(); ++i)

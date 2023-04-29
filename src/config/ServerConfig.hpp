@@ -12,7 +12,6 @@ class HttpConfig;
 class ServerConfig: public CommonConfig {
   public:
     ServerConfig();
-    ServerConfig(const HttpConfig& config);
     ~ServerConfig();
     ServerConfig(const ServerConfig& obj);
     ServerConfig& operator=(const ServerConfig& obj);

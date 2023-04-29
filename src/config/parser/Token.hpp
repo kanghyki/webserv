@@ -33,7 +33,6 @@ class Token {
     static const std::string  LBRACE;
     static const std::string  RBRACE;
     // Keyword
-    static const std::string  HTTP;
     static const std::string  SERVER;
     static const std::string  LOCATION;
     static const std::string  LISTEN;
