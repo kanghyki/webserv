@@ -39,6 +39,10 @@ class HttpRequest {
     const std::string                   getContentType(void) const;
     const LocationConfig&               getLocationConfig() const;
     const ServerConfig&                 getServerConfig() const;
+    const bool                          isCGI() const;
+    const std::string                   getScriptPath() const;
+    const std::string                   getCGIPath() const;
+    const std::string                   getPathInfo() const;
 
     void                                setBody(const std::string& body);
 
@@ -54,6 +58,10 @@ class HttpRequest {
     std::map<std::string, std::string>  field;
     LocationConfig                      locationConfig;
     ServerConfig                        serverConfig;
+    bool                                cgi;
+    std::string                         scriptPath;
+    std::string                         cgiPath;
+    std::string                         pathInfo;
 
     void                                setURI(const std::string& URI);
     void                                setMethod(const std::string& method);
@@ -64,6 +72,7 @@ class HttpRequest {
     void                                validateMethod(const std::string &method);
     void                                validateVersion(const std::string &path);
     void                                validateURI(const std::string &version);
+    void                                checkCGI(const std::string& path, ServerConfig& sc);
 
     std::pair<std::string, std::string> splitField(const std::string& line);
 

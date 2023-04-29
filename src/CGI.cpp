@@ -6,11 +6,10 @@
  * -------------------------- Constructor --------------------------
  */
 
-CGI::CGI(const HttpRequest& req, fd_set& reads, int& fdMax) : scriptPath(req.getLocationConfig().getCGIScriptPath()), \
-                                              cgiPath(req.getLocationConfig().getCGIPath()), reads(reads), fdMax(fdMax) {
+CGI::CGI(const HttpRequest& req, fd_set& reads, int& fdMax) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()),
+                                                              pathInfo(req.getPathInfo()), reads(reads), fdMax(fdMax) {
   this->argv = this->getArgv(req);
   this->env = this->envMapToEnv(this->getEnvMap(req));
-  if (req.getLocationConfig().isExecutable()) this->cgiPath = getCurrentPath() + this->scriptPath;
 }
 
 /*
@@ -30,6 +29,18 @@ CGI::~CGI(void) {
  * -------------------------- Getter -------------------------------
  */
 
+const std::string CGI::getScriptPath(void) const {
+  return this->scriptPath;
+}
+
+const std::string CGI::getCgiPath(void) const {
+  return this->cgiPath;
+}
+
+const std::string CGI::getPathInfo(void) const {
+  return this->pathInfo;
+}
+
 /*
  * -------------------------- Setter -------------------------------
  */
@@ -46,7 +57,7 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_TYPE, req.getContentType()));
   }
   ret.insert(std::pair<std::string, std::string>(cgi_env::GATEWAY_INTERFACE, CGI_VERSION));
-  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, getPathInfo(req)));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, getPathInfo()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod())); 
@@ -70,7 +81,7 @@ char** CGI::getArgv(const HttpRequest& req) const {
   if (ret == NULL) throw INTERNAL_SERVER_ERROR;
 
   ret[0] = strdup(getCgiPath().c_str());
-  ret[1] = strdup((getCurrentPath() + getScriptPath()).c_str());
+  ret[1] = strdup(("./" + getScriptPath().substr(getScriptPath().rfind("/") + 1)).c_str());
   ret[2] = NULL;
 
   return ret;
@@ -97,9 +108,12 @@ std::string CGI::execute(void) {
   int pid;
   int fd[2];
   int status;
+
+  std::cout << "cgi path : " << getCgiPath() << std::endl;
+  std::cout << "script path : " << getScriptPath() << std::endl;
   
   if (access(this->cgiPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
-  if (access(("." + this->scriptPath).c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
+  if (access(this->scriptPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
   try {
     util::ftPipe(fd);
 //    fcntl(fd[READ], F_SETFL, O_NONBLOCK);
@@ -127,16 +141,16 @@ std::string CGI::execute(void) {
   return ret;
 }
 
-const std::string CGI::getPathInfo(const HttpRequest& req) const {
-  size_t pos = req.getPath().find(req.getLocationConfig().getPath());
-  std::string ret = req.getPath().substr(pos + req.getLocationConfig().getPath().length());
-//  if (ret.empty())
-//    ret += "/";
-  return ret;
-}
+//const std::string CGI::getPathInfo(const HttpRequest& req) const {
+//  size_t pos = req.getPath().find(req.getLocationConfig().getPath());
+//  std::string ret = req.getPath().substr(pos + req.getLocationConfig().getPath().length());
+////  if (ret.empty())
+////    ret += "/";
+//  return ret;
+//}
 
 void CGI::changeWorkingDirectory(void) {
-  std::string target = getCurrentPath() + getScriptPath().substr(0, getScriptPath().rfind("/"));
+  std::string target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
   if (chdir(target.c_str()) == -1) throw INTERNAL_SERVER_ERROR;
 }
@@ -149,14 +163,6 @@ const std::string CGI::getCurrentPath(void) const {
   free(cur);
 
   return ret;
-}
-
-const std::string CGI::getScriptPath(void) const {
-  return this->scriptPath;
-}
-
-const std::string CGI::getCgiPath(void) const {
-  return this->cgiPath;
 }
 
 /*

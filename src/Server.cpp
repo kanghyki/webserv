@@ -81,8 +81,7 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
     port += 2000;
   std::cout << "[ http://localhost:" << port << "/html/index.html ]" << std::endl;
   std::cout << "[ http://localhost:" << port << " ]" << std::endl;
-  std::cout << "[ http://localhost:" << port << "/cgi/cgi_tester ]" << std::endl;
-  std::cout << "[ http://localhost:" << port << "/cgi/sum?a=5&b=3 ]" << std::endl;
+  std::cout << "[ http://localhost:" << port << "/cgi-bin/hello.py ]" << std::endl;
   in.sin_port = htons(port);
 }
 
@@ -250,7 +249,10 @@ void Server::receiveDone(int fd) {
 
   try {
     HttpRequest req(getData(fd), this->config);
-    res = Http::processing(req);
+    if (req.isCGI()) 
+      res = Http::executeCGI(req, this->reads, this->fdMax);
+    else
+      res = Http::processing(req);
     clearReceived(fd);
   } catch (HttpStatus status) {
     res = Http::getErrorPage(status, this->config);

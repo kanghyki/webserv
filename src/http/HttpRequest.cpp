@@ -3,7 +3,7 @@
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
 const std::string HttpRequest::CRLF = "\r\n";
 
-HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
+HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(false) {
   std::vector<std::string> vs;
 
 
@@ -12,6 +12,7 @@ HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
   setBody(vs[1]);
   this->serverConfig = sc;
   this->locationConfig = sc.findLocationConfig(this->getPath());
+  checkCGI(getPath(), this->serverConfig);
   std::cout << "this->locationConfig.getCGIPath()" << std::endl;
   std::cout << "this->locationConfig.getCGIPath()" << std::endl;
   std::cout << "this->locationConfig.getCGIPath()" << std::endl;
@@ -113,6 +114,22 @@ std::pair<std::string, std::string> HttpRequest::splitField(const std::string& l
   return std::make_pair(field, value);
 }
 
+void HttpRequest::checkCGI(const std::string& path, ServerConfig& sc) {
+  std::map<std::string, std::string>::iterator it;
+  std::map<std::string, std::string> cgi = sc.getCGI();
+  size_t pos;
+
+  for (it = cgi.begin(); it != cgi.end(); ++it) {
+    if ((pos = path.find(it->first)) != std::string::npos) {
+      this->cgi = true;
+      this->scriptPath = getRelativePath().substr(0, pos + it->first.length() + 1);
+      this->pathInfo = getPath().substr(pos + it->first.length());
+      this->cgiPath = it->second;
+      break;
+    }
+  }
+}
+
 /*
  * -------------------------- Getter -------------------------------
  */
@@ -159,6 +176,22 @@ const LocationConfig& HttpRequest::getLocationConfig() const {
 
 const ServerConfig& HttpRequest::getServerConfig() const {
   return this->serverConfig;
+}
+
+const bool HttpRequest::isCGI() const {
+  return this->cgi;
+}
+
+const std::string HttpRequest::getScriptPath() const {
+  return this->scriptPath;
+}
+
+const std::string HttpRequest::getCGIPath() const {
+  return this->cgiPath;
+}
+
+const std::string HttpRequest::getPathInfo() const {
+  return this->pathInfo;
 }
 
 /*
