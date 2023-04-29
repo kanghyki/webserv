@@ -15,13 +15,16 @@ form = cgi.FieldStorage()
 fileitem = form['file']
 
 if fileitem.filename:
-    file = os.environ['PATH_INFO'] + "/" + os.path.basename(fileitem.filename)
-    createDirectory('../upload')
-    if os.path.exists(file):
+    rootPath = os.environ['PATH_TRANSLATED'].replace(os.environ['SCRIPT_NAME'], "")
+    uploadPath =  rootPath + "/upload" + os.environ['PATH_INFO']
+    file = os.path.basename(fileitem.filename)
+    filePath = uploadPath + "/" + file
+    createDirectory(uploadPath)
+    if os.path.exists(filePath):
         message = 'File already exists'
     else:
-        open(file, 'wb').write(fileitem.file.read())
-        message = 'The file "' + fileitem.filename + '" was uploaded successfully'
+        open(filePath, 'wb').write(fileitem.file.read())
+        message = 'The file "' + file + '" was uploaded successfully'
 else:
     message = "No file was uploaded"
 
