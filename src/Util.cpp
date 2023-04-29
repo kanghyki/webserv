@@ -127,10 +127,10 @@ namespace util {
       free(data);
   }
 
-  std::pair<std::string, std::string> splitTwo(const std::string& str, const std::string& delim) {
+  std::pair<std::string, std::string> splitHeaderBody(const std::string& str, const std::string& delim) {
     size_t pos = str.find(delim);
 
-    std::pair<std::string, std::string> ret(str.substr(0, pos), str.substr(pos + 2));
+    std::pair<std::string, std::string> ret(str.substr(0, pos), str.substr(pos + 1));
     return ret;
   }
 

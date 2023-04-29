@@ -23,19 +23,27 @@ void HttpResponse::setStatusCode(const HttpStatus statusCode) {
   this->statusCode = statusCode;
 }
 
-void HttpResponse::setHeader(const std::string& field, const std::string& value) {
+void HttpResponse::setBody(const std::string& body) {
+  this->body = body;
+}
+
+void HttpResponse::removeBody() {
+  this->body = "";
+}
+
+void HttpResponse::addHeader(const std::string& field, const std::string& value) {
   this->header.insert(std::make_pair(field, value));
 }
 
-void HttpResponse::setBody(const std::string& body) {
-  this->body = body;
+void HttpResponse::removeHeader(const std::string& field) {
+  this->header.erase(field);
 }
 
 std::string HttpResponse::toString() throw() {
   std::string ret;
 
   this->statusText = getStatusText(this->statusCode);
-  setHeader(header_field::CONTENT_LENGTH, util::itoa(body.length()));
+  addHeader(header_field::CONTENT_LENGTH, util::itoa(body.length()));
   ret = makeStatusLine();
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
     ret += makeHeaderField(it->first, it->second);

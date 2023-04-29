@@ -10,8 +10,6 @@
 CGI::CGI(const HttpRequest& req, fd_set& reads, int& fdMax) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()),
                                                               pathInfo(req.getPathInfo()), reads(reads), fdMax(fdMax) {
   if (!req.getBody().empty()) this->body = req.getBody();
-  if (this->pathInfo.empty()) this->pathInfo = getUploadDir();
-  else this->pathInfo = "./" + this->pathInfo;
   this->argv = this->getArgv(req);
   this->env = this->envMapToEnv(this->getEnvMap(req));
 }
@@ -67,7 +65,7 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   }
   ret.insert(std::pair<std::string, std::string>(cgi_env::GATEWAY_INTERFACE, CGI_VERSION));
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, getPathInfo()));
-  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, req.getPath()));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod())); 
   ret.insert(std::pair<std::string, std::string>(cgi_env::SCRIPT_NAME, req.getPath()));
@@ -155,14 +153,6 @@ std::string CGI::execute(void) {
   return ret;
 }
 
-//const std::string CGI::getPathInfo(const HttpRequest& req) const {
-//  size_t pos = req.getPath().find(req.getLocationConfig().getPath());
-//  std::string ret = req.getPath().substr(pos + req.getLocationConfig().getPath().length());
-////  if (ret.empty())
-////    ret += "/";
-//  return ret;
-//}
-
 void CGI::changeWorkingDirectory(void) {
   std::string target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
@@ -177,10 +167,6 @@ const std::string CGI::getCurrentPath(void) const {
   free(cur);
 
   return ret;
-}
-
-const std::string CGI::getUploadDir(void) const {
-  return getCurrentPath() + UPLOAD_DIR;
 }
 
 /*

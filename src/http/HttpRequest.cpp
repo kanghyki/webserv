@@ -3,7 +3,7 @@
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
 
 HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(false) {
-  std::pair<std::string, std::string> p = util::splitTwo(request, CRLF + CRLF);
+  std::pair<std::string, std::string> p = util::splitHeaderBody(request, CRLF + CRLF);
 
   parseHeader(p.first);
   setBody(p.second);

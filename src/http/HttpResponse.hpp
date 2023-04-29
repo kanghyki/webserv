@@ -15,8 +15,10 @@ class HttpResponse {
     ~HttpResponse();
 
     void                                setStatusCode(const HttpStatus statusCode);
-    void                                setHeader(const std::string& field, const std::string& value);
     void                                setBody(const std::string& body);
+    void                                removeBody();
+    void                                addHeader(const std::string& field, const std::string& value);
+    void                                removeHeader(const std::string& field);
 
     std::string                         toString() throw();
 
