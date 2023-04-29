@@ -27,10 +27,17 @@ HttpResponse Http::processing(const HttpRequest req) throw(HttpStatus) {
 HttpResponse Http::executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax) throw (HttpStatus) {
   std::string str;
   HttpResponse ret;
+  std::string body;
+  std::map<std::string, std::string> header;
 
   try {
     CGI cgi(req, reads, fdMax);
     str = cgi.execute();
+    std::pair<std::string, std::string> p = util::splitTwo(str, CRLF + CRLF);
+    header = util::parseCGIHeader(p.first);
+    body = p.second;
+    std::cout << "header : " << p.first << std::endl;
+    std::cout << "body : " << body << std::endl;
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
@@ -38,7 +45,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax)
   ret = HttpResponseBuilder::getBuilder()
     .statusCode(OK)
     .header("date", getNowStr())
-    .body(str, req.getContentType())
+    .body(body, header.at("content-type"))
     .build();
 
   return ret;

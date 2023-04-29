@@ -8,6 +8,8 @@
 # include <iostream>
 # include <unistd.h>
 
+const std::string CRLF = "\r\n";
+
 namespace util {
   std::vector<std::string> split(const std::string& str, char delim);
   std::vector<std::string> split(std::string s, const std::string& delim);
@@ -22,6 +24,9 @@ namespace util {
   void ftPipe(int* fd);
   std::string readFd(int fd);
   void ftFree(char** data);
+  std::pair<std::string, std::string> splitTwo(const std::string& str, const std::string& delim);
+  std::map<std::string, std::string> parseCGIHeader(const std::string& str);
+  std::pair<std::string, std::string> splitField(const std::string& str);
 
   class StringFoundException : public std::exception
   {

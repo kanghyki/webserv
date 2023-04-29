@@ -1,17 +1,16 @@
 #include "./HttpRequest.hpp"
 
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
-const std::string HttpRequest::CRLF = "\r\n";
 
-HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
-  std::vector<std::string> vs;
+HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(false) {
+  std::pair<std::string, std::string> p = util::splitTwo(request, CRLF + CRLF);
 
+  parseHeader(p.first);
+  setBody(p.second);
 
-  vs = util::split(request, CRLF + CRLF);
-  parseHeader(vs[0]);
-  setBody(vs[1]);
   this->serverConfig = sc;
   this->locationConfig = sc.findLocationConfig(this->getPath());
+  checkCGI(getPath(), this->serverConfig);
 }
 
 HttpRequest::HttpRequest(const HttpRequest& obj):
@@ -22,7 +21,11 @@ HttpRequest::HttpRequest(const HttpRequest& obj):
   body(obj.body),
   field(obj.field),
   locationConfig(obj.locationConfig),
-  serverConfig(obj.serverConfig) {}
+  serverConfig(obj.serverConfig),
+  cgi(obj.isCGI()),
+  scriptPath(obj.getScriptPath()),
+  cgiPath(obj.getCGIPath()),
+  pathInfo(obj.pathInfo) {}
 
 HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
   if (this != &obj) {
@@ -34,6 +37,10 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
     this->field = obj.field;
     this->locationConfig = obj.locationConfig;
     this->serverConfig = obj.serverConfig;
+    this->cgi = obj.cgi;
+    this->scriptPath = obj.scriptPath;
+    this->cgiPath = obj.getCGIPath();
+    this->pathInfo = obj.pathInfo;
   }
   return *this;
 }
@@ -109,6 +116,22 @@ std::pair<std::string, std::string> HttpRequest::splitField(const std::string& l
   return std::make_pair(field, value);
 }
 
+void HttpRequest::checkCGI(const std::string& path, ServerConfig& sc) {
+  std::map<std::string, std::string>::iterator it;
+  std::map<std::string, std::string> cgi = sc.getCGI();
+  size_t pos;
+
+  for (it = cgi.begin(); it != cgi.end(); ++it) {
+    if ((pos = path.find(it->first)) != std::string::npos) {
+      this->cgi = true;
+      this->scriptPath = getRelativePath().substr(0, pos + it->first.length() + 1);
+      this->pathInfo = getPath().substr(pos + it->first.length());
+      this->cgiPath = it->second;
+      break;
+    }
+  }
+}
+
 /*
  * -------------------------- Getter -------------------------------
  */
@@ -155,6 +178,22 @@ const LocationConfig& HttpRequest::getLocationConfig() const {
 
 const ServerConfig& HttpRequest::getServerConfig() const {
   return this->serverConfig;
+}
+
+const bool HttpRequest::isCGI() const {
+  return this->cgi;
+}
+
+const std::string HttpRequest::getScriptPath() const {
+  return this->scriptPath;
+}
+
+const std::string HttpRequest::getCGIPath() const {
+  return this->cgiPath;
+}
+
+const std::string HttpRequest::getPathInfo() const {
+  return this->pathInfo;
 }
 
 /*

@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include "Util.hpp"
-/* * -------------------------- Constructor --------------------------
+
+/*
+ * -------------------------- Constructor --------------------------
  */
 
 Server::Server(ServerConfig config) : recvTable(MANAGE_FD_MAX), host(config.getHost()), port(config.getPort()), \
@@ -79,6 +81,8 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
     port += 2000;
   std::cout << "[ http://localhost:" << port << "/html/index.html ]" << std::endl;
   std::cout << "[ http://localhost:" << port << " ]" << std::endl;
+  std::cout << "[ http://localhost:" << port << "/cgi-bin/hello.py ]" << std::endl;
+  std::cout << "[ http://localhost:" << port << "/html/upload.html ]" << std::endl;
   in.sin_port = htons(port);
 }
 
@@ -235,24 +239,32 @@ bool Server::checkContentLength(int fd) {
   return false;
 }
 
-void Server::sendData(int fd) {
-  std::string   s;
-  HttpResponse  response;
+void Server::receiveDone(int fd) {
+  HttpResponse res;
 
-  FD_SET(fd, &this->getWrites());
+  shutdown(fd, SHUT_RD);
+  FD_CLR(fd, &this->getReads());
+  std::cout << "@---this->data[" << fd << "]" << std::endl;
+  std::cout << this->recvTable[fd].data;
+  std::cout << "@---" << std::endl;
+
   try {
-    HttpRequest hr(getData(fd), this->config);
-    if (hr.getPath().find(".py") != std::string::npos)
-      response = Http::executeCGI(hr, this->reads, this->fdMax);
+    HttpRequest req(getData(fd), this->config);
+    if (req.isCGI()) 
+      res = Http::executeCGI(req, this->reads, this->fdMax);
     else
-      response = Http::processing(hr);
+      res = Http::processing(req);
     clearReceived(fd);
-    s = response.toString();
   } catch (HttpStatus status) {
-    response = Http::getErrorPage(status, this->config);
+    res = Http::getErrorPage(status, this->config);
   }
 
-  if (send(fd, s.c_str(), s.length(), 0) == SOCK_ERROR)
+  sendData(fd, res.toString());
+  clearReceived(fd);
+}
+
+void Server::sendData(int fd, const std::string& data) {
+  if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";
@@ -265,72 +277,62 @@ void Server::closeSocket(int fd) {
   close(fd);
 }
 
-void Server::receiveDone(int fd) {
-  shutdown(fd, SHUT_RD);
-  FD_CLR(fd, &this->getReads());
-  std::cout << "@---this->data[" << fd << "]" << std::endl;
-  std::cout << this->recvTable[fd].data;
-  std::cout << "@---" << std::endl;
-  sendData(fd);
-  clearReceived(fd);
-}
-
 const std::string Server::getData(int fd) const {
   return this->recvTable[fd].data;
 }
 
-const int         Server::getContentLength(int fd) const {
+const int Server::getContentLength(int fd) const {
   return this->recvTable[fd].contentLength;
 }
 
-void              Server::addData(int fd, const std::string& data) {
+void Server::addData(int fd, const std::string& data) {
   this->recvTable[fd].data += data;
 }
 
-void              Server::setContentLength(int fd, int len) {
+void Server::setContentLength(int fd, int len) {
   this->recvTable[fd].contentLength = len;
 }
 
-void              Server::clearData(int fd) {
+void Server::clearData(int fd) {
   this->recvTable[fd].data.clear();
 }
 
-void              Server::clearContentLength(int fd) {
+void Server::clearContentLength(int fd) {
   this->recvTable[fd].contentLength = -1;
 }
 
-const size_t      Server::getHeaderPos(int fd) const {
+const size_t Server::getHeaderPos(int fd) const {
   return this->recvTable[fd].headerPos;
 }
 
-void              Server::setHeaderPos(int fd, size_t pos) {
+void Server::setHeaderPos(int fd, size_t pos) {
   this->recvTable[fd].headerPos = pos;
 }
 
-void              Server::clearHeaderPos(int fd) {
+void Server::clearHeaderPos(int fd) {
   this->recvTable[fd].headerPos = 0;
 }
 
-void              Server::clearReceived(int fd) {
+void Server::clearReceived(int fd) {
   clearData(fd);
   clearContentLength(fd);
   clearHeaderPos(fd);
   clearStatus(fd);
 }
 
-const int         Server::getStatus(int fd) const {
+const int Server::getStatus(int fd) const {
   return this->recvTable[fd].status;
 }
 
-void              Server::setStatus(int fd, recvStatus status) {
+void Server::setStatus(int fd, recvStatus status) {
   this->recvTable[fd].status = status;
 }
 
-void              Server::clearStatus(int fd) {
+void Server::clearStatus(int fd) {
   this->recvTable[fd].status = HEADER_NOT_RECV;
 }
 
-void              Server::recvHeader(int fd) {
+void Server::recvHeader(int fd) {
   size_t pos = getData(fd).find("\r\n\r\n");
 
   if (pos != std::string::npos) {
@@ -339,13 +341,13 @@ void              Server::recvHeader(int fd) {
   }
 }
 
-int              Server::parseContentLength(int fd, size_t start) {
+int Server::parseContentLength(int fd, size_t start) {
   size_t end = getData(fd).find("\r\n", start);
 
   return std::atoi(getData(fd).substr(start + 16, end - start + 1).c_str());
 }
 
-bool              Server::bodyRecvDone(int fd) {
+bool Server::bodyRecvDone(int fd) {
   if (getContentLength(fd) == getData(fd).substr(getHeaderPos(fd) + 4).length())
     return true;
   return false;
@@ -362,6 +364,7 @@ const char* Server::BindException::what() const throw() {
 const char* Server::ListenException::what() const throw() {
   return "Server listen failed";
 }
+
 /*
  * ---------------------- Non-Member Function ----------------------
  */
