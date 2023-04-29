@@ -1,7 +1,6 @@
 #ifndef HTTP_DATA_FETCHER_HPP
 # define HTTP_DATA_FETCHER_HPP
 
-# include "./DirectoryList.hpp"
 # include "./HttpRequest.hpp"
 # include "../Util.hpp"
 # include "../config/ServerConfig.hpp"

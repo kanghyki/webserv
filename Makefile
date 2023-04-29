@@ -33,7 +33,6 @@ SRCS			=	main.cpp\
 						HttpStatus.cpp\
 						Http.cpp\
 						MimeType.cpp\
-						DirectoryList.cpp\
 						CGI.cpp
 
 
