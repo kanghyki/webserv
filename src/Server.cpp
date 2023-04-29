@@ -11,7 +11,9 @@ Server::Server(ServerConfig config) :
   port(config.getPort()),
   servFd(SOCK_CLOSED),
   fdMax(FD_CLOSED),
-  sessionManager(600) {
+  sessionManager(config.getSessionTimeout()),
+  connection(config.getTimeout())
+{
     this->servFd = socketInit();
     socketaddrInit(this->host, this->port, this->in);
     socketOpen(this->servFd, this->in);
@@ -49,10 +51,6 @@ fd_set& Server::getReads(void) {
 
 fd_set& Server::getWrites(void) {
   return this->writes;
-}
-
-const std::map<int, time_t>& Server::getTimeRecord() const {
-  return this->timeout;
 }
 
 /*
@@ -103,54 +101,6 @@ inline void Server::fdSetInit(fd_set& fs, int fd) {
   FD_SET(fd, &fs);
 }
 
-void Server::removeData(int fd) {
-  this->recvTable[fd].data.clear();
-}
-
-void Server::removeTimeRecord(int fd) {
-  this->timeout.erase(fd);
-}
-
-bool Server::existsTimeRecord(int fd) {
-  if (this->timeout.find(fd) != this->timeout.end())
-    return true;
-  return false;
-}
-
-void Server::appendTimeRecord(int fd) {
-  time_t initTime;
-
-  time(&initTime);
-  this->timeout.insert(std::make_pair(fd, initTime));
-}
-
-// TODO: MUTIPLE CGI ? RESOURCE RECOVERY
-void Server::DisconnectTimeoutClient() {
-  const std::map<int, time_t>&  record = getTimeRecord();
-  std::vector<int>              removeList;
-
-  for (std::map<int, time_t>::const_iterator it = record.begin(); it != record.end(); ++it) {
-    time_t reqTime = it->second;
-    time_t curTime;
-
-    time(&curTime);
-    if (curTime - reqTime > this->config.getTimeout()) {
-      int fd = it->first;
-
-      // 408 error
-      FD_CLR(fd, &this->getReads());
-      close(fd);
-      std::cout << "timeout client: " << fd << std::endl;
-      removeList.push_back(fd);
-    }
-  }
-
-  for (int i = 0; i < removeList.size(); ++i) {
-    removeTimeRecord(removeList[i]);
-    removeData(removeList[i]);
-  }
-}
-
 void Server::run(void) {
   struct timeval t;
   t.tv_sec = 1;
@@ -163,7 +113,9 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-    DisconnectTimeoutClient();
+    std::vector<int> timeoutList = this->connection.getTimeoutList();
+    for (int i = 0; i < timeoutList.size(); ++i)
+      closeSocket(timeoutList[i]);
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
@@ -191,6 +143,9 @@ int Server::acceptConnect() {
   if (this->getFdMax() < fd)
     this->setFdMax(fd);
 
+  if (this->connection.isRegistered(fd) == false)
+    this->connection.add(fd);
+
   return fd;
 }
 
@@ -198,9 +153,6 @@ void Server::receiveData(int fd) {
   char buf[BUF_SIZE + 1];
   int recv_size;
   int DONE = 0;
-
-  if (existsTimeRecord(fd) == false)
-    appendTimeRecord(fd);
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;
@@ -274,13 +226,14 @@ void Server::sendData(int fd, const std::string& data) {
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";
-  removeTimeRecord(fd);
 }
 
 void Server::closeSocket(int fd) {
   std::cout << "[Log] close\n";
   FD_CLR(fd, &this->getWrites());
   close(fd);
+  this->connection.remove(fd);
+  clearData(fd);
 }
 
 const std::string Server::getData(int fd) const {

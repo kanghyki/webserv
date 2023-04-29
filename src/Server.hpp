@@ -1,9 +1,10 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+# include "./Connection.hpp"
 # include "./SessionManager.hpp"
-# include "./config/ServerConfig.hpp"
 # include "./Util.hpp"
+# include "./config/ServerConfig.hpp"
 # include "./http/HttpRequest.hpp"
 # include "./http/HttpResponse.hpp"
 # include "./http/Http.hpp"
@@ -102,16 +103,9 @@ class Server {
     int               parseContentLength(int fd, size_t start);
     bool              bodyRecvDone(int fd);
 
-    std::map<int, time_t> timeout;
-    const std::map<int, time_t>& getTimeRecord() const;
-    void removeData(int fd);
-    void removeTimeRecord(int fd);
-    bool existsTimeRecord(int fd);
-    void appendTimeRecord(int fd);
-    void DisconnectTimeoutClient();
-
     ServerConfig config;
     SessionManager sessionManager;
+    Connection connection;
 
   public:
     class InitException : public std::exception {
