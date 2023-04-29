@@ -1,21 +1,23 @@
 #include "./SessionManager.hpp"
 
 const std::string   SessionManager::SESSION_KEY = "_webserv_session";
+const unsigned int  SessionManager::INTERVAL_TIME = 5;
+const unsigned int  SessionManager::SESSION_ID_LENGTH = 30;
 
 void* sessionManagerRoutine(void *p) {
   SessionManager* manager = reinterpret_cast<SessionManager*>(p);
 
   while (1) {
-    manager->addSession();
     manager->cleanUpSession();
-    sleep(3);
+    sleep(SessionManager::INTERVAL_TIME);
   }
+  return (NULL);
 }
 
 SessionManager::SessionManager(unsigned int expired_max): expired_max(expired_max) {
   pthread_mutex_init(&this->table_mutex, 0);
   if (pthread_create(&this->tid, 0, sessionManagerRoutine, (void *)this))
-    throw std::runtime_error("THREAD ERROR");
+    throw std::runtime_error("create thread error");
   pthread_detach(this->tid);
 }
 
@@ -28,7 +30,7 @@ void SessionManager::cleanUpSession() {
 
   pthread_mutex_lock(&this->table_mutex);
   for (std::map<std::string, time_t>::iterator it = this->table.begin(); it != this->table.end(); ++it) {
-    if (time(0) - it->second > expired_max) {
+    if (time(NULL) - it->second > expired_max) {
       cleanUpList.push_back(it);
     }
   }
@@ -41,10 +43,10 @@ void SessionManager::cleanUpSession() {
 std::string SessionManager::addSession(void) {
   std::string randomID;
 
-  randomID = generateRandomString(30);
+  randomID = generateRandomString(SESSION_ID_LENGTH);
 
   pthread_mutex_lock(&this->table_mutex);
-  this->table.insert(std::make_pair(randomID, time(0)));
+  this->table.insert(std::make_pair(randomID, time(NULL)));
   pthread_mutex_unlock(&this->table_mutex);
 
   return randomID;
@@ -63,7 +65,7 @@ bool SessionManager::isSessionAlive(std::string sessionID) {
   pthread_mutex_lock(&this->table_mutex);
   time_t sessionTime = this->table[sessionID];
   if (sessionTime == 0) ret = false;
-  if (time(0) - sessionTime > expired_max) {
+  if (time(NULL) - sessionTime > expired_max) {
     this->table.erase(sessionID);
     ret = false;
   }

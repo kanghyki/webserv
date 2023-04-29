@@ -14,6 +14,8 @@ void* sessionManagerRoutine(void *p);
 
 class SessionManager {
   public:
+    static const unsigned int     INTERVAL_TIME;
+
     SessionManager(unsigned int SESSION_EXPIRED);
     ~SessionManager(void);
 
@@ -27,8 +29,9 @@ class SessionManager {
 
   private:
     static const std::string      SESSION_KEY;
-    const unsigned int            expired_max;
+    static const unsigned int     SESSION_ID_LENGTH;
 
+    const unsigned int            expired_max;
     pthread_t                     tid;
     // sessionID, time(sec)
     std::map<std::string, time_t> table;
