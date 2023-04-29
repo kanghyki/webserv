@@ -103,9 +103,9 @@ class Server {
     int               parseContentLength(int fd, size_t start);
     bool              bodyRecvDone(int fd);
 
-    ServerConfig config;
-    SessionManager sessionManager;
-    Connection connection;
+    ServerConfig      config;
+    Connection        connection;
+    SessionManager    sessionManager;
 
   public:
     class InitException : public std::exception {

@@ -113,9 +113,11 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-    std::vector<int> timeoutList = this->connection.getTimeoutList();
-    for (int i = 0; i < timeoutList.size(); ++i)
-      closeSocket(timeoutList[i]);
+    std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
+    for (int i = 0; i < timeout_fd_list.size(); ++i) {
+      std::cout << "timeout: " << timeout_fd_list[i] << std::endl;
+      closeSocket(timeout_fd_list[i]);
+    }
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
