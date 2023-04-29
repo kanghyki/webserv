@@ -18,7 +18,6 @@ std::vector<int> Connection::getTimeoutList(void) {
 
 void Connection::add(int fd) {
   this->table.insert(std::make_pair(fd, time(NULL)));
-  auto it  = this->table.find(fd);
 }
 
 void Connection::remove(int fd) {
