@@ -19,7 +19,7 @@ class Http {
 
     static HttpResponse processing(const HttpRequest&  req) throw (HttpStatus);
     static HttpResponse getErrorPage(HttpStatus s, const LocationConfig& config);
-    static HttpResponse executeCGI(const HttpRequest& req, fd_set& reads, int& fdMax) throw (HttpStatus);
+    static HttpResponse executeCGI(const HttpRequest& req) throw (HttpStatus);
 
   private:
     static HttpResponse getMethod(const HttpRequest& req);

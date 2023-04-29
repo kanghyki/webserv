@@ -251,7 +251,7 @@ void Server::receiveDone(int fd) {
   try {
     HttpRequest req(getData(fd), this->config, this->session);
     if (req.isCGI()) 
-      res = Http::executeCGI(req, this->reads, this->fdMax);
+      res = Http::executeCGI(req);
     else
       res = Http::processing(req);
     clearReceived(fd);
