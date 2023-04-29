@@ -1,8 +1,9 @@
 #include "./HttpRequest.hpp"
 
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
+const std::string HttpRequest::SESSION_KEY = "_webserv_session";
 
-HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(false) {
+HttpRequest::HttpRequest(std::string request, const ServerConfig& sc, std::map<std::string, time_t>& session) : cgi(false), session(session) {
   std::pair<std::string, std::string> p = util::splitTwo(request, CRLF + CRLF);
 
   parseHeader(p.first);
@@ -25,7 +26,10 @@ HttpRequest::HttpRequest(const HttpRequest& obj):
   cgi(obj.isCGI()),
   scriptPath(obj.getScriptPath()),
   cgiPath(obj.getCGIPath()),
-  pathInfo(obj.pathInfo) {}
+  pathInfo(obj.getPathInfo()),
+  cookieMap(obj.cookieMap),
+  session(obj.getSession())
+{}
 
 HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
   if (this != &obj) {
@@ -41,6 +45,8 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
     this->scriptPath = obj.scriptPath;
     this->cgiPath = obj.getCGIPath();
     this->pathInfo = obj.pathInfo;
+    this->cookieMap = obj.cookieMap;
+    this->session = obj.session;
   }
   return *this;
 }
@@ -58,6 +64,8 @@ void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
     std::pair<std::string, std::string> ret = splitField(*it);
     this->field.insert(ret);
   }
+  std::cout << "PARSE COOKIE" << std::endl;
+  parseCookie(getField("Cookie"));
 }
 
 void HttpRequest::parseStatusLine(const std::string& line) {
@@ -67,6 +75,62 @@ void HttpRequest::parseStatusLine(const std::string& line) {
   setMethod(vs[0]);
   setURI(vs[1]);
   setVersion(vs[2]);
+}
+
+void HttpRequest::parseCookie(const std::string& cookie) {
+  std::cout << "PARSE COOKIE:" << cookie << std::endl;
+  std::vector<std::string> vs;
+
+  vs = util::split(cookie, ';');
+  for (std::vector<std::string>::iterator it = vs.begin(); it != vs.end(); ++it) {
+    std::vector<std::string> vvs = util::split(*it, '=');
+
+    std::string key;
+    std::string value;
+
+    key = util::trimSpace(vvs[0]);
+    value = util::trimSpace(vvs[1]);
+    std::cout << key << "=" <<  value << std::endl;
+
+    this->cookieMap.insert(std::make_pair(key, value));
+  }
+  std::cout << this->cookieMap.size() << std::endl;
+}
+
+std::string HttpRequest::generateRandomString(int ch)
+{
+  srand(time(0));
+  std::string alpha = "abcdefghijklmnopqrstuvwx";
+  std::string result = "";
+  for (int i = 0; i<ch; i++)
+    result = result + alpha[rand() % 26];
+
+  return result;
+}
+
+HttpRequest::SessionStatus HttpRequest::getSessionStatus() const {
+  std::cout << this->cookieMap.size() << std::endl;
+  std::map<std::string, std::string>::const_iterator cookieIter = this->cookieMap.find(SESSION_KEY);
+  if (cookieIter == cookieMap.end()) return COOKIE_NOT_EXIST;
+
+  std::map<std::string, time_t>::iterator sessionIter = getSession().find(cookieIter->second);
+  if (sessionIter == this->session.end()) return SESSION_NOT_EXIST;
+
+  time_t curTime = time(0);
+  int EXPIRED_TIME = 60;
+  if (curTime - sessionIter->second > EXPIRED_TIME) return EXPIRED;
+
+  return NORMAL;
+}
+
+std::string HttpRequest::getSessionKey() const {
+  std::map<std::string, std::string> cookieMap = this->cookieMap;
+
+  return cookieMap.at(SESSION_KEY);
+}
+
+std::map<std::string, time_t>& HttpRequest::getSession() const {
+  return this->session;
 }
 
 void HttpRequest::validateMethod(const std::string &method) {

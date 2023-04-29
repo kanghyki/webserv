@@ -110,6 +110,8 @@ class Server {
     void appendTimeRecord(int fd);
     void DisconnectTimeoutClient();
 
+    std::map<std::string, time_t> session;
+
     ServerConfig config;
 
   public:

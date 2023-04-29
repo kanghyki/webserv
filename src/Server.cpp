@@ -249,7 +249,7 @@ void Server::receiveDone(int fd) {
   std::cout << "@---" << std::endl;
 
   try {
-    HttpRequest req(getData(fd), this->config);
+    HttpRequest req(getData(fd), this->config, this->session);
     if (req.isCGI()) 
       res = Http::executeCGI(req, this->reads, this->fdMax);
     else
