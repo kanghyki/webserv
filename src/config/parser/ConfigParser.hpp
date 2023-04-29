@@ -53,8 +53,9 @@ class ConfigParser {
     Token                     peekToken() const;
     void                      expectNextToken(const std::string& expected);
     void                      expectCurToken(const std::string& expected) const;
-    void                      expectError(const std::string& expected) const;
-    void                      throwBadSyntax() const;
+    void                      throwExpectError(const std::string& expected) const throw (std::runtime_error);
+    void                      throwBadSyntax() const throw (std::runtime_error);
+    int                       atoi(const std::string& s) const;
 };
 
 #endif

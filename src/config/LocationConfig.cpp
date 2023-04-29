@@ -44,7 +44,7 @@ std::string LocationConfig::getPath() const { return this->path; }
 
 std::string LocationConfig::getAlias() const { return this->alias; }
 
-std::string LocationConfig::getLimitExcept() const { return this->limitExcept; }
+const std::vector<std::string>& LocationConfig::getLimitExcept() const { return this->limitExcept; }
 
 std::map<int, std::string> LocationConfig::getReturnRes() const { return this->returnRes; }
 
@@ -58,7 +58,7 @@ void LocationConfig::setPath(std::string path) { this->path = path; }
 
 void LocationConfig::setAlias(std::string alias) { this->alias = alias; }
 
-void LocationConfig::setLimitExcept(std::string limitExcept) { this->limitExcept = limitExcept; }
+void LocationConfig::addLimitExcept(std::string method) { this->limitExcept.push_back(method); }
 
 void LocationConfig::addReturnRes(std::pair<int, std::string> returnRes) { this->returnRes.insert(returnRes); }
 
