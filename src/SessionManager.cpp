@@ -8,10 +8,10 @@ void* sessionManagerRoutine(void *p) {
   SessionManager* manager = reinterpret_cast<SessionManager*>(p);
 
   while (1) {
-    manager->cleanUpSession();
+    manager->cleanUpExpired();
     sleep(SessionManager::INTERVAL_TIME);
   }
-  return (NULL);
+  return NULL;
 }
 
 SessionManager::SessionManager(unsigned int expired_max): expired_max(expired_max) {
@@ -25,12 +25,12 @@ SessionManager::~SessionManager(void) {
   pthread_mutex_destroy(&this->table_mutex);
 }
 
-void SessionManager::cleanUpSession() {
+void SessionManager::cleanUpExpired() {
   std::vector<std::map<std::string, time_t>::iterator> cleanUpList;
 
   pthread_mutex_lock(&this->table_mutex);
   for (std::map<std::string, time_t>::iterator it = this->table.begin(); it != this->table.end(); ++it) {
-    if (time(NULL) - it->second > expired_max) {
+    if (time(NULL) - it->second > this->expired_max) {
       cleanUpList.push_back(it);
     }
   }
@@ -40,7 +40,7 @@ void SessionManager::cleanUpSession() {
   pthread_mutex_unlock(&this->table_mutex);
 }
 
-std::string SessionManager::addSession(void) {
+std::string SessionManager::createSession(void) {
   std::string randomID;
 
   randomID = generateRandomString(SESSION_ID_LENGTH);
@@ -58,7 +58,7 @@ void SessionManager::removeSession(std::string sessionID) {
   pthread_mutex_unlock(&this->table_mutex);
 }
 
-bool SessionManager::isSessionAlive(std::string sessionID) {
+bool SessionManager::isSessionAvailable(std::string sessionID) {
   bool        ret = true;
   std::string value;
 
@@ -78,7 +78,7 @@ bool SessionManager::isSessionAlive(std::string sessionID) {
 void SessionManager::showSession() {
   pthread_mutex_lock(&this->table_mutex);
   std::cout << "===========" << std::endl;
-  for (auto it = this->table.begin(); it != this->table.end(); ++it) {
+  for (std::map<std::string, time_t>::iterator it = this->table.begin(); it != this->table.end(); ++it) {
     std::cout << it->first << "=" << it->second << std::endl;
   }
   pthread_mutex_unlock(&this->table_mutex);

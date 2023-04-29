@@ -19,10 +19,10 @@ class SessionManager {
     SessionManager(unsigned int SESSION_EXPIRED);
     ~SessionManager(void);
 
-    void                          cleanUpSession(void);
-    std::string                   addSession(void);
+    void                          cleanUpExpired(void);
+    std::string                   createSession(void);
     void                          removeSession(std::string sessionID);
-    bool                          isSessionAlive(std::string sessionID);
+    bool                          isSessionAvailable(std::string sessionID);
 
     // for debug
     void                          showSession();
