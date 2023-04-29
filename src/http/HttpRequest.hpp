@@ -1,12 +1,12 @@
 #ifndef HTTP_REQUEST_HPP
 # define HTTP_REQUEST_HPP
 
-# include "../config/ServerConfig.hpp"
 # include "./HttpHeaderField.hpp"
 # include "./HttpStatus.hpp"
-# include "../Util.hpp"
 # include "./HttpHeaderField.hpp"
+# include "../Util.hpp"
 # include "../MimeType.hpp"
+# include "../config/ServerConfig.hpp"
 
 # include <stdexcept>
 # include <string>
@@ -22,58 +22,77 @@ namespace request_method {
 
 class HttpRequest {
   public:
-    HttpRequest(std::string request, const ServerConfig& sc);
+    HttpRequest(std::string request, const ServerConfig& sc, std::map<std::string, time_t>& session);
     HttpRequest(const HttpRequest& obj);
     HttpRequest& operator=(const HttpRequest& obj);
     ~HttpRequest();
 
-    void                                parseHeader(const std::string &h) throw(HttpStatus);
+    void                                  parseHeader(const std::string &h) throw(HttpStatus);
 
-    std::string                         getMethod() const;
-    std::string                         getPath() const;
-    std::string                         getRelativePath() const;
-    std::string                         getQueryString() const;
-    std::string                         getVersion() const;
-    std::string                         getField(const std::string& field) const;
-    std::string                         getBody() const;
-    const std::string                   getContentType(void) const;
-    const LocationConfig&               getLocationConfig() const;
-    const ServerConfig&                 getServerConfig() const;
-    const bool                          isCGI() const;
-    const std::string                   getScriptPath() const;
-    const std::string                   getCGIPath() const;
-    const std::string                   getPathInfo() const;
+    std::string                           getMethod() const;
+    std::string                           getPath() const;
+    std::string                           getRelativePath() const;
+    std::string                           getQueryString() const;
+    std::string                           getVersion() const;
+    std::string                           getField(const std::string& field) const;
+    std::string                           getBody() const;
+    const std::string                     getContentType(void) const;
+    const LocationConfig&                 getLocationConfig() const;
+    const ServerConfig&                   getServerConfig() const;
+    const bool                            isCGI() const;
+    const std::string                     getScriptPath() const;
+    const std::string                     getCGIPath() const;
+    const std::string                     getPathInfo() const;
 
-    void                                setBody(const std::string& body);
+    // -- cookie, session
+    static const std::string              SESSION_KEY;
+
+    enum SessionStatus {
+      COOKIE_NOT_EXIST = 0,
+      SESSION_NOT_EXIST,
+      EXPIRED,
+      NORMAL,
+    };
+
+    static std::string                    generateRandomString(int ch);
+    SessionStatus                         getSessionStatus() const;
+    std::map<std::string, time_t>&        getSession()const;
+    std::string                           getSessionKey() const;
+    std::map<std::string, std::string>    cookieMap;
+    std::map<std::string, time_t>&        session;
+    // -- cookie, session
+
+    void                                  setBody(const std::string& body);
 
   private:
-    static const size_t                 URL_MAX_LENGTH;
+    static const size_t                   URL_MAX_LENGTH;
 
-    std::string                         method;
-    std::string                         path;
-    std::string                         queryString;
-    std::string                         version;
-    std::string                         body;
-    std::map<std::string, std::string>  field;
-    LocationConfig                      locationConfig;
-    ServerConfig                        serverConfig;
-    bool                                cgi;
-    std::string                         scriptPath;
-    std::string                         cgiPath;
-    std::string                         pathInfo;
+    std::string                           method;
+    std::string                           path;
+    std::string                           queryString;
+    std::string                           version;
+    std::string                           body;
+    std::map<std::string, std::string>    field;
+    LocationConfig                        locationConfig;
+    ServerConfig                          serverConfig;
+    bool                                  cgi;
+    std::string                           scriptPath;
+    std::string                           cgiPath;
+    std::string                           pathInfo;
 
-    void                                setURI(const std::string& URI);
-    void                                setMethod(const std::string& method);
-    void                                setVersion(const std::string& version);
+    void                                  setURI(const std::string& URI);
+    void                                  setMethod(const std::string& method);
+    void                                  setVersion(const std::string& version);
 
-    void                                parseStatusLine(const std::string &line);
+    void                                  parseStatusLine(const std::string &line);
+    void                                  parseCookie(const std::string& cookie);
 
-    void                                validateMethod(const std::string &method);
-    void                                validateVersion(const std::string &path);
-    void                                validateURI(const std::string &version);
-    void                                checkCGI(const std::string& path, ServerConfig& sc);
+    void                                  validateMethod(const std::string &method);
+    void                                  validateVersion(const std::string &path);
+    void                                  validateURI(const std::string &version);
+    void                                  checkCGI(const std::string& path, ServerConfig& sc);
 
-    std::pair<std::string, std::string> splitField(const std::string& line);
+    std::pair<std::string, std::string>   splitField(const std::string& line);
 
 //    std::map<std::string, void (*)(const std::string &)> fieldMethod;
 
