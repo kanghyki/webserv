@@ -250,10 +250,7 @@ void Server::receiveDone(int fd) {
 
   try {
     HttpRequest req(getData(fd), this->config);
-    if (req.getLocationConfig().isCgi())
-      res = Http::executeCGI(req, this->reads, this->fdMax);
-    else
-      res = Http::processing(req);
+    res = Http::processing(req);
     clearReceived(fd);
   } catch (HttpStatus status) {
     res = Http::getErrorPage(status, this->config);

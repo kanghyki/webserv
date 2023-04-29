@@ -14,7 +14,6 @@ HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) {
   this->locationConfig = sc.findLocationConfig(this->getPath());
   std::cout << "this->locationConfig.getCGIPath()" << std::endl;
   std::cout << "this->locationConfig.getCGIPath()" << std::endl;
-  std::cout << this->locationConfig.getCGIPath() << std::endl;
   std::cout << "this->locationConfig.getCGIPath()" << std::endl;
   std::cout << "this->locationConfig.getCGIPath()" << std::endl;
 }

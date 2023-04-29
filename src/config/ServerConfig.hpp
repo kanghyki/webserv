@@ -20,28 +20,31 @@ class ServerConfig: public CommonConfig {
     const LocationConfig                findLocationConfig(std::string path) const;
     const LocationConfig                findLocationConfigRoop(const LocationConfig config, std::string path) const;
 
-    int                                 getTimeout() const;
-    short                               getPort() const;
-    std::string                         getHost() const;
-    std::string                         getServerName() const;
-    const std::vector<LocationConfig>&  getLocationConfig() const;
+    int                                       getTimeout() const;
+    short                                     getPort() const;
+    std::string                               getHost() const;
+    std::string                               getServerName() const;
+    const std::map<std::string, std::string>& getCGI() const;
+    const std::vector<LocationConfig>&        getLocationConfig() const;
 
-    void                                setTimeout(int n);
-    void                                setPort(short port);
-    void                                setHost(std::string host);
-    void                                setServerName(std::string serverName);
-    void                                addLocationConfig(LocationConfig location);
+    void                                      setTimeout(int n);
+    void                                      setPort(short port);
+    void                                      setHost(std::string host);
+    void                                      setServerName(std::string serverName);
+    void                                      insertCGI(std::string ext, std::string path);
+    void                                      addLocationConfig(LocationConfig location);
 
   private:
-    static const int                    DEFAULT_TIMEOUT;
-    static const short                  DEFAULT_PORT;
-    static const std::string            DEFAULT_HOST;
+    static const int                          DEFAULT_TIMEOUT;
+    static const short                        DEFAULT_PORT;
+    static const std::string                  DEFAULT_HOST;
 
-    int                                 timeout;
-    short                               port;
-    std::string                         host;
-    std::string                         serverName;
-    std::vector<LocationConfig>         locations;
+    int                                       timeout;
+    short                                     port;
+    std::string                               host;
+    std::string                               serverName;
+    std::map<std::string, std::string>        cgi;
+    std::vector<LocationConfig>               locations;
 };
 
 #endif

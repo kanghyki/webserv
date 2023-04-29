@@ -34,10 +34,10 @@ class ConfigParser {
     void                      parseTimeout(ServerConfig& conf);
     void                      parseListen(ServerConfig& conf);
     void                      parseServerName(ServerConfig& conf);
+    void                      parseCGI(ServerConfig& conf);
     // location
     void                      parseAlias(LocationConfig& conf);
     void                      parseLimitExcept(LocationConfig& conf);
-    void                      parseCGI(LocationConfig& conf);
     void                      parseAutoIndex(LocationConfig& conf);
     void                      parseReturn(LocationConfig& conf);
     // common
