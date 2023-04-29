@@ -26,6 +26,7 @@ ServerConfig::ServerConfig(const ServerConfig& obj):
   port(obj.getPort()),
   host(obj.getHost()),
   serverName(obj.getServerName()),
+  cgi(obj.getCGI()),
   locations(obj.getLocationConfig()) {}
 
 ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
@@ -39,6 +40,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
     this->port = obj.getPort();
     this->host = obj.getHost();
     this->serverName = obj.getServerName();
+    this->cgi = obj.getCGI();
     this->locations = obj.getLocationConfig();
   }
   return *this;
@@ -86,6 +88,8 @@ std::string ServerConfig::getHost() const { return this->host; }
 
 std::string ServerConfig::getServerName() const { return this->serverName; }
 
+const std::map<std::string, std::string>& ServerConfig::getCGI() const { return this->cgi; }
+
 const std::vector<LocationConfig>& ServerConfig::getLocationConfig() const { return this->locations; }
 
 // setter
@@ -97,5 +101,7 @@ void ServerConfig::setPort(short port) { this->port = port; }
 void ServerConfig::setHost(std::string host) { this->host = host; }
 
 void ServerConfig::setServerName(std::string serverName) { this->serverName = serverName; }
+
+void ServerConfig::insertCGI(std::string ext, std::string path) { this->cgi.insert(std::make_pair(ext, path)); }
 
 void ServerConfig::addLocationConfig(LocationConfig location) { locations.push_back(location); }

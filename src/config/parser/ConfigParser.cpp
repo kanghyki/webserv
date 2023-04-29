@@ -44,6 +44,7 @@ ServerConfig ConfigParser::parseServer(HttpConfig& httpConf) {
     else if (curToken().is(Token::TIMEOUT)) parseTimeout(conf);
     else if (curToken().is(Token::LISTEN)) parseListen(conf);
     else if (curToken().is(Token::SERVER_NAME)) parseServerName(conf);
+    else if (curToken().is(Token::CGI)) parseCGI(conf);
     else throwBadSyntax();
   }
   expectCurToken(Token::RBRACE);
@@ -62,7 +63,6 @@ LocationConfig ConfigParser::parseLocation(ServerConfig& serverConf) {
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
-    else if (curToken().is(Token::CGI)) parseCGI(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoIndex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
     else throwBadSyntax();
@@ -83,7 +83,6 @@ LocationConfig ConfigParser::parseLocation(LocationConfig& locationConf) {
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
-    else if (curToken().is(Token::CGI)) parseCGI(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoIndex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
     else throwBadSyntax();
@@ -146,11 +145,15 @@ void ConfigParser::parseLimitExcept(LocationConfig& conf) {
   expectNextToken(Token::SEMICOLON);
 }
 
-void ConfigParser::parseCGI(LocationConfig& conf) {
+void ConfigParser::parseCGI(ServerConfig& conf) {
+  std::string ext;
+  std::string path;
+
   expectNextToken(Token::IDENT);
-  conf.setCGIScriptPath(curToken().getLiteral());
+  ext = curToken().getLiteral();
   expectNextToken(Token::IDENT);
-  conf.setCGIPath(curToken().getLiteral());
+  path = curToken().getLiteral();
+  conf.insertCGI(ext, path);
   expectNextToken(Token::SEMICOLON);
 }
 

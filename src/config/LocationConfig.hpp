@@ -20,8 +20,6 @@ class LocationConfig: public CommonConfig {
     std::string                         getPath() const;
     std::string                         getAlias() const;
     std::string                         getLimitExcept() const;
-    std::string                         getCGIPath() const;
-    std::string                         getCGIScriptPath() const;
     std::map<int, std::string>          getReturnRes() const;
     bool                                isAutoIndex() const;
     const std::vector<LocationConfig>&  getLocationConfig() const;
@@ -29,8 +27,6 @@ class LocationConfig: public CommonConfig {
     void                                setPath(std::string path);
     void                                setAlias(std::string alias);
     void                                setLimitExcept(std::string limitExcept);
-    void                                setCGIPath(std::string p);
-    void                                setCGIScriptPath(std::string p);
     void                                addReturnRes(std::pair<int, std::string> returnRes);
     void                                setAutoIndex(bool autoIndex);
     void                                addLocationConfig(LocationConfig location);
@@ -41,8 +37,6 @@ class LocationConfig: public CommonConfig {
     std::string                         path;
     std::string                         alias;
     std::string                         limitExcept;
-    std::string                         cgiScriptPath;
-    std::string                         cgiPath;
     std::map<int, std::string>          returnRes;
     bool                                autoIndex;
     std::vector<LocationConfig>         locations;
