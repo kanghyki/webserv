@@ -13,6 +13,7 @@ MimeType::MimeType() {
   this->mimeTypes.insert(std::pair<std::string, std::string>(".jpeg", "image/jpeg"));
   this->mimeTypes.insert(std::pair<std::string, std::string>(".bmp", "image/bmp"));
   this->mimeTypes.insert(std::pair<std::string, std::string>(".webp", "image/webp"));
+  this->mimeTypes.insert(std::pair<std::string, std::string>(".ico", "image/x-icon"));
 
   this->mimeTypes.insert(std::pair<std::string, std::string>(".midi", "audio/midi"));
   this->mimeTypes.insert(std::pair<std::string, std::string>(".mpeg", "audio/mpeg"));
