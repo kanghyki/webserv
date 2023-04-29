@@ -9,7 +9,7 @@ form = cgi.FieldStorage()
 fileitem = form['file']
 
 if fileitem.filename:
-    file = os.path.basename(fileitem.filename)
+    file = os.environ['PATH_INFO'] + "/" + os.path.basename(fileitem.filename)
     if os.path.exists(file):
         message = 'File already exists'
     else:
@@ -17,6 +17,8 @@ if fileitem.filename:
         message = 'The file "' + file + '" was uploaded successfully'
 else:
     message = "No file was uploaded"
+
+print("Content-Type: text/html\r\n\r")
 
 print("<html>")
 print("<head>")

@@ -136,7 +136,7 @@ std::string CGI::execute(void) {
   if (pid == 0) {
     close(fd1[READ]);
     close(fd2[WRITE]);
-//    dup2(fd1[WRITE], STDOUT_FILENO);
+    dup2(fd1[WRITE], STDOUT_FILENO);
     dup2(fd2[READ], STDIN_FILENO);
     close(fd1[WRITE]);
     close(fd2[READ]);

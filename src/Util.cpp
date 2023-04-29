@@ -127,6 +127,43 @@ namespace util {
       free(data);
   }
 
+  std::pair<std::string, std::string> splitTwo(const std::string& str, const std::string& delim) {
+    size_t pos = str.find(delim);
+
+    std::pair<std::string, std::string> ret(str.substr(0, pos), str.substr(pos + 2));
+    return ret;
+  }
+
+  std::map<std::string, std::string> parseCGIHeader(const std::string& str) {
+    std::map<std::string, std::string> ret;
+    std::vector<std::string>            vs;
+    std::vector<std::string>::iterator  it;
+
+    vs = util::split(str, CRLF);
+    it = vs.begin();
+    while (it != vs.end()) {
+      std::pair<std::string, std::string> p = util::splitField(*it);
+      util::splitField(*it);
+      ret.insert(p);
+      ++it;
+    }
+
+    return ret;
+  }
+
+  std::pair<std::string, std::string> splitField(const std::string& line) {
+    std::string field = "";
+    std::string value = "";
+    int pos;
+
+    if ((pos = line.find(":")) != std::string::npos) {
+      field = util::toLowerStr(util::trimSpace(line.substr(0, pos)));
+      value = util::trimSpace(line.substr(pos + 1));
+    }
+
+    return std::make_pair(field, value);
+  }
+
   const char* StringFoundException::what() const throw() {
     return "Target not found";
   }

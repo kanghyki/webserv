@@ -1,19 +1,16 @@
 #include "./HttpRequest.hpp"
 
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
-const std::string HttpRequest::CRLF = "\r\n";
 
 HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(false) {
-  size_t pos = request.find(CRLF + CRLF);
-  parseHeader(request.substr(0, pos));
-  setBody(request.substr(pos + 1));
+  std::pair<std::string, std::string> p = util::splitTwo(request, CRLF + CRLF);
+
+  parseHeader(p.first);
+  setBody(p.second);
+
   this->serverConfig = sc;
   this->locationConfig = sc.findLocationConfig(this->getPath());
   checkCGI(getPath(), this->serverConfig);
-  std::cout << "this->locationConfig.getCGIPath()" << std::endl;
-  std::cout << "this->locationConfig.getCGIPath()" << std::endl;
-  std::cout << "this->locationConfig.getCGIPath()" << std::endl;
-  std::cout << "this->locationConfig.getCGIPath()" << std::endl;
 }
 
 HttpRequest::HttpRequest(const HttpRequest& obj):

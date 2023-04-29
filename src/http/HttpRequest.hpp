@@ -48,7 +48,6 @@ class HttpRequest {
 
   private:
     static const size_t                 URL_MAX_LENGTH;
-    static const std::string            CRLF;
 
     std::string                         method;
     std::string                         path;
