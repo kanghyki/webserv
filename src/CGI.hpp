@@ -11,7 +11,6 @@
 
 static const std::string CGI_VERSION = "CGI/1.1";
 static const std::string SOFTWARE_NAME = "NGINX MINUS";
-static const std::string UPLOAD_DIR = "/upload";
 
 class CGI {
   public:
@@ -33,7 +32,6 @@ class CGI {
     char** getArgv(const HttpRequest& req) const;
     char** envMapToEnv(const std::map<std::string, std::string>& envMap) const;
 
-//    const std::string getPathInfo(const HttpRequest& req) const;
     void changeWorkingDirectory(void);
 
     const std::string getScriptPath(void) const;
@@ -41,7 +39,6 @@ class CGI {
     const std::string getCurrentPath(void) const;
     const std::string getPathInfo(void) const;
     const std::string getBody(void) const;
-    const std::string getUploadDir(void) const;
 
     static const int READ = 0;
     static const int WRITE = 1;
