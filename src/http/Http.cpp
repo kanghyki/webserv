@@ -5,9 +5,18 @@
 Http::Http() {}
 
 Http::~Http() {}
+#include <algorithm>
 
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
+
+  if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
+    throw (METHOD_NOT_ALLOWED);
+  if (req.getMethod() != request_method::GET &&
+      req.getMethod() != request_method::POST &&
+      req.getMethod() != request_method::DELETE &&
+      req.getMethod() != request_method::PUT)
+    throw (METHOD_NOT_ALLOWED);
 
   std::cout << req.getRelativePath() << std::endl;
   try {

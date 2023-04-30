@@ -44,13 +44,29 @@ std::string LocationConfig::getPath() const { return this->path; }
 
 std::string LocationConfig::getAlias() const { return this->alias; }
 
-const std::vector<std::string>& LocationConfig::getLimitExcept() const { return this->limitExcept; }
+const std::vector<std::string>& LocationConfig::getLimitExcept() const {
+  return this->limitExcept;
+}
+
+bool LocationConfig::isMethodAllowed(std::string method) const {
+  if (this->limitExcept.size() == 0)
+    return true;
+
+  for (int i = 0; i < this->limitExcept.size(); ++i) {
+    if (this->limitExcept[i] == method)
+      return true;
+  }
+
+  return false;
+}
 
 std::map<int, std::string> LocationConfig::getReturnRes() const { return this->returnRes; }
 
 bool LocationConfig::isAutoIndex() const { return this->autoIndex; }
 
-const std::vector<LocationConfig>& LocationConfig::getLocationConfig() const { return this->locations; }
+const std::vector<LocationConfig>& LocationConfig::getLocationConfig() const {
+  return this->locations;
+}
 
 // setter
 
