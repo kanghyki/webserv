@@ -5,7 +5,6 @@
 Http::Http() {}
 
 Http::~Http() {}
-#include <algorithm>
 
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
