@@ -9,7 +9,7 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
   struct stat _stat;
 
   if (stat(this->req.getRelativePath().c_str(), &_stat) == -1)
-    throw (INTERNAL_SERVER_ERROR);
+    throw (NOT_FOUND);
 
   if (this->req.getLocationConfig().isAutoIndex()) {
     if (S_ISDIR(_stat.st_mode)) _data = autoindex();
