@@ -25,8 +25,6 @@ void Connection::remove(int fd) {
 }
 
 bool Connection::isRegistered(int fd) {
-  int value;
-
   if (this->table.find(fd) == this->table.end())
     return false;
   return true;

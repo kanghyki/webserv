@@ -7,13 +7,13 @@
 
 Server::Server(ServerConfig config) :
   recvTable(MANAGE_FD_MAX),
-  config(config),
   host(config.getHost()),
   port(config.getPort()),
   servFd(SOCK_CLOSED),
   fdMax(FD_CLOSED),
-  sessionManager(config.getSessionTimeout()),
-  connection(config.getTimeout()) {
+  config(config),
+  connection(config.getTimeout()),
+  sessionManager(config.getSessionTimeout()) {
     this->servFd = socketInit();
     socketaddrInit(this->host, this->port, this->in);
     socketOpen(this->servFd, this->in);
@@ -36,11 +36,11 @@ Server::~Server(void) {}
  * -------------------------- Getter -------------------------------
  */
 
-const int Server::getServFd(void) const {
+int Server::getServFd(void) const {
   return this->servFd;
 }
 
-const int Server::getFdMax(void) const {
+int Server::getFdMax(void) const {
   return this->fdMax;
 }
 
@@ -113,7 +113,7 @@ void Server::run(void) {
       break;
 
     std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
-    for (int i = 0; i < timeout_fd_list.size(); ++i) {
+    for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
       std::cout << "timeout: " << timeout_fd_list[i] << std::endl;
       closeSocket(timeout_fd_list[i]);
     }
@@ -153,7 +153,6 @@ int Server::acceptConnect() {
 void Server::receiveData(int fd) {
   char buf[BUF_SIZE + 1];
   int recv_size;
-  int DONE = 0;
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;
@@ -208,7 +207,7 @@ void Server::receiveDone(int fd) {
 
   try {
     HttpRequest req(getData(fd), this->config);
-    if (req.isCGI()) 
+    if (req.isCGI())
       res = Http::executeCGI(req);
     else
       res = Http::processing(req);
@@ -241,7 +240,7 @@ const std::string Server::getData(int fd) const {
   return this->recvTable[fd].data;
 }
 
-const int Server::getContentLength(int fd) const {
+size_t Server::getContentLength(size_t fd) const {
   return this->recvTable[fd].contentLength;
 }
 
@@ -261,7 +260,7 @@ void Server::clearContentLength(int fd) {
   this->recvTable[fd].contentLength = -1;
 }
 
-const size_t Server::getHeaderPos(int fd) const {
+size_t Server::getHeaderPos(int fd) const {
   return this->recvTable[fd].headerPos;
 }
 
@@ -280,7 +279,7 @@ void Server::clearReceived(int fd) {
   clearStatus(fd);
 }
 
-const int Server::getStatus(int fd) const {
+int Server::getStatus(int fd) const {
   return this->recvTable[fd].status;
 }
 

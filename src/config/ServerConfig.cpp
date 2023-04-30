@@ -42,7 +42,7 @@ ServerConfig::ServerConfig(const ServerConfig& obj):
 //}
 
 const LocationConfig ServerConfig::findLocationConfig(std::string path) const {
-  int         pos;
+  size_t      pos;
   std::string origin = path;
   bool        end = false;
 
@@ -66,7 +66,7 @@ const LocationConfig ServerConfig::findLocationConfig(std::string path) const {
 }
 
 const LocationConfig& ServerConfig::findLocationConfigRoop(const LocationConfig& config, std::string path) const {
-  int         pos;
+  size_t      pos;
   std::string origin = path;
   bool        end = false;
 

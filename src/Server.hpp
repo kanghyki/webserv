@@ -25,7 +25,7 @@ class Server {
     Server(ServerConfig config);
     ~Server(void);
 
-    const int getFdMax(void) const;
+    int getFdMax(void) const;
     void setFdMax(int fdMax);
 
     void run();
@@ -41,7 +41,7 @@ class Server {
 
     struct received {
       std::string data;
-      int         contentLength;
+      size_t      contentLength;
       size_t      headerPos;
       int         status;
     };
@@ -66,7 +66,7 @@ class Server {
     fd_set writes;
     sock in;
 
-    const int getServFd(void) const;
+    int getServFd(void) const;
     fd_set& getReads(void);
     fd_set& getWrites(void);
 
@@ -84,9 +84,9 @@ class Server {
     void receiveDone(int fd);
 
     const std::string getData(int fd) const;
-    const int         getContentLength(int fd) const;
-    const size_t      getHeaderPos(int fd) const;
-    const int         getStatus(int fd) const;
+    size_t            getContentLength(size_t fd) const;
+    size_t            getHeaderPos(int fd) const;
+    int               getStatus(int fd) const;
 
     void              addData(int fd, const std::string& data);
     void              setContentLength(int fd, int len);

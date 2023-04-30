@@ -39,7 +39,7 @@ class HttpRequest {
     const std::string                     getContentType(void) const;
     const LocationConfig&                 getLocationConfig() const;
     const ServerConfig&                   getServerConfig() const;
-    const bool                            isCGI() const;
+    bool                                  isCGI() const;
     const std::string                     getScriptPath() const;
     const std::string                     getCGIPath() const;
     const std::string                     getPathInfo() const;

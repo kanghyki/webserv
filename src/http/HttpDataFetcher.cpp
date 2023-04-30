@@ -43,7 +43,6 @@ std::string HttpDataFecther::autoindex() const throw(HttpStatus) {
   std::string     ret;
   DIR*            dir;
   struct dirent*  ent;
-  struct stat     _stat;
 
   if ((dir = opendir(req.getRelativePath().c_str())) == NULL) {
     if (errno == ENOTDIR)

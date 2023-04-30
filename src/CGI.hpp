@@ -27,7 +27,7 @@ class CGI {
     std::string body;
 
     const std::map<std::string, std::string> getEnvMap(const HttpRequest& req) const;
-    char** getArgv(const HttpRequest& req) const;
+    char** getArgv() const;
     char** envMapToEnv(const std::map<std::string, std::string>& envMap) const;
 
     void changeWorkingDirectory(void);

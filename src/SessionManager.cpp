@@ -34,7 +34,7 @@ void SessionManager::cleanUpExpired() {
       cleanUpList.push_back(it);
     }
   }
-  for (int i = 0; i < cleanUpList.size(); ++i) {
+  for (size_t i = 0; i < cleanUpList.size(); ++i) {
     this->table.erase(cleanUpList[i]);
   }
   pthread_mutex_unlock(&this->table_mutex);

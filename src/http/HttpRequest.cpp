@@ -95,12 +95,11 @@ void HttpRequest::validateMethod(const std::string &method) {
 }
 
 void HttpRequest::validateURI(const std::string &path) {
-  int i;
+  size_t i;
 
   i = 0;
   if (path.length() > URL_MAX_LENGTH)     throw URI_TOO_LONG;
   if (path[i++] != '/')                   throw BAD_REQUEST;
-
   while (i < path.length()) {
     if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=-", path[i]))
       throw BAD_REQUEST;
@@ -123,7 +122,7 @@ void HttpRequest::validateVersion(const std::string &version) {
 std::pair<std::string, std::string> HttpRequest::splitField(const std::string& line) {
   std::string field;
   std::string value;
-  int pos;
+  size_t pos;
 
   if ((pos = line.find(":")) == std::string::npos) throw BAD_REQUEST;
   field = util::toLowerStr(util::trimSpace(line.substr(0, pos)));
@@ -196,7 +195,7 @@ const ServerConfig& HttpRequest::getServerConfig() const {
   return this->serverConfig;
 }
 
-const bool HttpRequest::isCGI() const {
+bool HttpRequest::isCGI() const {
   return this->cgi;
 }
 
@@ -221,7 +220,7 @@ void  HttpRequest::setBody(const std::string& body) { this->body = body; }
 void HttpRequest::setURI(const std::string& URI) {
   validateURI(URI);
 
-  int pos = (URI.find('?'));
+  size_t pos = (URI.find('?'));
   this->path = URI.substr(0, pos);
   if (pos != std::string::npos) this->queryString = URI.substr(pos + 1);
 }

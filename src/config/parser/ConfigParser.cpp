@@ -194,7 +194,7 @@ void ConfigParser::parseErrorPage(CommonConfig& conf) {
 
   expectNextToken(Token::IDENT);
 
-  for (int i = 0; i < statusList.size(); ++i)
+  for (size_t i = 0; i < statusList.size(); ++i)
     conf.addErrorPage(statusList[i], curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }

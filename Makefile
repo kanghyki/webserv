@@ -2,9 +2,9 @@
 COMPILE_COLOR	=	"\033[1;34m"
 BUILD_COLOR		=	"\033[1;32m"
 MODE_COLOR		=	"\033[1;35m"
-DEL_COLOR	    =	"\033[1;31m"
-END				    =	"\033[0;0m"
-CLEAR			    =	"\x1b[1A\x1b[M"
+DEL_COLOR			=	"\033[1;31m"
+END						=	"\033[0;0m"
+CLEAR					=	"\x1b[1A\x1b[M"
 
 #---------------[ webserv ]-------------
 NAME			=	webserv
@@ -38,9 +38,9 @@ SRCS			=	main.cpp\
 
 OBJS_DIR	=	./obj
 OBJS			=	$(addprefix $(OBJS_DIR)/, $(SRCS:.cpp=.o))
-CXX       =	c++ -g
-CPPFLAGS  =	-I$(INCS)
-#CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
+CXX				=	c++
+CPPFLAGS	=	-I$(INCS)
+CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
 RM				=	rm -rf
 
 vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR)

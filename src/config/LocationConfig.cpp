@@ -52,7 +52,7 @@ bool LocationConfig::isMethodAllowed(std::string method) const {
   if (this->limitExcept.size() == 0)
     return true;
 
-  for (int i = 0; i < this->limitExcept.size(); ++i) {
+  for (size_t i = 0; i < this->limitExcept.size(); ++i) {
     if (this->limitExcept[i] == method)
       return true;
   }
