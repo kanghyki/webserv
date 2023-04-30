@@ -20,23 +20,23 @@ LocationConfig::LocationConfig(const LocationConfig& obj):
 
 LocationConfig::~LocationConfig() {}
 
-LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
-  if (this != &obj) {
-    this->clientBodySize = obj.getClientBodySize();
-    this->root = obj.getRoot();
-    this->errorPage = obj.getErrorPage();
-    this->index = obj.getIndex();
-
-    this->path = obj.getPath();
-    this->alias = obj.getAlias();
-    this->limitExcept = obj.getLimitExcept();
-    this->returnRes = obj.getReturnRes();
-    this->autoindex = obj.isAutoindex();
-    this->locations = obj.getLocationConfig();
-  }
-
-  return *this;
-}
+//LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
+//  if (this != &obj) {
+//    this->clientBodySize = obj.getClientBodySize();
+//    this->root = obj.getRoot();
+//    this->errorPage = obj.getErrorPage();
+//    this->index = obj.getIndex();
+//
+//    this->path = obj.getPath();
+//    this->alias = obj.getAlias();
+//    this->limitExcept = obj.getLimitExcept();
+//    this->returnRes = obj.getReturnRes();
+//    this->autoindex = obj.isAutoindex();
+//    this->locations = obj.getLocationConfig();
+//  }
+//
+//  return *this;
+//}
 
 // getter
 

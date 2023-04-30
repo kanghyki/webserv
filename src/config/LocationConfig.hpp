@@ -15,7 +15,7 @@ class LocationConfig: public CommonConfig {
     LocationConfig(const ServerConfig& config);
     ~LocationConfig();
     LocationConfig(const LocationConfig& obj);
-    LocationConfig& operator=(const LocationConfig& obj);
+//    LocationConfig& operator=(const LocationConfig& obj);
 
     std::string                         getPath() const;
     std::string                         getAlias() const;

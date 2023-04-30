@@ -18,15 +18,15 @@ CommonConfig::CommonConfig(const CommonConfig& obj):
 
 CommonConfig::~CommonConfig() {}
 
-CommonConfig &CommonConfig::operator=(const CommonConfig& obj) {
-  if (this != &obj) {
-    this->clientBodySize = obj.getClientBodySize();
-    this->root = obj.getRoot();
-    this->index = obj.getIndex();
-    this->errorPage = obj.getErrorPage();
-  }
-  return *this;
-}
+//CommonConfig &CommonConfig::operator=(const CommonConfig& obj) {
+//  if (this != &obj) {
+//    this->clientBodySize = obj.getClientBodySize();
+//    this->root = obj.getRoot();
+//    this->index = obj.getIndex();
+//    this->errorPage = obj.getErrorPage();
+//  }
+//  return *this;
+//}
 
 // getter
 
