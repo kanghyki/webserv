@@ -10,6 +10,8 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
 
+  if (req.getBody().size() > req.getLocationConfig().getClientBodySize())
+    throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
     throw (METHOD_NOT_ALLOWED);
   if (req.getMethod() != request_method::GET &&
