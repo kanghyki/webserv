@@ -3,11 +3,11 @@
 
 const bool LocationConfig::DEFAULT_AUTOINDEX = false;
 
-LocationConfig::LocationConfig(): autoIndex(DEFAULT_AUTOINDEX) {}
+LocationConfig::LocationConfig(): autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const ServerConfig& config):
   CommonConfig(config),
-  autoIndex(DEFAULT_AUTOINDEX) {}
+  autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const LocationConfig& obj):
   CommonConfig(obj),
@@ -15,7 +15,7 @@ LocationConfig::LocationConfig(const LocationConfig& obj):
   alias(obj.getAlias()),
   limitExcept(obj.getLimitExcept()),
   returnRes(obj.getReturnRes()), 
-  autoIndex(obj.isAutoIndex()),
+  autoindex(obj.isAutoindex()),
   locations(obj.getLocationConfig()) {}
 
 LocationConfig::~LocationConfig() {}
@@ -31,7 +31,7 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
     this->alias = obj.getAlias();
     this->limitExcept = obj.getLimitExcept();
     this->returnRes = obj.getReturnRes();
-    this->autoIndex = obj.isAutoIndex();
+    this->autoindex = obj.isAutoindex();
     this->locations = obj.getLocationConfig();
   }
 
@@ -62,7 +62,7 @@ bool LocationConfig::isMethodAllowed(std::string method) const {
 
 std::map<int, std::string> LocationConfig::getReturnRes() const { return this->returnRes; }
 
-bool LocationConfig::isAutoIndex() const { return this->autoIndex; }
+bool LocationConfig::isAutoindex() const { return this->autoindex; }
 
 const std::vector<LocationConfig>& LocationConfig::getLocationConfig() const {
   return this->locations;
@@ -78,6 +78,6 @@ void LocationConfig::addLimitExcept(std::string method) { this->limitExcept.push
 
 void LocationConfig::addReturnRes(std::pair<int, std::string> returnRes) { this->returnRes.insert(returnRes); }
 
-void LocationConfig::setAutoIndex(bool autoIndex) { this->autoIndex = autoIndex; }
+void LocationConfig::setAutoindex(bool autoIndex) { this->autoindex = autoIndex; }
 
 void LocationConfig::addLocationConfig(LocationConfig location) { this->locations.push_back(location); }

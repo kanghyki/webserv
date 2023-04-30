@@ -39,7 +39,7 @@ class ConfigParser {
     // location
     void                      parseAlias(LocationConfig& conf);
     void                      parseLimitExcept(LocationConfig& conf);
-    void                      parseAutoIndex(LocationConfig& conf);
+    void                      parseAutoindex(LocationConfig& conf);
     void                      parseReturn(LocationConfig& conf);
     // common
     void                      parseRoot(CommonConfig& conf);

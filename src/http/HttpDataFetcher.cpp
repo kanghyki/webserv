@@ -12,7 +12,7 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
     throw (NOT_FOUND);
 
   if (S_ISDIR(_stat.st_mode)) {
-    if (this->req.getLocationConfig().isAutoIndex())
+    if (this->req.getLocationConfig().isAutoindex())
       _data = autoindex();
     else if (this->req.getLocationConfig().getIndex() != "")
       _data = readFile("." + this->req.getLocationConfig().getIndex());
