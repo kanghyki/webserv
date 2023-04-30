@@ -16,7 +16,12 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
     else                        _data = getData();
   }
   else {
-    if (S_ISDIR(_stat.st_mode)) throw (FORBIDDEN);
+    if (S_ISDIR(_stat.st_mode)) {
+      if (this->req.getLocationConfig().getIndex() == "")
+        throw (FORBIDDEN);
+      else
+        _data = readFile("." + this->req.getLocationConfig().getIndex());
+    }
     else                        _data = getData();
   }
 
