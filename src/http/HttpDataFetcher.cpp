@@ -11,19 +11,18 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
   if (stat(this->req.getRelativePath().c_str(), &_stat) == -1)
     throw (NOT_FOUND);
 
-  if (this->req.getLocationConfig().isAutoIndex()) {
-    if (S_ISDIR(_stat.st_mode)) _data = autoindex();
-    else                        _data = getData();
+  if (S_ISDIR(_stat.st_mode)) {
+    if (this->req.getLocationConfig().isAutoIndex())
+      _data = autoindex();
+    else if (this->req.getLocationConfig().getIndex() != "")
+      _data = readFile("." + this->req.getLocationConfig().getIndex());
+    else
+      throw (FORBIDDEN);
   }
-  else {
-    if (S_ISDIR(_stat.st_mode)) {
-      if (this->req.getLocationConfig().getIndex() == "")
-        throw (FORBIDDEN);
-      else
-        _data = readFile("." + this->req.getLocationConfig().getIndex());
-    }
-    else                        _data = getData();
-  }
+  else if (S_ISREG(_stat.st_mode))
+    _data = getData();
+  else
+    throw (FORBIDDEN);
 
   return _data;
 }

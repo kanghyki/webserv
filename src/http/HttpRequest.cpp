@@ -165,6 +165,7 @@ std::string HttpRequest::getRelativePath() const {
 
   if (root == "/")
     return "." + this->path;
+
   return "." + root + this->path;
 }
 
