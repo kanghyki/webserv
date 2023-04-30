@@ -156,9 +156,16 @@ std::string HttpRequest::getMethod() const { return this->method; }
 std::string HttpRequest::getPath() const { return this->path; }
 
 std::string HttpRequest::getRelativePath() const {
-  if (getLocationConfig().getRoot() == "/")
+  std::string root;
+
+  if (getLocationConfig().getAlias() != "") 
+    root = getLocationConfig().getAlias();
+  else
+    root = getLocationConfig().getRoot();
+
+  if (root == "/")
     return "." + this->path;
-  return "." + getLocationConfig().getRoot() + this->path;
+  return "." + root + this->path;
 }
 
 std::string HttpRequest::getQueryString() const { return this->queryString; }
