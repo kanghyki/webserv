@@ -5,30 +5,22 @@ HttpDataFecther::HttpDataFecther(const HttpRequest& req): req(req) {}
 HttpDataFecther::~HttpDataFecther() {}
 
 std::string HttpDataFecther::fetch() const throw(HttpStatus) {
-  std::string data;
+  std::string _data;
+  struct stat _stat;
 
-  std::cout << "relative path: " << this->req.getRelativePath() << std::endl;
+  if (stat(this->req.getRelativePath().c_str(), &_stat) == -1)
+    throw (INTERNAL_SERVER_ERROR);
 
   if (this->req.getLocationConfig().isAutoIndex()) {
-    std::cout << "autoIndex : true" << std::endl;
-    DIR* dir = opendir(this->req.getRelativePath().c_str());
-    if (dir) {
-      std::cout << "@is dir" << std::endl;
-      closedir(dir);
-      data = autoindex();
-    }
-    else {
-      std::cout << "@is file" << std::endl;
-      data = getData();
-    }
+    if (S_ISDIR(_stat.st_mode)) _data = autoindex();
+    else                        _data = getData();
   }
   else {
-    std::cout << "autoIndex : false" << std::endl;
-    // FIXME :: 폴더 읽어도 에러 안남.., 데이터는 0 임
-    data = getData();
+    if (S_ISDIR(_stat.st_mode)) throw (FORBIDDEN);
+    else                        _data = getData();
   }
 
-  return data;
+  return _data;
 }
 
 std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus) {
@@ -51,6 +43,7 @@ std::string HttpDataFecther::autoindex() const throw(HttpStatus) {
   std::string     ret;
   DIR*            dir;
   struct dirent*  ent;
+  struct stat     _stat;
 
   if ((dir = opendir(req.getRelativePath().c_str())) == NULL) {
     if (errno == ENOTDIR)

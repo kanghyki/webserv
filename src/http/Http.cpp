@@ -124,26 +124,40 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
 }
 
 HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config) {
-  std::string                                 data;
-  std::map<int, std::string>                  m = config.getErrorPage();
-  std::map<int, std::string>::const_iterator  it;
-  std::string                                 path;
-  HttpResponse                                res;
+  HttpResponse  res;
+  std::string   data;
+  std::string   path;
 
   std::cout << "Http error occured: " << status << std::endl;
-  if ((it = m.find(status)) != m.end()) {
-    path = "." + it->second;
+  std::string errorPagePath = config.getErrorPage()[status];
+  if (errorPagePath.empty())
+    data = defaultErrorPage(status);
+  else {
+    path = "." + errorPagePath;
     try {
       data = HttpDataFecther::readFile(path);
     } catch (HttpStatus status) {
-      std::cout << "ERROR OF ERROR" << std::endl;
+      data = defaultErrorPage(status);
     }
   }
 
-  // FIXME: erorr of error?
-  res.setStatusCode(CREATED);
+  res.setStatusCode(status);
   res.addHeader(header_field::CONTENT_TYPE, "text/html");
   res.setBody(data);
 
   return res;
+}
+
+std::string Http::defaultErrorPage(HttpStatus s) {
+  std::string ret = "<html><head><title>"\
+                     + util::itoa(s) + " " + getStatusText(s)\
+                     + "</title></head>\
+                     <body>\
+                     <center><h1>"\
+                     + util::itoa(s) + " " + getStatusText(s)\
+                     + "</h1></center>\
+                     <hr><center>webserv/1.0.0</center>\
+                     </body>\
+                     </html>";
+  return ret;
 }
