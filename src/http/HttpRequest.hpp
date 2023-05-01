@@ -18,6 +18,7 @@ namespace request_method {
   const std::string POST   = "POST";
   const std::string DELETE = "DELETE";
   const std::string PUT    = "PUT";
+  const std::string HEAD   = "HEAD";
 }
 
 class HttpRequest {

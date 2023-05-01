@@ -207,6 +207,7 @@ void Server::receiveDone(int fd) {
 
   try {
     HttpRequest req(getData(fd), this->config);
+    clearReceived(fd);
     if (req.isCGI())
       res = Http::executeCGI(req);
     else
@@ -217,7 +218,6 @@ void Server::receiveDone(int fd) {
   }
 
   sendData(fd, res.toString());
-  clearReceived(fd);
 }
 
 void Server::sendData(int fd, const std::string& data) {
@@ -233,7 +233,7 @@ void Server::closeSocket(int fd) {
   FD_CLR(fd, &this->getWrites());
   close(fd);
   this->connection.remove(fd);
-  clearData(fd);
+  clearReceived(fd);
 }
 
 const std::string Server::getData(int fd) const {

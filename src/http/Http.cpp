@@ -16,7 +16,8 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   if (req.getMethod() != request_method::GET &&
       req.getMethod() != request_method::POST &&
       req.getMethod() != request_method::DELETE &&
-      req.getMethod() != request_method::PUT)
+      req.getMethod() != request_method::PUT &&
+      req.getMethod() != request_method::HEAD)
     throw (METHOD_NOT_ALLOWED);
 
   std::cout << req.getRelativePath() << std::endl;
@@ -25,6 +26,7 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
     else if (req.getMethod() == request_method::POST) ret = postMethod(req);
     else if (req.getMethod() == request_method::DELETE) ret = deleteMethod(req);
     else if (req.getMethod() == request_method::PUT) ret = putMethod(req);
+    else if (req.getMethod() == request_method::HEAD) ret = headMethod(req);
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
@@ -66,12 +68,16 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   HttpResponse res;
 
   std::cout << "GET" << std::endl;
+  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+  std::cout << "GET PATH : " << req.getRelativePath() << std::endl;
+  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"<<std::endl;
   HttpDataFecther fetcher(req);
   std::string data = fetcher.fetch();
 
   res.setStatusCode(OK);
   res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(data);
+
 
   return res;
 }
@@ -129,6 +135,18 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
   res.setStatusCode(CREATED);
   res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(req.getBody());
+
+  return res;
+}
+
+HttpResponse Http::headMethod(const HttpRequest& req) {
+  HttpResponse res;
+
+  std::cout << "HEAD" << std::endl;
+  HttpDataFecther fetcher(req);
+  std::string data = fetcher.fetch();
+
+  res.setStatusCode(OK);
 
   return res;
 }
