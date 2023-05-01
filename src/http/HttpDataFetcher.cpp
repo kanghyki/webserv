@@ -15,7 +15,7 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
     if (this->req.getLocationConfig().isAutoindex())
       _data = autoindex();
     else if (this->req.getLocationConfig().getIndex() != "")
-      _data = readFile("." + this->req.getLocationConfig().getIndex());
+      _data = readFile("." + this->req.getLocationConfig().getRoot() + "/" + this->req.getLocationConfig().getIndex());
     else
       throw (FORBIDDEN);
   }

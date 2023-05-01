@@ -3,6 +3,7 @@
 Connection::Connection(unsigned int timeout_max): timeout_max(timeout_max) {}
 
 Connection::~Connection(void) {}
+#include <iostream>
 
 std::vector<int> Connection::getTimeoutList(void) {
   std::vector<int> timeout_fd_list;

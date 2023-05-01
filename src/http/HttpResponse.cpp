@@ -16,6 +16,14 @@ HttpResponse::HttpResponse(): statusCode(INTERNAL_SERVER_ERROR), statusText() {}
 HttpResponse::~HttpResponse() {}
 
 /*
+ * -------------------------- Getter -------------------------------
+ */
+
+HttpStatus HttpResponse::getStatusCode() const {
+  return this->statusCode;
+}
+
+/*
  * -------------------------- Setter -------------------------------
  */
 
