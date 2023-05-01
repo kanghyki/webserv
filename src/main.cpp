@@ -1,7 +1,7 @@
 #include <iostream>
 #include "./Server.hpp"
 #include "./config/parser/ConfigParser.hpp"
-#include "./config/ServerConfig.hpp"
+#include "./config/Config.hpp"
 #include "./Logger.hpp"
 
 const std::string TEAM_MARK = "\
@@ -20,9 +20,9 @@ int main(int argc, char **argv) {
 
   try {
     ConfigParser p;
-    ServerConfig a = p.parse(argv[1]);
+    Config a = p.parse(argv[1]);
     Log::cout() << INFO << "Config parsing ok\n";
-    Server server(a);
+    Server server(a.getHttpConfig()[0].getServerConfig()[0]);
     Log::cout() << INFO << "Server setup done\n";
     server.run();
   } catch (std::exception &e) {

@@ -33,6 +33,7 @@ class Token {
     static const std::string  LBRACE;
     static const std::string  RBRACE;
     // Keyword
+    static const std::string  HTTP;
     static const std::string  SERVER;
     static const std::string  LOCATION;
     static const std::string  LISTEN;
@@ -49,7 +50,7 @@ class Token {
     static const std::string  TIMEOUT;
     static const std::string  CGI;
 
-    enum { KEYWORD_SIZE = 15 };
+    enum { KEYWORD_SIZE = 16 };
     static const int          IDENT_IDX;
     static const int          TYPE_IDX;
     static const std::string  keyword[KEYWORD_SIZE][2];

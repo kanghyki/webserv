@@ -12,12 +12,13 @@ class HttpConfig;
 class ServerConfig: public CommonConfig {
   public:
     ServerConfig();
-    ~ServerConfig();
+    ServerConfig(const HttpConfig& config);
     ServerConfig(const ServerConfig& obj);
+    ~ServerConfig();
 //    ServerConfig& operator=(const ServerConfig& obj);
 
-    const LocationConfig                findLocationConfig(std::string path) const;
-    const LocationConfig&               findLocationConfigRoop(const LocationConfig& config, std::string path) const;
+    const LocationConfig                      findLocationConfig(std::string path) const;
+    const LocationConfig&                     findLocationConfigRoop(const LocationConfig& config, std::string path) const;
 
     int                                       getSessionTimeout() const;
     int                                       getTimeout() const;

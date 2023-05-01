@@ -20,6 +20,8 @@ SRCS			=	main.cpp\
 						Server.cpp\
 						SessionManager.cpp\
 						Connection.cpp\
+						Config.cpp\
+						HttpConfig.cpp\
 						CommonConfig.cpp\
 						ServerConfig.cpp\
 						LocationConfig.cpp\

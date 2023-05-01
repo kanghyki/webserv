@@ -3,7 +3,9 @@
 
 const bool LocationConfig::DEFAULT_AUTOINDEX = false;
 
-LocationConfig::LocationConfig(): autoindex(DEFAULT_AUTOINDEX) {}
+LocationConfig::LocationConfig():
+  CommonConfig(),
+  autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const ServerConfig& config):
   CommonConfig(config),
