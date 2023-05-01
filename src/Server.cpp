@@ -120,8 +120,9 @@ void Server::run(void) {
       Log::cout() << INFO << "Client(" << timeout_fd_list[i] << ") timeout, closed\n";
 
       FD_CLR(timeout_fd_list[i], &this->getReads());
+      FD_CLR(timeout_fd_list[i], &this->getWrites());
       close(timeout_fd_list[i]);
-      clearData(timeout_fd_list[i]);
+      clearReceived(timeout_fd_list[i]);
       this->connection.remove(timeout_fd_list[i]);
     }
 
@@ -213,25 +214,23 @@ bool Server::checkContentLength(int fd) {
 void Server::receiveDone(int fd) {
   HttpResponse res;
 
-  shutdown(fd, SHUT_RD);
   FD_CLR(fd, &this->getReads());
   Log::cout() << DEBUG << "this->data[" << fd << "]\n" << this->recvTable[fd].data;
 
   try {
     HttpRequest req(getData(fd), this->config);
+    clearReceived(fd);
     Log::cout() << INFO << "Request from " << fd << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"\n";
     if (req.isCGI())
       res = Http::executeCGI(req);
     else
       res = Http::processing(req);
-    clearReceived(fd);
   } catch (HttpStatus status) {
     res = Http::getErrorPage(status, this->config);
   }
 
   Log::cout() << INFO << "Response to " << fd << ", Status=" << res.getStatusCode() << "\n";
   sendData(fd, res.toString());
-  clearReceived(fd);
 }
 
 void Server::sendData(int fd, const std::string& data) {
@@ -243,8 +242,9 @@ void Server::sendData(int fd, const std::string& data) {
 void Server::closeSocket(int fd) {
   FD_CLR(fd, &this->getWrites());
   close(fd);
-  clearData(fd);
+  clearReceived(fd);
   this->connection.remove(fd);
+  Log::cout() << INFO << "Closed client(" << fd << ")\n";
 }
 
 const std::string Server::getData(int fd) const {
