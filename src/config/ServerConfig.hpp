@@ -7,12 +7,9 @@
 # include <string>
 # include <vector>
 
-class HttpConfig;
-
 class ServerConfig: public CommonConfig {
   public:
     ServerConfig();
-    ServerConfig(const HttpConfig& config);
     ServerConfig(const ServerConfig& obj);
     ~ServerConfig();
 //    ServerConfig& operator=(const ServerConfig& obj);

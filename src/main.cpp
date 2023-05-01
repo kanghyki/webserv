@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     ConfigParser p;
     Config a = p.parse(argv[1]);
     Log::cout() << INFO << "Config parsing ok\n";
-    Server server(a.getHttpConfig()[0].getServerConfig()[0]);
+    Server server(a);
     Log::cout() << INFO << "Server setup done\n";
     server.run();
   } catch (std::exception &e) {

@@ -8,7 +8,6 @@ const std::string Token::SEMICOLON                = ";";
 const std::string Token::LBRACE                   = "{";
 const std::string Token::RBRACE                   = "}";
 // Keyword
-const std::string Token::HTTP                     = "http";
 const std::string Token::SERVER                   = "server";
 const std::string Token::LOCATION                 = "location";
 const std::string Token::LISTEN                   = "listen";
@@ -29,7 +28,6 @@ const int         Token::IDENT_IDX                = 0;
 const int         Token::TYPE_IDX                 = 1;
 
 const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
-  {"http",                                       Token::HTTP},
   {"server",                                     Token::SERVER},
   {"location",                                   Token::LOCATION},
   {"listen",                                     Token::LISTEN},

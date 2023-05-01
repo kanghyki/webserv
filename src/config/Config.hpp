@@ -1,7 +1,7 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include "HttpConfig.hpp"
+# include "ServerConfig.hpp"
 
 # include <vector>
 
@@ -10,15 +10,14 @@ class Config {
     Config();
     ~Config();
     Config(const Config& obj);
-    Config                  &operator=(const Config& obj);
 
-    std::vector<HttpConfig> getHttpConfig() const;
-    void                    addHttpConfig(HttpConfig http);
+    const std::vector<ServerConfig>&  getServerConfig() const;
+    void                              addServerConfig(ServerConfig server);
 
-    Config&                 parseServerConfig();
+    const ServerConfig&               findServerConfig(std::string reqHost) const;
 
   private:
-    std::vector<HttpConfig> https;
+    std::vector<ServerConfig> servers;
 };
 
 #endif

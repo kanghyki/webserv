@@ -1,3 +1,5 @@
+첫번째 server config가 default server가 된다.
+
 # Common
 ```
 1.

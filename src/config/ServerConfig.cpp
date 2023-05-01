@@ -1,5 +1,4 @@
 #include "./ServerConfig.hpp"
-#include "./HttpConfig.hpp"
 
 const int         ServerConfig::DEFAULT_SESSION_TIMEOUT = 600;
 const int         ServerConfig::DEFAULT_TIMEOUT = 60;
@@ -14,14 +13,6 @@ ServerConfig::ServerConfig():
   host(DEFAULT_HOST) {}
 
 ServerConfig::~ServerConfig() {}
-
-ServerConfig::ServerConfig(const HttpConfig& config):
-  CommonConfig(config),
-  session_timeout(DEFAULT_SESSION_TIMEOUT),
-  timeout(DEFAULT_TIMEOUT),
-  port(DEFAULT_PORT),
-  host(DEFAULT_HOST) {
-}
 
 ServerConfig::ServerConfig(const ServerConfig& obj):
   CommonConfig(obj),

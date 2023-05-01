@@ -1,21 +1,31 @@
 #include "./Config.hpp"
+#include "../http/HttpStatus.hpp"
 
 Config::Config() {}
 
 Config::~Config() {}
 
-Config::Config(const Config& obj) : https(obj.getHttpConfig()) {}
+Config::Config(const Config& obj) : servers(obj.getServerConfig()) {}
 
-Config& Config::operator=(const Config& obj) {
-  if (this != &obj)
-    this->https = obj.getHttpConfig();
-  return *this;
+const std::vector<ServerConfig>& Config::getServerConfig() const {
+  return this->servers;
 }
 
-std::vector<HttpConfig> Config::getHttpConfig() const {
-  return this->https;
+void Config::addServerConfig(ServerConfig server) {
+  servers.push_back(server);
 }
 
-void Config::addHttpConfig(HttpConfig http) {
-  this->https.push_back(http);
+const ServerConfig& Config::findServerConfig(std::string reqHost) const {
+  size_t pos;
+
+  if ((pos = reqHost.find(":")) != std::string::npos)
+    reqHost = reqHost.substr(pos + 1);
+
+  std::vector<ServerConfig> servers = getServerConfig();
+  for (std::vector<ServerConfig>::iterator sit = servers.begin(); sit != servers.end(); ++sit) {
+    if (sit->getServerName() == reqHost) {
+      return *sit;
+    }
+  }
+  return getServerConfig()[0];
 }

@@ -10,6 +10,7 @@ HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(fals
 
   this->serverConfig = sc;
   this->locationConfig = sc.findLocationConfig(this->getPath());
+
   checkCGI(getPath(), this->serverConfig);
 }
 

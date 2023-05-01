@@ -23,9 +23,7 @@ class ConfigParser {
     std::vector<Token>        tokens;
     std::string               fileName;
 
-    HttpConfig                parseHttp();
-
-    ServerConfig              parseServer(HttpConfig& httpConf);
+    ServerConfig              parseServer();
     LocationConfig            parseLocation(ServerConfig& conf);
     LocationConfig            parseLocation(LocationConfig& conf);
     void                      parseCommon(CommonConfig& conf);
