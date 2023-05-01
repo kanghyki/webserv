@@ -2,7 +2,6 @@
 # define SERVER_HPP
 
 # include "./Connection.hpp"
-# include "./SessionManager.hpp"
 # include "./Util.hpp"
 # include "./config/Config.hpp"
 # include "./http/HttpRequest.hpp"
