@@ -1,10 +1,12 @@
 #include "./ServerConfig.hpp"
 
+const int         ServerConfig::DEFAULT_SESSION_TIMEOUT = 600;
 const int         ServerConfig::DEFAULT_TIMEOUT = 60;
 const short       ServerConfig::DEFAULT_PORT = 80;
 const std::string ServerConfig::DEFAULT_HOST = "127.0.0.1";
 
 ServerConfig::ServerConfig():
+  session_timeout(DEFAULT_SESSION_TIMEOUT),
   timeout(DEFAULT_TIMEOUT),
   port(DEFAULT_PORT),
   host(DEFAULT_HOST) {}
@@ -13,6 +15,7 @@ ServerConfig::~ServerConfig() {}
 
 ServerConfig::ServerConfig(const ServerConfig& obj):
   CommonConfig(obj),
+  session_timeout(obj.getSessionTimeout()),
   timeout(obj.getTimeout()),
   port(obj.getPort()),
   host(obj.getHost()),
@@ -20,25 +23,26 @@ ServerConfig::ServerConfig(const ServerConfig& obj):
   cgi(obj.getCGI()),
   locations(obj.getLocationConfig()) {}
 
-ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
-  if (this != &obj) {
-    this->clientBodySize = obj.getClientBodySize();
-    this->timeout = obj.getTimeout();
-    this->root = obj.getRoot();
-    this->errorPage = obj.getErrorPage();
-    this->index = obj.getIndex();
-
-    this->port = obj.getPort();
-    this->host = obj.getHost();
-    this->serverName = obj.getServerName();
-    this->cgi = obj.getCGI();
-    this->locations = obj.getLocationConfig();
-  }
-  return *this;
-}
+//ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
+//  if (this != &obj) {
+//    this->clientBodySize = obj.getClientBodySize();
+//    this->session_timeout = obj.getSessionTimeout();
+//    this->timeout = obj.getTimeout();
+//    this->root = obj.getRoot();
+//    this->errorPage = obj.getErrorPage();
+//    this->index = obj.getIndex();
+//
+//    this->port = obj.getPort();
+//    this->host = obj.getHost();
+//    this->serverName = obj.getServerName();
+//    this->cgi = obj.getCGI();
+//    this->locations = obj.getLocationConfig();
+//  }
+//  return *this;
+//}
 
 const LocationConfig ServerConfig::findLocationConfig(std::string path) const {
-  int         pos;
+  size_t      pos;
   std::string origin = path;
   bool        end = false;
 
@@ -62,7 +66,7 @@ const LocationConfig ServerConfig::findLocationConfig(std::string path) const {
 }
 
 const LocationConfig& ServerConfig::findLocationConfigRoop(const LocationConfig& config, std::string path) const {
-  int         pos;
+  size_t      pos;
   std::string origin = path;
   bool        end = false;
 
@@ -86,6 +90,8 @@ const LocationConfig& ServerConfig::findLocationConfigRoop(const LocationConfig&
 }
 
 // getter
+//
+int ServerConfig::getSessionTimeout() const { return this->session_timeout; }
 
 int ServerConfig::getTimeout() const { return this->timeout; }
 
@@ -100,6 +106,8 @@ const std::map<std::string, std::string>& ServerConfig::getCGI() const { return 
 const std::vector<LocationConfig>& ServerConfig::getLocationConfig() const { return this->locations; }
 
 // setter
+//
+void ServerConfig::setSessionTimeout(int n) { this->session_timeout = n; }
 
 void ServerConfig::setTimeout(int n) { this->timeout = n; }
 

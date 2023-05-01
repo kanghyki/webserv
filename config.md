@@ -26,16 +26,21 @@ example) index hello.html;
 # Server
 ```
 1.
+session timeout [second(int)];
+default value) 600
+example) session_timeout 30;
+
+2.
 timeout [second(int)];
 default value) 60
 example) timeout 35;
 
-2.
+3.
 listen [host(ident)]:[port(int)];
 default value) 127.0.0.1:80
 example) listen 192.168.0.1:4242;
 
-3.
+4.
 server_name [path(ident)];
 default value) NONE
 example) server_name webserv.42.kr;

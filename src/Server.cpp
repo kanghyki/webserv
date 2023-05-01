@@ -5,15 +5,21 @@
  * -------------------------- Constructor --------------------------
  */
 
-Server::Server(ServerConfig config) : recvTable(MANAGE_FD_MAX), host(config.getHost()), port(config.getPort()), \
-                                     servFd(SOCK_CLOSED), fdMax(FD_CLOSED) {
-  this->servFd = socketInit();
-  socketaddrInit(this->host, this->port, this->in);
-  socketOpen(this->servFd, this->in);
-  fdSetInit(this->reads, this->servFd);
-  FD_ZERO(&this->writes);
-  this->fdMax = this->servFd;
-  this->config = config;
+Server::Server(ServerConfig config) :
+  recvTable(MANAGE_FD_MAX),
+  host(config.getHost()),
+  port(config.getPort()),
+  servFd(SOCK_CLOSED),
+  fdMax(FD_CLOSED),
+  config(config),
+  connection(config.getTimeout()),
+  sessionManager(config.getSessionTimeout()) {
+    this->servFd = socketInit();
+    socketaddrInit(this->host, this->port, this->in);
+    socketOpen(this->servFd, this->in);
+    fdSetInit(this->reads, this->servFd);
+    FD_ZERO(&this->writes);
+    this->fdMax = this->servFd;
 }
 
 /*
@@ -30,11 +36,11 @@ Server::~Server(void) {}
  * -------------------------- Getter -------------------------------
  */
 
-const int Server::getServFd(void) const {
+int Server::getServFd(void) const {
   return this->servFd;
 }
 
-const int Server::getFdMax(void) const {
+int Server::getFdMax(void) const {
   return this->fdMax;
 }
 
@@ -44,10 +50,6 @@ fd_set& Server::getReads(void) {
 
 fd_set& Server::getWrites(void) {
   return this->writes;
-}
-
-const std::map<int, time_t>& Server::getTimeRecord() const {
-  return this->timeout;
 }
 
 /*
@@ -98,54 +100,6 @@ inline void Server::fdSetInit(fd_set& fs, int fd) {
   FD_SET(fd, &fs);
 }
 
-void Server::removeData(int fd) {
-  this->recvTable[fd].data.clear();
-}
-
-void Server::removeTimeRecord(int fd) {
-  this->timeout.erase(fd);
-}
-
-bool Server::existsTimeRecord(int fd) {
-  if (this->timeout.find(fd) != this->timeout.end())
-    return true;
-  return false;
-}
-
-void Server::appendTimeRecord(int fd) {
-  time_t initTime;
-
-  time(&initTime);
-  this->timeout.insert(std::make_pair(fd, initTime));
-}
-
-// TODO: MUTIPLE CGI ? RESOURCE RECOVERY
-void Server::DisconnectTimeoutClient() {
-  const std::map<int, time_t>&  record = getTimeRecord();
-  std::vector<int>              removeList;
-
-  for (std::map<int, time_t>::const_iterator it = record.begin(); it != record.end(); ++it) {
-    time_t reqTime = it->second;
-    time_t curTime;
-
-    time(&curTime);
-    if (curTime - reqTime > this->config.getTimeout()) {
-      int fd = it->first;
-
-      // 408 error
-      FD_CLR(fd, &this->getReads());
-      close(fd);
-      std::cout << "timeout client: " << fd << std::endl;
-      removeList.push_back(fd);
-    }
-  }
-
-  for (int i = 0; i < removeList.size(); ++i) {
-    removeTimeRecord(removeList[i]);
-    removeData(removeList[i]);
-  }
-}
-
 void Server::run(void) {
   struct timeval t;
   t.tv_sec = 1;
@@ -158,7 +112,11 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-    DisconnectTimeoutClient();
+    std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
+    for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
+      std::cout << "timeout: " << timeout_fd_list[i] << std::endl;
+      closeSocket(timeout_fd_list[i]);
+    }
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
@@ -186,16 +144,15 @@ int Server::acceptConnect() {
   if (this->getFdMax() < fd)
     this->setFdMax(fd);
 
+  if (this->connection.isRegistered(fd) == false)
+    this->connection.add(fd);
+
   return fd;
 }
 
 void Server::receiveData(int fd) {
   char buf[BUF_SIZE + 1];
   int recv_size;
-  int DONE = 0;
-
-  if (existsTimeRecord(fd) == false)
-    appendTimeRecord(fd);
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   std::cout << "recv_size" << recv_size << std::endl;
@@ -249,8 +206,8 @@ void Server::receiveDone(int fd) {
   std::cout << "@---" << std::endl;
 
   try {
-    HttpRequest req(getData(fd), this->config, this->session);
-    if (req.isCGI()) 
+    HttpRequest req(getData(fd), this->config);
+    if (req.isCGI())
       res = Http::executeCGI(req);
     else
       res = Http::processing(req);
@@ -269,20 +226,21 @@ void Server::sendData(int fd, const std::string& data) {
     std::cout << "[ERROR] send failed\n";
   else
     std::cout << "[Log] send data\n";
-  removeTimeRecord(fd);
 }
 
 void Server::closeSocket(int fd) {
   std::cout << "[Log] close\n";
   FD_CLR(fd, &this->getWrites());
   close(fd);
+  this->connection.remove(fd);
+  clearData(fd);
 }
 
 const std::string Server::getData(int fd) const {
   return this->recvTable[fd].data;
 }
 
-const int Server::getContentLength(int fd) const {
+size_t Server::getContentLength(size_t fd) const {
   return this->recvTable[fd].contentLength;
 }
 
@@ -302,7 +260,7 @@ void Server::clearContentLength(int fd) {
   this->recvTable[fd].contentLength = -1;
 }
 
-const size_t Server::getHeaderPos(int fd) const {
+size_t Server::getHeaderPos(int fd) const {
   return this->recvTable[fd].headerPos;
 }
 
@@ -321,7 +279,7 @@ void Server::clearReceived(int fd) {
   clearStatus(fd);
 }
 
-const int Server::getStatus(int fd) const {
+int Server::getStatus(int fd) const {
   return this->recvTable[fd].status;
 }
 

@@ -76,14 +76,14 @@ bool Lexer::isWord(char ch) const {
 }
 
 bool Lexer::isWordNumber(const std::string &s) const {
-  for (int i = 0; i < s.length(); ++i)
+  for (size_t i = 0; i < s.length(); ++i)
     if (!std::isdigit(s[i]))
       return false;
   return true;
 }
 
 std::string Lexer::lookupIdent(std::string ident) {
-  for (int i = 0; i < Token::KEYWORD_SIZE; ++i)
+  for (size_t i = 0; i < Token::KEYWORD_SIZE; ++i)
     if (Token::keyword[i][Token::IDENT_IDX] == ident)
       return Token::keyword[i][Token::TYPE_IDX];
   return Token::IDENT;

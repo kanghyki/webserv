@@ -5,30 +5,26 @@ HttpDataFecther::HttpDataFecther(const HttpRequest& req): req(req) {}
 HttpDataFecther::~HttpDataFecther() {}
 
 std::string HttpDataFecther::fetch() const throw(HttpStatus) {
-  std::string data;
+  std::string _data;
+  struct stat _stat;
 
-  std::cout << "relative path: " << this->req.getRelativePath() << std::endl;
+  if (stat(this->req.getRelativePath().c_str(), &_stat) == -1)
+    throw (NOT_FOUND);
 
-  if (this->req.getLocationConfig().isAutoIndex()) {
-    std::cout << "autoIndex : true" << std::endl;
-    DIR* dir = opendir(this->req.getRelativePath().c_str());
-    if (dir) {
-      std::cout << "@is dir" << std::endl;
-      closedir(dir);
-      data = DirectoryList::generate(this->req);
-    }
-    else {
-      std::cout << "@is file" << std::endl;
-      data = getData();
-    }
+  if (S_ISDIR(_stat.st_mode)) {
+    if (this->req.getLocationConfig().isAutoindex())
+      _data = autoindex();
+    else if (this->req.getLocationConfig().getIndex() != "")
+      _data = readFile("." + this->req.getLocationConfig().getIndex());
+    else
+      throw (FORBIDDEN);
   }
-  else {
-    std::cout << "autoIndex : false" << std::endl;
-    // FIXME :: 폴더 읽어도 에러 안남.., 데이터는 0 임
-    data = getData();
-  }
+  else if (S_ISREG(_stat.st_mode))
+    _data = getData();
+  else
+    throw (FORBIDDEN);
 
-  return data;
+  return _data;
 }
 
 std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus) {
@@ -45,4 +41,48 @@ std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus)
 
 const std::string HttpDataFecther::getData(void) const throw(HttpStatus) {
   return readFile(this->req.getRelativePath());
+}
+
+std::string HttpDataFecther::autoindex() const throw(HttpStatus) {
+  std::string     ret;
+  DIR*            dir;
+  struct dirent*  ent;
+
+  if ((dir = opendir(req.getRelativePath().c_str())) == NULL) {
+    if (errno == ENOTDIR)
+      throw (FORBIDDEN);
+    if (errno == ENOENT)
+      throw (NOT_FOUND);
+    else
+      throw (INTERNAL_SERVER_ERROR);
+  }
+  ret = "<!DOCTYPE html>\
+    <html>\
+    <head>\
+    <title>Index of " + req.getPath() + "</title>\
+    </head>\
+    <style>\
+    table { width: 300px; }\
+    th { height: 17px; }\
+    </style>\
+    <body>\
+    <h1>Index of " + req.getPath() + "</h1>\
+    <table>";
+
+  while ((ent = readdir(dir)) != NULL) {
+    std::string name(ent->d_name);
+    if (name == ".")
+      continue;
+    ret += "<tr><td>";
+    if (ent->d_type == DT_DIR) ret += "<a href=" + name + "/>" + name + "/<a></td><td align=\"right\">directory";
+    else if (ent->d_type == DT_REG) ret += "<a href=" + name + ">" + name + "<a></td><td align=\"right\">file";
+    ret += "</td></tr>\n";
+  }
+  ret += "</table>\
+          </body>\
+          </html>";
+
+  closedir(dir);
+
+  return ret;
 }

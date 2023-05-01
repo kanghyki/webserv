@@ -26,6 +26,7 @@ ServerConfig ConfigParser::parseServer() {
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
+    else if (curToken().is(Token::SESSION_TIMEOUT)) parseSessionTimeout(conf);
     else if (curToken().is(Token::TIMEOUT)) parseTimeout(conf);
     else if (curToken().is(Token::LISTEN)) parseListen(conf);
     else if (curToken().is(Token::SERVER_NAME)) parseServerName(conf);
@@ -48,7 +49,7 @@ LocationConfig ConfigParser::parseLocation(ServerConfig& serverConf) {
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
-    else if (curToken().is(Token::AUTOINDEX)) parseAutoIndex(conf);
+    else if (curToken().is(Token::AUTOINDEX)) parseAutoindex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
     else throwBadSyntax();
   }
@@ -68,7 +69,7 @@ LocationConfig ConfigParser::parseLocation(LocationConfig& locationConf) {
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
-    else if (curToken().is(Token::AUTOINDEX)) parseAutoIndex(conf);
+    else if (curToken().is(Token::AUTOINDEX)) parseAutoindex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
     else throwBadSyntax();
   }
@@ -87,6 +88,13 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
 // server
 // server
 // server
+
+// session_timeout [second(int)];
+void ConfigParser::parseSessionTimeout(ServerConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setSessionTimeout(atoi(curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
+}
 
 // timeout [second(int)];
 void ConfigParser::parseTimeout(ServerConfig& conf) {
@@ -146,10 +154,10 @@ void ConfigParser::parseCGI(ServerConfig& conf) {
 }
 
 // autoindex [on(ident)/off(ident)]
-void ConfigParser::parseAutoIndex(LocationConfig& conf) {
+void ConfigParser::parseAutoindex(LocationConfig& conf) {
   expectNextToken(Token::IDENT);
-  if (curToken().getLiteral() == "on") conf.setAutoIndex(true);
-  else if (curToken().getLiteral() == "off") conf.setAutoIndex(false);
+  if (curToken().getLiteral() == "on") conf.setAutoindex(true);
+  else if (curToken().getLiteral() == "off") conf.setAutoindex(false);
   else throw std::runtime_error("autoindex error");
   expectNextToken(Token::SEMICOLON);
 }
@@ -186,7 +194,7 @@ void ConfigParser::parseErrorPage(CommonConfig& conf) {
 
   expectNextToken(Token::IDENT);
 
-  for (int i = 0; i < statusList.size(); ++i)
+  for (size_t i = 0; i < statusList.size(); ++i)
     conf.addErrorPage(statusList[i], curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }

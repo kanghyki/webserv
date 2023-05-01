@@ -1,8 +1,10 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include "./config/ServerConfig.hpp"
+# include "./Connection.hpp"
+# include "./SessionManager.hpp"
 # include "./Util.hpp"
+# include "./config/ServerConfig.hpp"
 # include "./http/HttpRequest.hpp"
 # include "./http/HttpResponse.hpp"
 # include "./http/Http.hpp"
@@ -23,7 +25,7 @@ class Server {
     Server(ServerConfig config);
     ~Server(void);
 
-    const int getFdMax(void) const;
+    int getFdMax(void) const;
     void setFdMax(int fdMax);
 
     void run();
@@ -39,7 +41,7 @@ class Server {
 
     struct received {
       std::string data;
-      int         contentLength;
+      size_t      contentLength;
       size_t      headerPos;
       int         status;
     };
@@ -64,7 +66,7 @@ class Server {
     fd_set writes;
     sock in;
 
-    const int getServFd(void) const;
+    int getServFd(void) const;
     fd_set& getReads(void);
     fd_set& getWrites(void);
 
@@ -82,9 +84,9 @@ class Server {
     void receiveDone(int fd);
 
     const std::string getData(int fd) const;
-    const int         getContentLength(int fd) const;
-    const size_t      getHeaderPos(int fd) const;
-    const int         getStatus(int fd) const;
+    size_t            getContentLength(size_t fd) const;
+    size_t            getHeaderPos(int fd) const;
+    int               getStatus(int fd) const;
 
     void              addData(int fd, const std::string& data);
     void              setContentLength(int fd, int len);
@@ -101,17 +103,9 @@ class Server {
     int               parseContentLength(int fd, size_t start);
     bool              bodyRecvDone(int fd);
 
-    std::map<int, time_t> timeout;
-    const std::map<int, time_t>& getTimeRecord() const;
-    void removeData(int fd);
-    void removeTimeRecord(int fd);
-    bool existsTimeRecord(int fd);
-    void appendTimeRecord(int fd);
-    void DisconnectTimeoutClient();
-
-    std::map<std::string, time_t> session;
-
-    ServerConfig config;
+    ServerConfig      config;
+    Connection        connection;
+    SessionManager    sessionManager;
 
   public:
     class InitException : public std::exception {

@@ -31,6 +31,7 @@ class ConfigParser {
     void                      parseCommon(CommonConfig& conf);
 
     // server
+    void                      parseSessionTimeout(ServerConfig& conf);
     void                      parseTimeout(ServerConfig& conf);
     void                      parseListen(ServerConfig& conf);
     void                      parseServerName(ServerConfig& conf);
@@ -38,7 +39,7 @@ class ConfigParser {
     // location
     void                      parseAlias(LocationConfig& conf);
     void                      parseLimitExcept(LocationConfig& conf);
-    void                      parseAutoIndex(LocationConfig& conf);
+    void                      parseAutoindex(LocationConfig& conf);
     void                      parseReturn(LocationConfig& conf);
     // common
     void                      parseRoot(CommonConfig& conf);

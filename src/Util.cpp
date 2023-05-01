@@ -156,7 +156,7 @@ namespace util {
     std::string value = "";
     int pos;
 
-    if ((pos = line.find(":")) != std::string::npos) {
+    if ((pos = line.find(":")) != -1) {
       field = util::toLowerStr(util::trimSpace(line.substr(0, pos)));
       value = util::trimSpace(line.substr(pos + 1));
     }

@@ -9,7 +9,7 @@
 
 CGI::CGI(const HttpRequest& req) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()), pathInfo(req.getPathInfo()) {
   if (!req.getBody().empty()) this->body = req.getBody();
-  this->argv = this->getArgv(req);
+  this->argv = this->getArgv();
   this->env = this->envMapToEnv(this->getEnvMap(req));
 }
 
@@ -80,7 +80,7 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   return ret;
 }
 
-char** CGI::getArgv(const HttpRequest& req) const {
+char** CGI::getArgv() const {
   char** ret;
 
   ret = (char**)malloc(sizeof(char*) * 3);

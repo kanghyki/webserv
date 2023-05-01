@@ -1,9 +1,8 @@
 #include "./HttpRequest.hpp"
 
 const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
-const std::string HttpRequest::SESSION_KEY = "_webserv_session";
 
-HttpRequest::HttpRequest(std::string request, const ServerConfig& sc, std::map<std::string, time_t>& session) : cgi(false), session(session) {
+HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(false) {
   std::pair<std::string, std::string> p = util::splitHeaderBody(request, CRLF + CRLF);
 
   parseHeader(p.first);
@@ -26,10 +25,7 @@ HttpRequest::HttpRequest(const HttpRequest& obj):
   cgi(obj.isCGI()),
   scriptPath(obj.getScriptPath()),
   cgiPath(obj.getCGIPath()),
-  pathInfo(obj.getPathInfo()),
-  cookieMap(obj.cookieMap),
-  session(obj.getSession())
-{}
+  pathInfo(obj.getPathInfo()) {}
 
 HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
   if (this != &obj) {
@@ -45,8 +41,6 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
     this->scriptPath = obj.scriptPath;
     this->cgiPath = obj.getCGIPath();
     this->pathInfo = obj.pathInfo;
-    this->cookieMap = obj.cookieMap;
-    this->session = obj.session;
   }
   return *this;
 }
@@ -64,7 +58,6 @@ void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
     std::pair<std::string, std::string> ret = splitField(*it);
     this->field.insert(ret);
   }
-  parseCookie(getField("Cookie"));
 }
 
 void HttpRequest::parseStatusLine(const std::string& line) {
@@ -76,56 +69,21 @@ void HttpRequest::parseStatusLine(const std::string& line) {
   setVersion(vs[2]);
 }
 
-void HttpRequest::parseCookie(const std::string& cookie) {
-  std::vector<std::string> vs;
-
-  vs = util::split(cookie, ';');
-  for (std::vector<std::string>::iterator it = vs.begin(); it != vs.end(); ++it) {
-    std::vector<std::string> vvs = util::split(*it, '=');
-
-    std::string key;
-    std::string value;
-
-    key = util::trimSpace(vvs[0]);
-    value = util::trimSpace(vvs[1]);
-    this->cookieMap.insert(std::make_pair(key, value));
-  }
-}
-
-std::string HttpRequest::generateRandomString(int ch)
-{
-  srand(time(0));
-  std::string alpha = "abcdefghijklmnopqrstuvwx";
-  std::string result = "";
-  for (int i = 0; i<ch; i++)
-    result = result + alpha[rand() % 26];
-
-  return result;
-}
-
-HttpRequest::SessionStatus HttpRequest::getSessionStatus() const {
-  std::map<std::string, std::string>::const_iterator cookieIter = this->cookieMap.find(SESSION_KEY);
-  if (cookieIter == cookieMap.end()) return COOKIE_NOT_EXIST;
-
-  std::map<std::string, time_t>::iterator sessionIter = getSession().find(cookieIter->second);
-  if (sessionIter == this->session.end()) return SESSION_NOT_EXIST;
-
-  time_t curTime = time(0);
-  int EXPIRED_TIME = 10;
-  if (curTime - sessionIter->second > EXPIRED_TIME) return EXPIRED;
-
-  return NORMAL;
-}
-
-std::string HttpRequest::getSessionKey() const {
-  std::map<std::string, std::string> cookieMap = this->cookieMap;
-
-  return cookieMap.at(SESSION_KEY);
-}
-
-std::map<std::string, time_t>& HttpRequest::getSession() const {
-  return this->session;
-}
+//void HttpRequest::parseCookie(const std::string& cookie) {
+//  std::vector<std::string> vs;
+//
+//  vs = util::split(cookie, ';');
+//  for (std::vector<std::string>::iterator it = vs.begin(); it != vs.end(); ++it) {
+//    std::vector<std::string> vvs = util::split(*it, '=');
+//
+//    std::string key;
+//    std::string value;
+//
+//    key = util::trimSpace(vvs[0]);
+//    value = util::trimSpace(vvs[1]);
+//    this->cookieMap.insert(std::make_pair(key, value));
+//  }
+//}
 
 void HttpRequest::validateMethod(const std::string &method) {
   if (method != request_method::GET &&
@@ -137,12 +95,11 @@ void HttpRequest::validateMethod(const std::string &method) {
 }
 
 void HttpRequest::validateURI(const std::string &path) {
-  int i;
+  size_t i;
 
   i = 0;
   if (path.length() > URL_MAX_LENGTH)     throw URI_TOO_LONG;
   if (path[i++] != '/')                   throw BAD_REQUEST;
-
   while (i < path.length()) {
     if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=-", path[i]))
       throw BAD_REQUEST;
@@ -165,7 +122,7 @@ void HttpRequest::validateVersion(const std::string &version) {
 std::pair<std::string, std::string> HttpRequest::splitField(const std::string& line) {
   std::string field;
   std::string value;
-  int pos;
+  size_t pos;
 
   if ((pos = line.find(":")) == std::string::npos) throw BAD_REQUEST;
   field = util::toLowerStr(util::trimSpace(line.substr(0, pos)));
@@ -199,9 +156,17 @@ std::string HttpRequest::getMethod() const { return this->method; }
 std::string HttpRequest::getPath() const { return this->path; }
 
 std::string HttpRequest::getRelativePath() const {
-  if (getLocationConfig().getRoot() == "/")
+  std::string root;
+
+  if (getLocationConfig().getAlias() != "") 
+    root = getLocationConfig().getAlias();
+  else
+    root = getLocationConfig().getRoot();
+
+  if (root == "/")
     return "." + this->path;
-  return "." + getLocationConfig().getRoot() + this->path;
+
+  return "." + root + this->path;
 }
 
 std::string HttpRequest::getQueryString() const { return this->queryString; }
@@ -238,7 +203,7 @@ const ServerConfig& HttpRequest::getServerConfig() const {
   return this->serverConfig;
 }
 
-const bool HttpRequest::isCGI() const {
+bool HttpRequest::isCGI() const {
   return this->cgi;
 }
 
@@ -263,7 +228,7 @@ void  HttpRequest::setBody(const std::string& body) { this->body = body; }
 void HttpRequest::setURI(const std::string& URI) {
   validateURI(URI);
 
-  int pos = (URI.find('?'));
+  size_t pos = (URI.find('?'));
   this->path = URI.substr(0, pos);
   if (pos != std::string::npos) this->queryString = URI.substr(pos + 1);
 }

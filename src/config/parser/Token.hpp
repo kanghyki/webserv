@@ -45,6 +45,7 @@ class Token {
     static const std::string  LIMIT_EXCEPT;
     static const std::string  AUTOINDEX;
     static const std::string  RETURN;
+    static const std::string  SESSION_TIMEOUT;
     static const std::string  TIMEOUT;
     static const std::string  CGI;
 

@@ -9,35 +9,15 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
 
-  HttpRequest::SessionStatus ss = req.getSessionStatus();
-
-  if (req.getPath() == "./favicon.ico") {
-  }
-  else if (ss == HttpRequest::EXPIRED) {
-    req.getSession().erase(req.getSessionKey());
-    ret.setStatusCode(FORBIDDEN);
-    ret.addHeader(header_field::CONTENT_TYPE, "text/html");
-    ret.setBody("<html><h1>Session expired!</h1></html>");
-    return ret;
-  }
-  else if (ss == HttpRequest::COOKIE_NOT_EXIST) {
-    std::string random = HttpRequest::generateRandomString(15);
-    req.getSession().insert(std::make_pair(random, time(0)));
-    ret.setStatusCode(FORBIDDEN);
-    ret.addHeader(header_field::CONTENT_TYPE, "text/html");
-    ret.addHeader("Set-Cookie", HttpRequest::SESSION_KEY + "=" + random);
-    ret.setBody("<html><h1>No cookie!</h1>\nnew cookie : " + random + "</html>");
-    return ret;
-  }
-  else if (ss == HttpRequest::SESSION_NOT_EXIST) {
-    std::string random = HttpRequest::generateRandomString(15);
-    req.getSession().insert(std::make_pair(random, time(0)));
-    ret.setStatusCode(FORBIDDEN);
-    ret.addHeader(header_field::CONTENT_TYPE, "text/html");
-    ret.addHeader("Set-Cookie", "_webserv_session=" + random);
-    ret.setBody("<html><h1>No session!</h1>\nnew cookie : " + random + "</html>");
-    return ret;
-  }
+  if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientBodySize()))
+    throw (PAYLOAD_TOO_LARGE);
+  if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
+    throw (METHOD_NOT_ALLOWED);
+  if (req.getMethod() != request_method::GET &&
+      req.getMethod() != request_method::POST &&
+      req.getMethod() != request_method::DELETE &&
+      req.getMethod() != request_method::PUT)
+    throw (METHOD_NOT_ALLOWED);
 
   std::cout << req.getRelativePath() << std::endl;
   try {
@@ -154,26 +134,40 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
 }
 
 HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config) {
-  std::string                                 data;
-  std::map<int, std::string>                  m = config.getErrorPage();
-  std::map<int, std::string>::const_iterator  it;
-  std::string                                 path;
-  HttpResponse                                res;
+  HttpResponse  res;
+  std::string   data;
+  std::string   path;
 
   std::cout << "Http error occured: " << status << std::endl;
-  if ((it = m.find(status)) != m.end()) {
-    path = "." + it->second;
+  std::string errorPagePath = config.getErrorPage()[status];
+  if (errorPagePath.empty())
+    data = defaultErrorPage(status);
+  else {
+    path = "." + errorPagePath;
     try {
       data = HttpDataFecther::readFile(path);
     } catch (HttpStatus status) {
-      std::cout << "ERROR OF ERROR" << std::endl;
+      data = defaultErrorPage(status);
     }
   }
 
-  // FIXME: erorr of error?
-  res.setStatusCode(CREATED);
+  res.setStatusCode(status);
   res.addHeader(header_field::CONTENT_TYPE, "text/html");
   res.setBody(data);
 
   return res;
+}
+
+std::string Http::defaultErrorPage(HttpStatus s) {
+  std::string ret = "<html><head><title>"\
+                     + util::itoa(s) + " " + getStatusText(s)\
+                     + "</title></head>\
+                     <body>\
+                     <center><h1>"\
+                     + util::itoa(s) + " " + getStatusText(s)\
+                     + "</h1></center>\
+                     <hr><center>webserv/1.0.0</center>\
+                     </body>\
+                     </html>";
+  return ret;
 }

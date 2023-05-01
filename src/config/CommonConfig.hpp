@@ -10,7 +10,7 @@ class CommonConfig {
     CommonConfig();
     CommonConfig(const CommonConfig& obj);
     virtual ~CommonConfig();
-    CommonConfig&               operator=(const CommonConfig& obj);
+//    CommonConfig&               operator=(const CommonConfig& obj);
 
     int                         getClientBodySize() const;
     std::string                 getRoot() const;
