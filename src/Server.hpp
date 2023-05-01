@@ -9,10 +9,10 @@
 # include "./http/HttpResponse.hpp"
 # include "./http/Http.hpp"
 # include "./http/HttpStatus.hpp"
+# include "./Logger.hpp"
 
 # include <arpa/inet.h>
 # include <fcntl.h>
-# include <iostream>
 # include <sys/socket.h>
 # include <time.h>
 # include <unistd.h>

@@ -19,7 +19,10 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
       req.getMethod() != request_method::PUT)
     throw (METHOD_NOT_ALLOWED);
 
-  std::cout << req.getRelativePath() << std::endl;
+  Log::cout() << DEBUG << "Http -------------\n\
+    Request Path: " << req.getPath() << "\n\
+    Method: " << req.getMethod() << "\n";
+
   try {
     if (req.getMethod() == request_method::GET) ret = getMethod(req);
     else if (req.getMethod() == request_method::POST) ret = postMethod(req);
@@ -65,7 +68,6 @@ HttpResponse Http::executeCGI(const HttpRequest& req) throw (HttpStatus) {
 HttpResponse Http::getMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  std::cout << "GET" << std::endl;
   HttpDataFecther fetcher(req);
   std::string data = fetcher.fetch();
 
@@ -79,7 +81,6 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  std::cout << "POST" << std::endl;
   if (access(req.getRelativePath().c_str(), F_OK) == 0) throw BAD_REQUEST;
 
   std::ofstream out(req.getRelativePath(), std::ofstream::out);
@@ -98,7 +99,6 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
 HttpResponse Http::deleteMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  std::cout << "DELETE" << std::endl;
   DIR* dir = opendir(req.getRelativePath().c_str());
   if (dir) {
     closedir(dir);
@@ -114,7 +114,6 @@ HttpResponse Http::deleteMethod(const HttpRequest& req) {
 HttpResponse Http::putMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  std::cout << "PUT" << std::endl;
   DIR* dir = opendir(req.getRelativePath().c_str());
   if (dir) {
     closedir(dir);
@@ -138,7 +137,7 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   std::string   data;
   std::string   path;
 
-  std::cout << "Http error occured: " << status << std::endl;
+  Log::cout() << "Http error occured: " << status << "\n";
   std::string errorPagePath = config.getErrorPage()[status];
   if (errorPagePath.empty())
     data = defaultErrorPage(status);

@@ -2,7 +2,7 @@
 #include "./Server.hpp"
 #include "./config/parser/ConfigParser.hpp"
 #include "./config/ServerConfig.hpp"
-#include "./Log.hpp"
+#include "./Logger.hpp"
 
 const std::string TEAM_MARK = "\
   ███    ██  ██████  ██ ███    ██ ██   ██     ███    ███ ██ ███    ██ ██    ██ ███████\n\
@@ -18,18 +18,15 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  Log::cout() << DEBUG << "hello";
-  Log::cout() << WARNING << "hello";
-  Log::cout() << ERROR << "hello";
-  Log::cout() << DEBUG << "hello";
-
   try {
     ConfigParser p;
     ServerConfig a = p.parse(argv[1]);
+    Log::cout() << INFO << "Config parsing ok\n";
     Server server(a);
+    Log::cout() << INFO << "Server setup done\n";
     server.run();
   } catch (std::exception &e) {
-    std::cerr << "Error: " << e.what() << std::endl;
+    Log::cout() << ERROR << e.what() << "\n";
   }
 
   return EXIT_SUCCESS;

@@ -7,6 +7,7 @@
 # include "./HttpResponse.hpp"
 # include "../CGI.hpp"
 # include "../config/ServerConfig.hpp"
+# include "../Logger.hpp"
 
 # include <vector>
 # include <utility>
