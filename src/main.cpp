@@ -2,6 +2,7 @@
 #include "./Server.hpp"
 #include "./config/parser/ConfigParser.hpp"
 #include "./config/ServerConfig.hpp"
+#include "./Log.hpp"
 
 const std::string TEAM_MARK = "\
   ███    ██  ██████  ██ ███    ██ ██   ██     ███    ███ ██ ███    ██ ██    ██ ███████\n\
@@ -16,6 +17,11 @@ int main(int argc, char **argv) {
     std::cerr << "Error: argument" << std::endl;
     return EXIT_FAILURE;
   }
+
+  Log::cout() << DEBUG << "hello";
+  Log::cout() << WARNING << "hello";
+  Log::cout() << ERROR << "hello";
+  Log::cout() << DEBUG << "hello";
 
   try {
     ConfigParser p;
