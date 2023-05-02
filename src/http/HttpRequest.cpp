@@ -162,7 +162,7 @@ std::string HttpRequest::getRelativePath() const {
   std::string loc_path = getLocationConfig().getPath();
   size_t      loc_path_len = getLocationConfig().getPath().length();
 
-  if (req_path.find(loc_path) == 0) {
+  if (req_path.find(loc_path) != std::string::npos) {
 
     if (req_path.length() == loc_path_len || req_path[loc_path_len] == '/') {
       req_path.replace(req_path.find(loc_path), loc_path_len, root_path);
