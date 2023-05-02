@@ -2,6 +2,7 @@
 # define SERVER_HPP
 
 # include "./Connection.hpp"
+# include "./SessionManager.hpp"
 # include "./Util.hpp"
 # include "./config/Config.hpp"
 # include "./http/HttpRequest.hpp"
@@ -100,6 +101,7 @@ class Server {
 
     const Config&     config;
 //    Connection        connection;
+    SessionManager    sessionManager;
 
   public:
     class InitException : public std::exception {

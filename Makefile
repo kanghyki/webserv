@@ -18,6 +18,7 @@ HTTP_DIR			= ./src/http
 
 SRCS			=	main.cpp\
 						Server.cpp\
+						SessionManager.cpp\
 						Connection.cpp\
 						Config.cpp\
 						CommonConfig.cpp\

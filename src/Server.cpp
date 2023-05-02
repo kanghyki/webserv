@@ -7,7 +7,8 @@
 Server::Server(Config& config) :
   recvTable(MANAGE_FD_MAX),
   fdMax(FD_CLOSED),
-  config(config) {
+  config(config),
+  sessionManager() {
     FD_ZERO(&this->reads);
     FD_ZERO(&this->writes);
     FD_ZERO(&this->listens);
