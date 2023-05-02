@@ -86,7 +86,7 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
   inet_pton(AF_INET, host.c_str(), &(in.sin_addr));
   in.sin_port = htons(port);
 
-  Log::cout() << INFO << "Preparing... Host=[" << inet_ntoa(in.sin_addr) << "] Port=[" << ntohs(in.sin_port) << "]\n";
+  log::info << "Preparing... Host=[" << inet_ntoa(in.sin_addr) << "] Port=[" << ntohs(in.sin_port) << "]" << log::endl;
 }
 
 inline void Server::socketOpen(int servFd, sock& in) {
@@ -95,7 +95,7 @@ inline void Server::socketOpen(int servFd, sock& in) {
   if (listen(servFd, MANAGE_FD_MAX) == -1)
     throw Server::ListenException();
 
-  Log::cout() << INFO << "Listening... \"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n";
+  log::info << "Listening... \"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"" << log::endl;
 }
 
 inline void Server::fdSetInit(fd_set& fs, int fd) {
@@ -108,7 +108,7 @@ void Server::run(void) {
   t.tv_sec = 1;
   t.tv_usec = 0;
 
-  Log::cout() << INFO << "Server is running...\n";
+  log::info << "Server is running..." << log::endl;
   while (1) {
     fd_set readsCpy = this->getReads();
     fd_set writesCpy = this->getWrites();
@@ -118,7 +118,7 @@ void Server::run(void) {
 
 //    std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
 //    for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
-//      Log::cout() << INFO << "Client(" << timeout_fd_list[i] << ") timeout, closed\n";
+//      log::cout << INFO << "Client(" << timeout_fd_list[i] << ") timeout, closed\n";
 //
 //      FD_CLR(timeout_fd_list[i], &this->getReads());
 //      FD_CLR(timeout_fd_list[i], &this->getWrites());
@@ -151,7 +151,7 @@ int Server::acceptConnect(int server_fd) {
   size = sizeof(client_addr);
   int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &size);
   if (client_fd == -1 || fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1) {
-    Log::cout() << WARNING << "connection failed\n";
+    log::warning << "connection failed" << log::endl;
     return FD_CLOSED;
   }
 
@@ -162,7 +162,7 @@ int Server::acceptConnect(int server_fd) {
 
 //  if (this->connection.isRegistered(fd) == false)
 //    this->connection.add(fd);
-  Log::cout() << INFO << "Accept "<< inet_ntoa(client_addr.sin_addr) << ", create client(" << client_fd << ")\n";
+  log::info << "Accept " << inet_ntoa(client_addr.sin_addr) << ", create client(" << client_fd << ")" << log::endl;
 
   return client_fd;
 }
@@ -173,7 +173,7 @@ void Server::receiveData(int fd) {
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   if (recv_size < 0) {
-    Log::cout() << WARNING << "recv failed\n";
+    log::warning << "recv failed" << log::endl;
     throw (RecvException());
   }
   else if (recv_size == 0) {
@@ -217,12 +217,12 @@ void Server::receiveDone(int fd) {
   HttpResponse res;
 
   FD_CLR(fd, &this->getReads());
-  Log::cout() << DEBUG << "this->data[" << fd << "]\n" << this->recvTable[fd].data;
+  log::debug << "this->data[" << fd << "]\n" << this->recvTable[fd].data << log::endl;
 
   try {
     HttpRequest req(getData(fd), this->config.findServerConfig(""));
     clearReceived(fd);
-    Log::cout() << INFO << "Request from " << fd << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"\n";
+    log::info << "Request from " << fd << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isCGI())
       res = Http::executeCGI(req);
     else
@@ -231,14 +231,14 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(status, this->config.findServerConfig(""));
   }
 
-  Log::cout() << INFO << "Response to " << fd << ", Status=" << res.getStatusCode() << "\n";
+  log::info << "Response to " << fd <<  ", Status=" << res.getStatusCode() << log::endl;
   sendData(fd, res.toString());
 }
 
 void Server::sendData(int fd, const std::string& data) {
   FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
-    Log::cout() << WARNING << "send failed\n";
+    log::warning << "send failed" << log::endl;
 }
 
 void Server::closeSocket(int fd) {
@@ -246,7 +246,7 @@ void Server::closeSocket(int fd) {
   if (close(fd) == -1) throw (CloseException());
   clearReceived(fd);
 //  this->connection.remove(fd);
-  Log::cout() << INFO << "Closed client(" << fd << ")\n";
+  log::info << "Closed client(" << fd << ")" << log::endl;
 }
 
 const std::string Server::getData(int fd) const {

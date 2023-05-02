@@ -9,7 +9,7 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
 
-  Log::cout() << DEBUG << "Relative path: " << req.getRelativePath() << "\n";
+  log::debug << "Relative path: " + req.getRelativePath();
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientBodySize()))
     throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
@@ -20,9 +20,9 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
       req.getMethod() != request_method::PUT)
     throw (METHOD_NOT_ALLOWED);
 
-  Log::cout() << DEBUG << "Http -------------\n\
-    Request Path: " << req.getPath() << "\n\
-    Method: " << req.getMethod() << "\n";
+  log::debug << "Http -------------\n\
+Request Path: " << req.getPath() << "\n\
+Method: " << req.getMethod() << log::endl;
 
   try {
     if (req.getMethod() == request_method::GET) ret = getMethod(req);
@@ -57,7 +57,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req) throw (HttpStatus) {
   } catch (std::exception& e) {}
 
   ret.setStatusCode(OK);
-  if (!ct.empty()) 
+  if (!ct.empty())
     ret.addHeader(header_field::CONTENT_TYPE, ct);
   else
     ret.addHeader(header_field::CONTENT_TYPE, util::itoa(body.length()));
@@ -138,7 +138,7 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   std::string   data;
   std::string   path;
 
-  Log::cout() << "Http error occured: " << status << "\n";
+  log::error << "Http error occured: " << status << log::endl;
   std::string errorPagePath = config.getErrorPage()[status];
   if (errorPagePath.empty())
     data = defaultErrorPage(status);

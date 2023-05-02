@@ -2,6 +2,7 @@
 # define LOGGER_HPP
 
 # include <iostream>
+# include "./Util.hpp"
 
 # define RESET "\033[0;0m"
 # define CYAN "\e[0;36m"    // TIMESTAMP
@@ -16,60 +17,66 @@
 # define BOLD_YELLOW "\e[1;33m"  // WARNING
 # define BOLD_WHITE "\e[1;37m"      // DEBUG
 
-enum logger_level {
-  INFO,
-  WARNING,
-  ERROR,
-  DEBUG,
-  UNKNOWN
+namespace log {
+
+  extern std::string endl;
+  std::string timestamp();
+
+  class Error {
+    public:
+      Error& operator<<(std::string s);
+      Error& operator<<(int s);
+      Error& operator<<(size_t s);
+      Error& operator<<(unsigned int s);
+      Error& operator<<(short s);
+      Error& operator<<(unsigned short s);
+
+    private:
+      std::string buf;
+  };
+  class Warning {
+    public:
+      Warning& operator<<(std::string s);
+      Warning& operator<<(int s);
+      Warning& operator<<(size_t s);
+      Warning& operator<<(unsigned int s);
+      Warning& operator<<(short s);
+      Warning& operator<<(unsigned short s);
+
+    private:
+      std::string buf;
+  };
+  class Info {
+    public:
+      Info& operator<<(std::string s);
+      Info& operator<<(int s);
+      Info& operator<<(size_t s);
+      Info& operator<<(unsigned int s);
+      Info& operator<<(short s);
+      Info& operator<<(unsigned short s);
+
+    private:
+      std::string buf;
+  };
+  class Debug {
+    public:
+      Debug& operator<<(std::string s);
+      Debug& operator<<(int s);
+      Debug& operator<<(size_t s);
+      Debug& operator<<(unsigned int s);
+      Debug& operator<<(short s);
+      Debug& operator<<(unsigned short s);
+
+    private:
+      std::string buf;
+  };
+
+  extern Info info;
+  extern Error error;
+  extern Warning warning;
+  extern Debug debug;
+
 };
 
-class Log {
-  public:
-    Log();
-    ~Log();
-
-    static Log cout();
-
-    Log& operator<<(logger_level s) {
-      this->level = s;
-
-      if (this->level == DEBUG && IS_DEBUG == 0)
-        return *this;
-
-      std::cout << timestamp();
-      if (this->level == INFO)
-        std::cout << std::string(GREEN) + "[INFO]" + std::string(RESET);
-      else if (this->level == WARNING)
-        std::cout << std::string(YELLOW) + "[WARNING]" + std::string(RESET);
-      else if (this->level == ERROR)
-        std::cout << std::string(RED) + "[ERROR]" + std::string(RESET);
-      else if (this->level == DEBUG)
-        std::cout << std::string(WHITE) + "[DEBUG]" + std::string(RESET);
-      else
-        std::cout << std::string(WHITE) + "[UNKNOWN]" + std::string(RESET);
-      std::cout << " ";
-      return *this;
-    }
-
-    template<typename T>
-    Log& operator<<(T s) {
-      if (this->level == DEBUG && IS_DEBUG == 0)
-        return *this;
-
-      if (this->level == INFO)          std::cout << std::string(BOLD_GREEN);
-      else if (this->level == WARNING)  std::cout << std::string(BOLD_YELLOW);
-      else if (this->level == ERROR)    std::cout << std::string(BOLD_RED);
-      else if (this->level == DEBUG)    std::cout << std::string(BOLD_WHITE);
-      else if (this->level == UNKNOWN)    std::cout << std::string(WHITE);
-      std::cout << s << std::string(RESET);
-
-      return *this;
-    }
-
-  private:
-    logger_level level;
-    std::string timestamp(void) const;
-};
 
 #endif

@@ -41,7 +41,7 @@ SRCS			=	main.cpp\
 OBJS_DIR	=	./obj
 OBJS			=	$(addprefix $(OBJS_DIR)/, $(SRCS:.cpp=.o))
 CXX				=	c++
-CPPFLAGS	=	-I$(INCS)
+CPPFLAGS	=
 CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -D IS_DEBUG=1
 RM				=	rm -rf
 

@@ -14,19 +14,19 @@ const std::string TEAM_MARK = "\
 int main(int argc, char **argv) {
   std::cout << TEAM_MARK;
   if (argc != 2) {
-    std::cerr << "Error: argument" << std::endl;
+    log::error << "argument";
     return EXIT_FAILURE;
   }
 
   try {
     ConfigParser p;
     Config a = p.parse(argv[1]);
-    Log::cout() << INFO << "Config parsing ok\n";
+    log::info << "Config parsing ok" << log::endl;
     Server server(a);
-    Log::cout() << INFO << "Server setup done\n";
+    log::info << "Server setup done" << log::endl;
     server.run();
   } catch (std::exception &e) {
-    Log::cout() << ERROR << e.what() << "\n";
+    log::error << e.what();
   }
 
   return EXIT_SUCCESS;
