@@ -35,7 +35,6 @@ class ConfigParser {
     void                      parseServerName(ServerConfig& conf);
     void                      parseCGI(ServerConfig& conf);
     // location
-    void                      parseAlias(LocationConfig& conf);
     void                      parseLimitExcept(LocationConfig& conf);
     void                      parseAutoindex(LocationConfig& conf);
     void                      parseReturn(LocationConfig& conf);

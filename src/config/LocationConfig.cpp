@@ -14,7 +14,6 @@ LocationConfig::LocationConfig(const ServerConfig& config):
 LocationConfig::LocationConfig(const LocationConfig& obj):
   CommonConfig(obj),
   path(obj.getPath()),
-  alias(obj.getAlias()),
   limitExcept(obj.getLimitExcept()),
   returnRes(obj.getReturnRes()), 
   autoindex(obj.isAutoindex()),
@@ -30,7 +29,6 @@ LocationConfig::~LocationConfig() {}
 //    this->index = obj.getIndex();
 //
 //    this->path = obj.getPath();
-//    this->alias = obj.getAlias();
 //    this->limitExcept = obj.getLimitExcept();
 //    this->returnRes = obj.getReturnRes();
 //    this->autoindex = obj.isAutoindex();
@@ -43,8 +41,6 @@ LocationConfig::~LocationConfig() {}
 // getter
 
 std::string LocationConfig::getPath() const { return this->path; }
-
-std::string LocationConfig::getAlias() const { return this->alias; }
 
 const std::vector<std::string>& LocationConfig::getLimitExcept() const {
   return this->limitExcept;
@@ -73,8 +69,6 @@ const std::vector<LocationConfig>& LocationConfig::getLocationConfig() const {
 // setter
 
 void LocationConfig::setPath(std::string path) { this->path = path; }
-
-void LocationConfig::setAlias(std::string alias) { this->alias = alias; }
 
 void LocationConfig::addLimitExcept(std::string method) { this->limitExcept.push_back(method); }
 

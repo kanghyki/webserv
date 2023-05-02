@@ -50,7 +50,6 @@ LocationConfig ConfigParser::parseLocation(ServerConfig& serverConf) {
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
-    else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoindex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
@@ -70,7 +69,6 @@ LocationConfig ConfigParser::parseLocation(LocationConfig& locationConf) {
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
-    else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoindex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
@@ -126,13 +124,6 @@ void ConfigParser::parseServerName(ServerConfig& conf) {
 // location
 // location
 // location
-
-// alias [path(ident)];
-void ConfigParser::parseAlias(LocationConfig& conf) {
-  expectNextToken(Token::IDENT);
-  conf.setAlias(curToken().getLiteral());
-  expectNextToken(Token::SEMICOLON);
-}
 
 // limit_except [HTTP method(indent) ...] ;
 void ConfigParser::parseLimitExcept(LocationConfig& conf) {
