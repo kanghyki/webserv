@@ -157,17 +157,24 @@ std::string HttpRequest::getMethod() const { return this->method; }
 std::string HttpRequest::getPath() const { return this->path; }
 
 std::string HttpRequest::getRelativePath() const {
-  std::string root;
+  std::string root_path = getLocationConfig().getRoot();
+  std::string req_path = getPath();
+  std::string loc_path = getLocationConfig().getPath();
+  size_t      loc_path_len = getLocationConfig().getPath().length();
 
-  if (getLocationConfig().getAlias() != "") 
-    root = getLocationConfig().getAlias();
-  else
-    root = getLocationConfig().getRoot();
+  if (req_path.find(loc_path) == 0) {
 
-  if (root == "/")
-    return "." + this->path;
+    if (req_path.length() == loc_path_len || req_path[loc_path_len] == '/') {
+      req_path.replace(req_path.find(loc_path), loc_path_len, root_path);
+    }
 
-  return "." + root + this->path;
+    if (loc_path == "/" && root_path != "/") {
+      req_path = root_path + req_path;
+    }
+
+  }
+
+  return "." + req_path;
 }
 
 std::string HttpRequest::getQueryString() const { return this->queryString; }
