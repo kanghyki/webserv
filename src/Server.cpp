@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "SessionManager.hpp"
 #include "Util.hpp"
 
 /*
@@ -222,7 +223,7 @@ void Server::receiveDone(int fd) {
     clearReceived(fd);
     Log::cout() << INFO << "Request from " << fd << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"\n";
     if (req.isCGI())
-      res = Http::executeCGI(req);
+      res = Http::executeCGI(req, this->sessionManager);
     else
       res = Http::processing(req);
   } catch (HttpStatus status) {

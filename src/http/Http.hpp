@@ -8,6 +8,7 @@
 # include "../CGI.hpp"
 # include "../config/ServerConfig.hpp"
 # include "../Logger.hpp"
+# include "../SessionManager.hpp"
 
 # include <vector>
 # include <utility>
@@ -20,7 +21,7 @@ class Http {
 
     static HttpResponse processing(const HttpRequest&  req) throw (HttpStatus);
     static HttpResponse getErrorPage(HttpStatus s, const LocationConfig& config);
-    static HttpResponse executeCGI(const HttpRequest& req) throw (HttpStatus);
+    static HttpResponse executeCGI(const HttpRequest& req, SessionManager& sm) throw (HttpStatus);
 
   private:
     static HttpResponse getMethod(const HttpRequest& req);

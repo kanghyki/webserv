@@ -38,15 +38,16 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   return ret;
 }
 
-HttpResponse Http::executeCGI(const HttpRequest& req) throw (HttpStatus) {
+HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw (HttpStatus) {
   std::string str;
   HttpResponse ret;
   std::string body;
   std::map<std::string, std::string> header;
-  std::string ct;
 
   try {
-    CGI cgi(req);
+    std::map<std::string, std::string> c = util::splitHeaderField(req.getField(header_field::COOKIE));
+    std::cout << sm.isSessionAvailable(c[SessionManager::SESSION_KEY]) << std::endl;
+    CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
     str = cgi.execute();
     std::pair<std::string, std::string> p = util::splitHeaderBody(str, CRLF + CRLF);
     header = util::parseCGIHeader(p.first);
@@ -54,15 +55,17 @@ HttpResponse Http::executeCGI(const HttpRequest& req) throw (HttpStatus) {
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
-  try {
-    ct = header.at("content-type");
-  } catch (std::exception& e) {}
 
+  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
+    ret.addHeader(it->first, it->second);
+    if (it->first == "Set-Cookie")
+      sm.addSession(it->second);
+  }
+
+
+  std::string sc = header[header_field::SET_COOKIE]
+;
   ret.setStatusCode(OK);
-  if (!ct.empty()) 
-    ret.addHeader(header_field::CONTENT_TYPE, ct);
-  else
-    ret.addHeader(header_field::CONTENT_TYPE, util::itoa(body.length()));
   ret.setBody(body);
 
   return ret;
