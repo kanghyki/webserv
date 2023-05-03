@@ -61,6 +61,8 @@ namespace header_field {
   const std::string FROM                  =   "from";
   const std::string REFERER               =   "referer";
   const std::string USER_AGENT            =   "user-agent";
+  const std::string SET_COOKIE            =   "set-cookie";
+  const std::string COOKIE                =   "cookie";
 }
 
 #endif

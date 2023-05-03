@@ -23,12 +23,14 @@ class SessionManager {
     std::string                   createSession(void);
     void                          removeSession(std::string sessionID);
     bool                          isSessionAvailable(std::string sessionID);
+    void                          addSession(const std::string& sessionID);
 
     // for debug
     void                          showSession();
 
-  private:
     static const std::string      SESSION_KEY;
+
+  private:
     static const unsigned int     SESSION_ID_LENGTH;
 
     const unsigned int            expired_max;

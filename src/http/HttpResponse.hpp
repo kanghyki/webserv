@@ -19,6 +19,7 @@ class HttpResponse {
     void                                removeBody();
     void                                addHeader(const std::string& field, const std::string& value);
     void                                removeHeader(const std::string& field);
+    HttpStatus                          getStatusCode() const;
 
     std::string                         toString() throw();
 

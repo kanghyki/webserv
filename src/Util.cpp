@@ -164,6 +164,18 @@ namespace util {
     return std::make_pair(field, value);
   }
 
+  std::map<std::string, std::string> splitHeaderField(const std::string& str) {
+    std::map<std::string, std::string> ret;
+
+    std::vector<std::string> tmp = util::split(str, "; ");
+    for (std::vector<std::string>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
+      std::vector<std::string> v = util::split(*it, "=");
+      ret.insert(std::pair<std::string, std::string>(v[0], v[1]));
+    }
+
+    return ret;
+  }
+
   const char* StringFoundException::what() const throw() {
     return "Target not found";
   }
