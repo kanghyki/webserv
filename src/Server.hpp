@@ -39,17 +39,17 @@ class Server {
 //    static const int HEADER_NOT_RECV = -1;
 //    static const int HEADER_RECV = 0;
 
-    struct received {
-      std::string data;
-      size_t      contentLength;
-      size_t      headerPos;
-      int         status;
-    };
-
     enum recvStatus {
       HEADER_NOT_RECV,
       HEADER_RECV,
       BODY_RECV
+    };
+
+    struct received {
+      std::string     data;
+      size_t          contentLength;
+      size_t          headerPos;
+      enum recvStatus status;
     };
 
     std::vector<struct received> recvTable;

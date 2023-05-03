@@ -145,7 +145,6 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-    log::debug << "Selecting..." << log::endl;
 //    std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
 //    for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
 //      log::cout << INFO << "Client(" << timeout_fd_list[i] << ") timeout, closed\n";
