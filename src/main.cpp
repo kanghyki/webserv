@@ -1,32 +1,32 @@
 #include <iostream>
 #include "./Server.hpp"
 #include "./config/parser/ConfigParser.hpp"
-#include "./config/ServerConfig.hpp"
+#include "./config/Config.hpp"
 #include "./Logger.hpp"
 
-const std::string TEAM_MARK = "\
+const std::string TEAM_MARK = "\n\
   ███    ██  ██████  ██ ███    ██ ██   ██     ███    ███ ██ ███    ██ ██    ██ ███████\n\
   ████   ██ ██       ██ ████   ██  ██ ██      ████  ████ ██ ████   ██ ██    ██ ██     \n\
   ██ ██  ██ ██   ███ ██ ██ ██  ██   ███       ██ ████ ██ ██ ██ ██  ██ ██    ██ ███████\n\
   ██  ██ ██ ██    ██ ██ ██  ██ ██  ██ ██      ██  ██  ██ ██ ██  ██ ██ ██    ██      ██\n\
-  ██   ████  ██████  ██ ██   ████ ██   ██     ██      ██ ██ ██   ████  ██████  ███████\n";
+  ██   ████  ██████  ██ ██   ████ ██   ██     ██      ██ ██ ██   ████  ██████  ███████\n\n";
 
 int main(int argc, char **argv) {
   std::cout << TEAM_MARK;
   if (argc != 2) {
-    std::cerr << "Error: argument" << std::endl;
+    log::error << "argument";
     return EXIT_FAILURE;
   }
 
   try {
     ConfigParser p;
-    ServerConfig a = p.parse(argv[1]);
-    Log::cout() << INFO << "Config parsing ok\n";
+    Config a = p.parse(argv[1]);
+    log::info << "Config parsing ok" << log::endl;
     Server server(a);
-    Log::cout() << INFO << "Server setup done\n";
+    log::info << "Server setup done" << log::endl;
     server.run();
   } catch (std::exception &e) {
-    Log::cout() << ERROR << e.what() << "\n";
+    log::error << e.what() << log::endl;
   }
 
   return EXIT_SUCCESS;

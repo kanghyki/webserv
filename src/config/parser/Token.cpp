@@ -16,7 +16,6 @@ const std::string Token::ROOT                     = "root";
 const std::string Token::ERROR_PAGE               = "error_page";
 const std::string Token::CLIENT_BODY_BUFFER_SIZE  = "client_body_buffer_size";
 const std::string Token::INDEX                    = "index";
-const std::string Token::ALIAS                    = "alias";
 const std::string Token::LIMIT_EXCEPT             = "limit_except";
 const std::string Token::AUTOINDEX                = "autoindex";
 const std::string Token::RETURN                   = "return";
@@ -36,7 +35,6 @@ const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"error_page",                                 Token::ERROR_PAGE},
   {"client_body_buffer_size",                    Token::CLIENT_BODY_BUFFER_SIZE},
   {"index",                                      Token::INDEX},
-  {"alias",                                      Token::ALIAS},
   {"limit_except",                               Token::LIMIT_EXCEPT},
   {"autoindex",                                  Token::AUTOINDEX},
   {"return",                                     Token::RETURN},

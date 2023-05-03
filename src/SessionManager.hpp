@@ -1,6 +1,7 @@
 #ifndef SESSION_MANAGER_HPP
 # define SESSION_MANAGER_HPP
 
+# include "./Logger.hpp"
 # include <iostream>
 
 # include <pthread.h>
@@ -16,11 +17,11 @@ class SessionManager {
   public:
     static const unsigned int     INTERVAL_TIME;
 
-    SessionManager(unsigned int expired_max);
+    SessionManager();
     ~SessionManager(void);
 
     void                          cleanUpExpired(void);
-    std::string                   createSession(void);
+    std::string                   createSession(unsigned int expired_time);
     void                          removeSession(std::string sessionID);
     bool                          isSessionAvailable(std::string sessionID);
     void                          addSession(const std::string& sessionID);
@@ -33,7 +34,6 @@ class SessionManager {
   private:
     static const unsigned int     SESSION_ID_LENGTH;
 
-    const unsigned int            expired_max;
     pthread_t                     tid;
     // sessionID, time(sec)
     std::map<std::string, time_t> table;

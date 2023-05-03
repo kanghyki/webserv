@@ -1,51 +1,53 @@
 #include "./HttpRequest.hpp"
 
-const size_t      HttpRequest::URL_MAX_LENGTH = 2000;
+const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 
-HttpRequest::HttpRequest(std::string request, const ServerConfig& sc) : cgi(false) {
-  std::pair<std::string, std::string> p = util::splitHeaderBody(request, CRLF + CRLF);
+HttpRequest::HttpRequest(): cgi(false) {}
 
-  parseHeader(p.first);
-  setBody(p.second);
+//HttpRequest::HttpRequest(const HttpRequest& obj):
+//  method(obj.method),
+//  path(obj.path),
+//  queryString(obj.queryString),
+//  version(obj.version),
+//  body(obj.body),
+//  field(obj.field),
+//  locationConfig(obj.locationConfig),
+//  serverConfig(obj.serverConfig),
+//  cgi(obj.isCGI()),
+//  scriptPath(obj.getScriptPath()),
+//  cgiPath(obj.getCGIPath()),
+//  pathInfo(obj.getPathInfo()) {}
 
-  this->serverConfig = sc;
-  this->locationConfig = sc.findLocationConfig(this->getPath());
-  checkCGI(getPath(), this->serverConfig);
-}
-
-HttpRequest::HttpRequest(const HttpRequest& obj):
-  method(obj.method),
-  path(obj.path),
-  queryString(obj.queryString),
-  version(obj.version),
-  body(obj.body),
-  field(obj.field),
-  locationConfig(obj.locationConfig),
-  serverConfig(obj.serverConfig),
-  cgi(obj.isCGI()),
-  scriptPath(obj.getScriptPath()),
-  cgiPath(obj.getCGIPath()),
-  pathInfo(obj.getPathInfo()) {}
-
-HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
-  if (this != &obj) {
-    this->method = obj.method;
-    this->path = obj.path;
-    this->queryString = obj.queryString;
-    this->version = obj.version;
-    this->body = obj.body;
-    this->field = obj.field;
-    this->locationConfig = obj.locationConfig;
-    this->serverConfig = obj.serverConfig;
-    this->cgi = obj.cgi;
-    this->scriptPath = obj.scriptPath;
-    this->cgiPath = obj.getCGIPath();
-    this->pathInfo = obj.pathInfo;
-  }
-  return *this;
-}
+//HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
+//  if (this != &obj) {
+//    this->method = obj.method;
+//    this->path = obj.path;
+//    this->queryString = obj.queryString;
+//    this->version = obj.version;
+//    this->body = obj.body;
+//    this->field = obj.field;
+//    this->locationConfig = obj.locationConfig;
+//    this->serverConfig = obj.serverConfig;
+//    this->cgi = obj.cgi;
+//    this->scriptPath = obj.scriptPath;
+//    this->cgiPath = obj.getCGIPath();
+//    this->pathInfo = obj.pathInfo;
+//  }
+//  return *this;
+//}
 
 HttpRequest::~HttpRequest() {}
+
+void HttpRequest::parse(std::string request) {
+  size_t pos;
+
+  if ((pos = request.find(CRLF + CRLF)) != std::string::npos) {
+    parseHeader(request.substr(0, pos));
+    setBody(request.substr(pos + (CRLF + CRLF).length()));
+  }
+
+  checkCGI(getPath(), getServerConfig());
+}
 
 void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
   std::vector<std::string>            vs;
@@ -132,7 +134,7 @@ std::pair<std::string, std::string> HttpRequest::splitField(const std::string& l
   return std::make_pair(field, value);
 }
 
-void HttpRequest::checkCGI(const std::string& path, ServerConfig& sc) {
+void HttpRequest::checkCGI(const std::string& path, const ServerConfig& sc) {
   std::map<std::string, std::string>::iterator it;
   std::map<std::string, std::string> cgi = sc.getCGI();
   size_t pos;
@@ -157,17 +159,24 @@ std::string HttpRequest::getMethod() const { return this->method; }
 std::string HttpRequest::getPath() const { return this->path; }
 
 std::string HttpRequest::getRelativePath() const {
-  std::string root;
+  std::string root_path = getLocationConfig().getRoot();
+  std::string req_path = getPath();
+  std::string loc_path = getLocationConfig().getPath();
+  size_t      loc_path_len = getLocationConfig().getPath().length();
 
-  if (getLocationConfig().getAlias() != "") 
-    root = getLocationConfig().getAlias();
-  else
-    root = getLocationConfig().getRoot();
+  if (req_path.find(loc_path) != std::string::npos) {
 
-  if (root == "/")
-    return "." + this->path;
+    if (req_path.length() == loc_path_len || req_path[loc_path_len] == '/') {
+      req_path.replace(req_path.find(loc_path), loc_path_len, root_path);
+    }
 
-  return "." + root + this->path;
+    if (loc_path == "/" && root_path != "/") {
+      req_path = root_path + req_path;
+    }
+
+  }
+
+  return "." + req_path;
 }
 
 std::string HttpRequest::getQueryString() const { return this->queryString; }
@@ -197,11 +206,11 @@ const std::string HttpRequest::getContentType(void) const {
 }
 
 const LocationConfig& HttpRequest::getLocationConfig() const {
-  return this->locationConfig;
+  return this->lc;
 }
 
 const ServerConfig& HttpRequest::getServerConfig() const {
-  return this->serverConfig;
+  return this->sc;
 }
 
 bool HttpRequest::isCGI() const {
@@ -224,7 +233,15 @@ const std::string HttpRequest::getPathInfo() const {
  * -------------------------- Setter -------------------------------
  */
 
-void  HttpRequest::setBody(const std::string& body) { this->body = body; }
+#include "../Logger.hpp"
+
+void HttpRequest::setBody(const std::string& body) { this->body = body; }
+
+void HttpRequest::setConfig(const ServerConfig& conf) {
+  this->sc = conf;
+  log::debug << "this server server_name:" << conf.getServerName() << log::endl;
+  this->lc = conf.findLocationConfig(this->getPath());
+}
 
 void HttpRequest::setURI(const std::string& URI) {
   validateURI(URI);

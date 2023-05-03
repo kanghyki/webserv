@@ -14,7 +14,7 @@ void* sessionManagerRoutine(void *p) {
   return NULL;
 }
 
-SessionManager::SessionManager(unsigned int expired_max): expired_max(expired_max) {
+SessionManager::SessionManager() {
   pthread_mutex_init(&this->table_mutex, 0);
   if (pthread_create(&this->tid, 0, sessionManagerRoutine, (void *)this))
     throw std::runtime_error("create thread error");
@@ -30,23 +30,25 @@ void SessionManager::cleanUpExpired() {
 
   pthread_mutex_lock(&this->table_mutex);
   for (std::map<std::string, time_t>::iterator it = this->table.begin(); it != this->table.end(); ++it) {
-    if (time(NULL) - it->second > this->expired_max) {
+    if (time(NULL) > it->second) {
       cleanUpList.push_back(it);
     }
   }
   for (size_t i = 0; i < cleanUpList.size(); ++i) {
+    log::debug << "Cleanup Session: " << cleanUpList[i]->first << log::endl;
     this->table.erase(cleanUpList[i]);
   }
   pthread_mutex_unlock(&this->table_mutex);
 }
 
-std::string SessionManager::createSession(void) {
+std::string SessionManager::createSession(unsigned int expired_time) {
   std::string randomID;
 
   randomID = generateRandomString(SESSION_ID_LENGTH);
+  log::debug << "Create Session: " << randomID << log::endl;
 
   pthread_mutex_lock(&this->table_mutex);
-  this->table.insert(std::make_pair(randomID, time(NULL)));
+  this->table.insert(std::make_pair(randomID, time(NULL) + expired_time));
   pthread_mutex_unlock(&this->table_mutex);
 
   return randomID;
@@ -54,6 +56,7 @@ std::string SessionManager::createSession(void) {
 
 void SessionManager::removeSession(std::string sessionID) {
   pthread_mutex_lock(&this->table_mutex);
+  log::debug << "Remove Session: " << sessionID << log::endl;
   this->table.erase(sessionID);
   pthread_mutex_unlock(&this->table_mutex);
 }
@@ -63,13 +66,18 @@ bool SessionManager::isSessionAvailable(std::string sessionID) {
   std::string value;
 
   pthread_mutex_lock(&this->table_mutex);
-  time_t sessionTime = this->table[sessionID];
-  if (sessionTime == 0) ret = false;
-  if (time(NULL) - sessionTime > expired_max) {
+  time_t sessionExpiredTime = this->table[sessionID];
+  if (sessionExpiredTime == 0) ret = false;
+  if (time(NULL) > sessionExpiredTime) {
     this->table.erase(sessionID);
     ret = false;
   }
   pthread_mutex_unlock(&this->table_mutex);
+
+  if (ret == false)
+    log::debug << "SessionID(" << sessionID << ") is unavailable" << log::endl;
+  else
+    log::debug << "SessionID(" << sessionID << ") is available" << log::endl;
 
   return ret;
 }

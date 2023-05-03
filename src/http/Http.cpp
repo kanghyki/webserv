@@ -9,6 +9,7 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
 
+  log::debug << log::endl << "Relative path: " + req.getRelativePath() << log::endl;
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientBodySize()))
     throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
@@ -20,10 +21,10 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
       req.getMethod() != request_method::HEAD)
     throw (METHOD_NOT_ALLOWED);
 
-  Log::cout() << DEBUG << "Http -------------\n\
-    Request Path: " << req.getPath() << "\n\
-    Relatived Path: " << req.getRelativePath() << "\n\
-    Method: " << req.getMethod() << "\n";
+  log::debug << log::endl << "Http -------------\n\
+Request Path: " << req.getPath() << "\n\
+Method: " << req.getMethod() << log::endl;
+
 
   try {
     if (req.getMethod() == request_method::GET) ret = getMethod(req);
@@ -69,6 +70,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
   std::string sc = header[header_field::SET_COOKIE]
 ;
   ret.setStatusCode(OK);
+  
   ret.setBody(body);
 
   return ret;
@@ -159,7 +161,7 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   std::string   data;
   std::string   path;
 
-  Log::cout() << "Http error occured: " << status << "\n";
+  log::error << "Http error occured: " << status << log::endl;
   std::string errorPagePath = config.getErrorPage()[status];
   if (errorPagePath.empty())
     data = defaultErrorPage(status);

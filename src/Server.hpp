@@ -4,7 +4,7 @@
 # include "./Connection.hpp"
 # include "./SessionManager.hpp"
 # include "./Util.hpp"
-# include "./config/ServerConfig.hpp"
+# include "./config/Config.hpp"
 # include "./http/HttpRequest.hpp"
 # include "./http/HttpResponse.hpp"
 # include "./http/Http.hpp"
@@ -22,7 +22,7 @@ class Server {
   typedef struct sockaddr_in sock;
 
   public:
-    Server(ServerConfig config);
+    Server(Config& config);
     ~Server(void);
 
     int getFdMax(void) const;
@@ -58,15 +58,15 @@ class Server {
 //    std::vector<int> contentLengths;
 //    std::vector<size_t> headerPos;
 
-    const std::string host;
-    const int port;
-    int servFd;
+//    int servFd;
     int fdMax;
+    fd_set listens;
     fd_set reads;
     fd_set writes;
-    sock in;
+    std::vector<int> listens_fd;
+//    sock in;
 
-    int getServFd(void) const;
+//    int getServFd(void) const;
     fd_set& getReads(void);
     fd_set& getWrites(void);
 
@@ -76,7 +76,7 @@ class Server {
     inline void fdSetInit(fd_set& fs, int fd);
 
 
-    int acceptConnect();
+    int acceptConnect(int server_fd);
     void receiveData(int fd);
     bool checkContentLength(int fd);
     void sendData(int fd, const std::string& data);
@@ -93,18 +93,14 @@ class Server {
     void              setHeaderPos(int fd, size_t pos);
     void              setStatus(int fd, recvStatus status);
 
-    void              clearData(int fd);
-    void              clearContentLength(int fd);
-    void              clearHeaderPos(int fd);
     void              clearReceived(int fd);
-    void              clearStatus(int fd);
 
     void              recvHeader(int fd);
     int               parseContentLength(int fd, size_t start);
     bool              bodyRecvDone(int fd);
 
-    ServerConfig      config;
-    Connection        connection;
+    const Config&     config;
+//    Connection        connection;
     SessionManager    sessionManager;
 
   public:
@@ -119,6 +115,16 @@ class Server {
     };
 
     class ListenException : public std::exception {
+      public:
+        const char* what(void) const throw();
+    };
+
+    class CloseException : public std::exception {
+      public:
+        const char* what(void) const throw();
+    };
+
+    class RecvException : public std::exception {
       public:
         const char* what(void) const throw();
     };

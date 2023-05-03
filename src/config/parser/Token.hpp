@@ -41,7 +41,6 @@ class Token {
     static const std::string  ERROR_PAGE;
     static const std::string  CLIENT_BODY_BUFFER_SIZE;
     static const std::string  INDEX;
-    static const std::string  ALIAS;
     static const std::string  LIMIT_EXCEPT;
     static const std::string  AUTOINDEX;
     static const std::string  RETURN;
@@ -49,7 +48,7 @@ class Token {
     static const std::string  TIMEOUT;
     static const std::string  CGI;
 
-    enum { KEYWORD_SIZE = 15 };
+    enum { KEYWORD_SIZE = 14 };
     static const int          IDENT_IDX;
     static const int          TYPE_IDX;
     static const std::string  keyword[KEYWORD_SIZE][2];
@@ -61,9 +60,5 @@ class Token {
     std::string literal;
 
 };
-
-namespace keyword {
-};
-
 
 #endif

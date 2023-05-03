@@ -6,15 +6,18 @@ ConfigParser::ConfigParser() {
 
 ConfigParser::~ConfigParser() {};
 
-ServerConfig ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
-  ServerConfig conf;
+Config ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
+  Config conf;
 
   generateToken(fileName);
+  while (curToken().isNot(Token::END_OF_FILE)) {
+    if (curToken().is(Token::SERVER)) conf.addServerConfig(parseServer());
+    else throwBadSyntax();
+    nextToken();
+  }
+  expectCurToken(Token::END_OF_FILE);
 
-  if (curToken().is(Token::SERVER)) conf = parseServer();
-  else throwBadSyntax();
-
-  expectNextToken(Token::END_OF_FILE);
+  if (conf.getServerConfig().size() == 0) throw (std::runtime_error("No server config found"));
 
   return conf;
 }
@@ -47,7 +50,6 @@ LocationConfig ConfigParser::parseLocation(ServerConfig& serverConf) {
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
-    else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoindex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
@@ -67,7 +69,6 @@ LocationConfig ConfigParser::parseLocation(LocationConfig& locationConf) {
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
-    else if (curToken().is(Token::ALIAS)) parseAlias(conf);
     else if (curToken().is(Token::LIMIT_EXCEPT)) parseLimitExcept(conf);
     else if (curToken().is(Token::AUTOINDEX)) parseAutoindex(conf);
     else if (curToken().is(Token::RETURN)) parseReturn(conf);
@@ -123,13 +124,6 @@ void ConfigParser::parseServerName(ServerConfig& conf) {
 // location
 // location
 // location
-
-// alias [path(ident)];
-void ConfigParser::parseAlias(LocationConfig& conf) {
-  expectNextToken(Token::IDENT);
-  conf.setAlias(curToken().getLiteral());
-  expectNextToken(Token::SEMICOLON);
-}
 
 // limit_except [HTTP method(indent) ...] ;
 void ConfigParser::parseLimitExcept(LocationConfig& conf) {

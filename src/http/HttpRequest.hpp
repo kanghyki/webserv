@@ -23,12 +23,10 @@ namespace request_method {
 
 class HttpRequest {
   public:
-    HttpRequest(std::string request, const ServerConfig& sc);
-    HttpRequest(const HttpRequest& obj);
-    HttpRequest& operator=(const HttpRequest& obj);
+    HttpRequest();
     ~HttpRequest();
 
-    void                                  parseHeader(const std::string &h) throw(HttpStatus);
+    void                                  parse(std::string request);
 
     std::string                           getMethod() const;
     std::string                           getPath() const;
@@ -46,33 +44,39 @@ class HttpRequest {
     const std::string                     getPathInfo() const;
 
     void                                  setBody(const std::string& body);
+    void                                  setConfig(const ServerConfig& conf);
 
   private:
+    HttpRequest(const HttpRequest& obj);
+    HttpRequest& operator=(const HttpRequest& obj);
+
     static const size_t                   URL_MAX_LENGTH;
 
+//    std::string                           request;
     std::string                           method;
     std::string                           path;
     std::string                           queryString;
     std::string                           version;
     std::string                           body;
     std::map<std::string, std::string>    field;
-    LocationConfig                        locationConfig;
-    ServerConfig                          serverConfig;
+    ServerConfig                          sc;
+    LocationConfig                        lc;
     bool                                  cgi;
     std::string                           scriptPath;
     std::string                           cgiPath;
     std::string                           pathInfo;
 
+    void                                  parseHeader(const std::string &h) throw(HttpStatus);
+    void                                  parseStatusLine(const std::string &line);
+
     void                                  setURI(const std::string& URI);
     void                                  setMethod(const std::string& method);
     void                                  setVersion(const std::string& version);
 
-    void                                  parseStatusLine(const std::string &line);
-
     void                                  validateMethod(const std::string &method);
     void                                  validateVersion(const std::string &path);
     void                                  validateURI(const std::string &version);
-    void                                  checkCGI(const std::string& path, ServerConfig& sc);
+    void                                  checkCGI(const std::string& path, const ServerConfig& sc);
 
     std::pair<std::string, std::string>   splitField(const std::string& line);
 

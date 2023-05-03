@@ -15,10 +15,9 @@ class LocationConfig: public CommonConfig {
     LocationConfig(const ServerConfig& config);
     ~LocationConfig();
     LocationConfig(const LocationConfig& obj);
-//    LocationConfig& operator=(const LocationConfig& obj);
+    LocationConfig& operator=(const LocationConfig& obj);
 
     std::string                         getPath() const;
-    std::string                         getAlias() const;
     const std::vector<std::string>&     getLimitExcept() const;
     bool                                isMethodAllowed(std::string method) const;
     std::map<int, std::string>          getReturnRes() const;
@@ -26,7 +25,6 @@ class LocationConfig: public CommonConfig {
     const std::vector<LocationConfig>&  getLocationConfig() const;
 
     void                                setPath(std::string path);
-    void                                setAlias(std::string alias);
     void                                addLimitExcept(std::string method);
     void                                addReturnRes(std::pair<int, std::string> returnRes);
     void                                setAutoindex(bool autoindex);
@@ -34,9 +32,9 @@ class LocationConfig: public CommonConfig {
 
   private:
     static const bool                   DEFAULT_AUTOINDEX;
+    static const std::string            DEFAULT_PATH;
 
     std::string                         path;
-    std::string                         alias;
     std::vector<std::string>            limitExcept;
     std::map<int, std::string>          returnRes;
     bool                                autoindex;

@@ -1,3 +1,5 @@
+첫번째 server config가 default server가 된다.
+
 # Common
 ```
 1.
@@ -49,26 +51,21 @@ example) server_name webserv.42.kr;
 # Location
 ```
 1.
-alias [path(ident)];
-default value) NONE
-example) alias /secret_html/index.html;
-
-2.
 limit_except [HTTP method(indent) ...] ;
 default value) NONE
 example) limit_except GET POST DELETE;
 
-3.
+2.
 cgi [extension(indent)] [CGI path(ident)]
 default value) NONE
 example) cgi .py /cgi/hello.py;
 
-4.
+3.
 autoindex [on(ident)/off(ident)]
 default value) off
 example) autoindex on;
 
-5.
+4.
 return [HTTP status code(int)] [URI(ident)]
 default value) NONE
 example) return 301 http://localhost/index.html;

@@ -4,8 +4,7 @@
 # include "./Token.hpp"
 # include "./Lexer.hpp"
 # include "../../Util.hpp"
-# include "../ServerConfig.hpp"
-# include "../LocationConfig.hpp"
+# include "../Config.hpp"
 
 # include <fstream>
 # include <string>
@@ -17,7 +16,7 @@ class ConfigParser {
     ConfigParser();
     ~ConfigParser();
 
-    ServerConfig              parse(const std::string &fileName) throw(std::runtime_error);
+    Config                    parse(const std::string &fileName) throw(std::runtime_error);
 
   private:
     unsigned long             pos;
@@ -27,7 +26,6 @@ class ConfigParser {
     ServerConfig              parseServer();
     LocationConfig            parseLocation(ServerConfig& conf);
     LocationConfig            parseLocation(LocationConfig& conf);
-    LocationConfig            parseLocation();
     void                      parseCommon(CommonConfig& conf);
 
     // server
@@ -37,7 +35,6 @@ class ConfigParser {
     void                      parseServerName(ServerConfig& conf);
     void                      parseCGI(ServerConfig& conf);
     // location
-    void                      parseAlias(LocationConfig& conf);
     void                      parseLimitExcept(LocationConfig& conf);
     void                      parseAutoindex(LocationConfig& conf);
     void                      parseReturn(LocationConfig& conf);
