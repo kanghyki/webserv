@@ -85,7 +85,7 @@ bool SessionManager::isSessionAvailable(std::string sessionID) {
 // for debug
 void SessionManager::showSession() {
   pthread_mutex_lock(&this->table_mutex);
-  std::cout << "===========" << std::endl;
+  log::debug << "===========" << log::endl;
   for (std::map<std::string, time_t>::iterator it = this->table.begin(); it != this->table.end(); ++it) {
     std::cout << it->first << "=" << it->second << std::endl;
   }

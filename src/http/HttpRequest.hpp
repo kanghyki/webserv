@@ -6,7 +6,7 @@
 # include "./HttpHeaderField.hpp"
 # include "../Util.hpp"
 # include "../MimeType.hpp"
-# include "../config/ServerConfig.hpp"
+# include "../config/Config.hpp"
 
 # include <stdexcept>
 # include <string>
@@ -26,7 +26,7 @@ class HttpRequest {
     HttpRequest();
     ~HttpRequest();
 
-    void                                  parse(std::string request);
+    void                                  parse(std::string request, const Config& conf);
 
     std::string                           getMethod() const;
     std::string                           getPath() const;
@@ -44,7 +44,6 @@ class HttpRequest {
     const std::string                     getPathInfo() const;
 
     void                                  setBody(const std::string& body);
-    void                                  setConfig(const ServerConfig& conf);
 
   private:
     HttpRequest(const HttpRequest& obj);

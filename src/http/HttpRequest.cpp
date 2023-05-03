@@ -38,13 +38,18 @@ HttpRequest::HttpRequest(): cgi(false) {}
 
 HttpRequest::~HttpRequest() {}
 
-void HttpRequest::parse(std::string request) {
+#include "../Logger.hpp"
+void HttpRequest::parse(std::string request, const Config& conf) {
   size_t pos;
 
   if ((pos = request.find(CRLF + CRLF)) != std::string::npos) {
     parseHeader(request.substr(0, pos));
     setBody(request.substr(pos + (CRLF + CRLF).length()));
   }
+
+  this->sc = conf.findServerConfig(getField("Host"));
+  log::debug << "this server server_name:" << this->sc.getServerName() << log::endl;
+  this->lc = this->sc.findLocationConfig(this->getPath());
 
   checkCGI(getPath(), getServerConfig());
 }
@@ -236,12 +241,6 @@ const std::string HttpRequest::getPathInfo() const {
 #include "../Logger.hpp"
 
 void HttpRequest::setBody(const std::string& body) { this->body = body; }
-
-void HttpRequest::setConfig(const ServerConfig& conf) {
-  this->sc = conf;
-  log::debug << "this server server_name:" << conf.getServerName() << log::endl;
-  this->lc = conf.findLocationConfig(this->getPath());
-}
 
 void HttpRequest::setURI(const std::string& URI) {
   validateURI(URI);

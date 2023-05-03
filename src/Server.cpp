@@ -145,6 +145,7 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
+    log::debug << "Selecting..." << log::endl;
 //    std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
 //    for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
 //      log::cout << INFO << "Client(" << timeout_fd_list[i] << ") timeout, closed\n";
@@ -253,12 +254,10 @@ void Server::receiveDone(int fd) {
   log::debug << "this->data[" << fd << "]\n" << this->recvTable[fd].data << log::endl;
   
   try {
-    req.parse(getData(fd));
+    req.parse(getData(fd), this->config);
     log::debug << "request good!" << log::endl;
-    req.setConfig(this->config.findServerConfig(req.getField("Host")));
-    log::debug << "config good!" << log::endl;
     clearReceived(fd);
-    log::info << "Request from " << fd << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
+    log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isCGI())
       res = Http::executeCGI(req, this->sessionManager);
     else
@@ -268,7 +267,7 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(status, req.getServerConfig());
   }
 
-  log::info << "Response to " << fd <<  ", Status=" << res.getStatusCode() << log::endl;
+  log::info << "<= Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
   sendData(fd, res.toString());
 }
 
