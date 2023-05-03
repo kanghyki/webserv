@@ -91,7 +91,8 @@ void HttpRequest::validateMethod(const std::string &method) {
   if (method != request_method::GET &&
       method != request_method::POST &&
       method != request_method::DELETE &&
-      method != request_method::PUT)
+      method != request_method::PUT &&
+      method != request_method::HEAD)
     throw METHOD_NOT_ALLOWED;
   this->method = method;
 }

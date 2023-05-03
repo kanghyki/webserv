@@ -17,18 +17,21 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   if (req.getMethod() != request_method::GET &&
       req.getMethod() != request_method::POST &&
       req.getMethod() != request_method::DELETE &&
-      req.getMethod() != request_method::PUT)
+      req.getMethod() != request_method::PUT &&
+      req.getMethod() != request_method::HEAD)
     throw (METHOD_NOT_ALLOWED);
 
   log::debug << log::endl << "Http -------------\n\
 Request Path: " << req.getPath() << "\n\
 Method: " << req.getMethod() << log::endl;
 
+
   try {
     if (req.getMethod() == request_method::GET) ret = getMethod(req);
     else if (req.getMethod() == request_method::POST) ret = postMethod(req);
     else if (req.getMethod() == request_method::DELETE) ret = deleteMethod(req);
     else if (req.getMethod() == request_method::PUT) ret = putMethod(req);
+    else if (req.getMethod() == request_method::HEAD) ret = headMethod(req);
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
@@ -36,15 +39,19 @@ Method: " << req.getMethod() << log::endl;
   return ret;
 }
 
-HttpResponse Http::executeCGI(const HttpRequest& req) throw (HttpStatus) {
+HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw (HttpStatus) {
   std::string str;
   HttpResponse ret;
   std::string body;
   std::map<std::string, std::string> header;
-  std::string ct;
 
   try {
-    CGI cgi(req);
+    std::map<std::string, std::string> c = util::splitHeaderField(req.getField(header_field::COOKIE));
+    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+    std::cout << c[SessionManager::SESSION_KEY] << std::endl;
+    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+    std::cout << sm.isSessionAvailable(c[SessionManager::SESSION_KEY]) << std::endl;
+    CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
     str = cgi.execute();
     std::pair<std::string, std::string> p = util::splitHeaderBody(str, CRLF + CRLF);
     header = util::parseCGIHeader(p.first);
@@ -52,15 +59,18 @@ HttpResponse Http::executeCGI(const HttpRequest& req) throw (HttpStatus) {
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
-  try {
-    ct = header.at("content-type");
-  } catch (std::exception& e) {}
 
+  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
+    ret.addHeader(it->first, it->second);
+    if (it->first == "set-cookie")
+      sm.addSession(it->second);
+  }
+
+
+  std::string sc = header[header_field::SET_COOKIE]
+;
   ret.setStatusCode(OK);
-  if (!ct.empty())
-    ret.addHeader(header_field::CONTENT_TYPE, ct);
-  else
-    ret.addHeader(header_field::CONTENT_TYPE, util::itoa(body.length()));
+  
   ret.setBody(body);
 
   return ret;
@@ -75,6 +85,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   res.setStatusCode(OK);
   res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(data);
+
 
   return res;
 }
@@ -129,6 +140,18 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
   res.setStatusCode(CREATED);
   res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(req.getBody());
+
+  return res;
+}
+
+HttpResponse Http::headMethod(const HttpRequest& req) {
+  HttpResponse res;
+
+  std::cout << "HEAD" << std::endl;
+  HttpDataFecther fetcher(req);
+  std::string data = fetcher.fetch();
+
+  res.setStatusCode(OK);
 
   return res;
 }

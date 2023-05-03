@@ -17,3 +17,13 @@ createDirectory(dbPath);
 dbFile = dbPath + "/user"
 
 open(dbFile, 'a').write(form.getvalue('id') + "|" + form.getvalue("password") + "|" + form.getvalue("email") + "\n")
+
+print("Content-Type: text/html\r\n\r")
+
+print("<html>")
+print("<head>")
+print("</head>")
+print("<body>")
+print("<h2>Congratulations</h2>")
+print("</body>")
+print("</html>")

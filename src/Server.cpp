@@ -1,4 +1,6 @@
 #include "Server.hpp"
+#include "SessionManager.hpp"
+#include "Util.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
@@ -258,7 +260,7 @@ void Server::receiveDone(int fd) {
     clearReceived(fd);
     log::info << "Request from " << fd << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isCGI())
-      res = Http::executeCGI(req);
+      res = Http::executeCGI(req, this->sessionManager);
     else
       res = Http::processing(req);
   } catch (HttpStatus status) {
@@ -281,9 +283,10 @@ void Server::closeSocket(int fd) {
   // FIXME:
   if (close(fd) == -1)
     throw (CloseException());
+  else
+    log::info << "Closed client(" << fd << ")" << log::endl;
   clearReceived(fd);
-//  this->connection.remove(fd);
-  log::info << "Closed client(" << fd << ")" << log::endl;
+  this->connection.remove(fd);
 }
 
 const std::string Server::getData(int fd) const {

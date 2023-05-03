@@ -41,8 +41,8 @@ SRCS			=	main.cpp\
 OBJS_DIR	=	./obj
 OBJS			=	$(addprefix $(OBJS_DIR)/, $(SRCS:.cpp=.o))
 CXX				=	c++
-CPPFLAGS	=
-CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -g
+CPPFLAGS	=	-I$(INCS)
+CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
 RM				=	rm -rf
 
 vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR)

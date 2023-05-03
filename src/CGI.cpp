@@ -7,7 +7,7 @@
  * -------------------------- Constructor --------------------------
  */
 
-CGI::CGI(const HttpRequest& req) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()), pathInfo(req.getPathInfo()) {
+CGI::CGI(const HttpRequest& req, const bool sessionAvailable) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()), pathInfo(req.getPathInfo()), sessionAvailable(sessionAvailable) {
   if (!req.getBody().empty()) this->body = req.getBody();
   this->argv = this->getArgv();
   this->env = this->envMapToEnv(this->getEnvMap(req));
@@ -63,6 +63,12 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_TYPE, req.getContentType()));
   }
   ret.insert(std::pair<std::string, std::string>(cgi_env::GATEWAY_INTERFACE, CGI_VERSION));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_ACCEPT, req.getField(cgi_env::HTTP_ACCEPT)));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_ACCEPT_CHARSET, req.getField(cgi_env::HTTP_ACCEPT_CHARSET)));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_ACCEPT_ENCODING, req.getField(cgi_env::HTTP_ACCEPT_ENCODING)));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_ACCEPT_LANGUAGE, req.getField(cgi_env::HTTP_ACCEPT_LANGUAGE)));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_HOST, req.getField(cgi_env::HTTP_HOST)));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_USER_AGENT, req.getField(cgi_env::HTTP_USER_AGENT)));
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, getPathInfo()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
@@ -72,6 +78,8 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_PORT, util::itoa(req.getServerConfig().getPort())));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_PROTOCOL, req.getVersion()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_SOFTWARE, SOFTWARE_NAME));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_COOKIE, req.getField(cgi_env::HTTP_COOKIE)));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::SESSION_AVAILABLE, getSessionAvailable()));
 
   for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
     std::cout << it->first << " : " << it->second << std::endl;
@@ -166,6 +174,12 @@ const std::string CGI::getCurrentPath(void) const {
   free(cur);
 
   return ret;
+}
+
+const std::string CGI::getSessionAvailable(void) const {
+  if (this->sessionAvailable)
+    return "true";
+  return "false";
 }
 
 /*
