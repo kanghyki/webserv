@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     log::info << "Server setup done" << log::endl;
     server.run();
   } catch (std::exception &e) {
-    log::error << e.what();
+    log::error << e.what() << log::endl;
   }
 
   return EXIT_SUCCESS;

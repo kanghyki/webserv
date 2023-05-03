@@ -9,7 +9,7 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
 
-  log::debug << "Relative path: " + req.getRelativePath();
+  log::debug << log::endl << "Relative path: " + req.getRelativePath() << log::endl;
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientBodySize()))
     throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)

@@ -90,9 +90,34 @@ inline void Server::socketaddrInit(const std::string& host, int port, sock& in) 
 }
 
 inline void Server::socketOpen(int servFd, sock& in) {
-  if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
+  bool  bind_success = false;
+  bool  listen_success = false;
+
+  for (int i = 0; i < 10; ++i) {
+    if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
+      log::warning << "bind failed.. retry..." << i << log::endl;
+    else {
+      bind_success = true;
+      break;
+    }
+    sleep(6);
+  }
+
+  if (bind_success == false)
     throw Server::BindException();
-  if (listen(servFd, MANAGE_FD_MAX) == -1)
+
+
+  for (int i = 0; i < 10; ++i) {
+    if (listen(servFd, MANAGE_FD_MAX) == -1)
+      log::warning << "listen failed.. retry..." << i << log::endl;
+    else {
+      listen_success = true;
+      break;
+    }
+    sleep(6);
+  }
+
+  if (listen_success == false)
     throw Server::ListenException();
 
   log::info << "Listening... \"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"" << log::endl;
