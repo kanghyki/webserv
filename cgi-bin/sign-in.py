@@ -20,22 +20,29 @@ if not os.path.exists(filePath):
     exit(0)
 
 f = open(filePath, 'r')
-ret = "Login failed"
+ret = False
 
 for line in f:
     s = list(line.strip().split('|'))
     if len(s) == 3 and s[0] == id and s[1] == pw:
-        ret = "Login Success"
+        ret = True
         break
 f.close()
 
-print("Set-Cookie: _webserv_session=" + generate_session_id() + "; Path=/")
+print("Set-Cookie: _webserv_session=" + generate_session_id() + "; Path=/\r")
 print("Content-Type: text/html\r\n\r")
 
 print("<html>")
 print("<head>")
 print("</head>")
 print("<body>")
+print('<script type="text/javascript">')
+if ret == True:
+    print("window.location.href='/';")
+else:
+    print('alert("sing-in failed")')
+    print("window.location.href='/html/sign-in.html';")
+print("</script")
 print(f"<h2>{ret}</h2>")
 print("</body>")
 print("</html>")

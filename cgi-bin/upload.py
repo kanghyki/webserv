@@ -11,6 +11,18 @@ def createDirectory(directory):
         print("Error: Failed to create the directory.")
 
 form = cgi.FieldStorage()
+if os.environ['SESSION_AVAILABLE'] == 'false':
+    print("Content-Type: text/html\r\n\r")
+    print("<html>")
+    print("<body>")
+    print("hi")
+    print('<script type="text/javascript">')
+    print('alert("please login")')
+    print("window.location.href='/html/sign-in.html';")
+    print("</script")
+    print("</body>")
+    print("</html>")
+    exit(0);
 
 fileitem = form['file']
 

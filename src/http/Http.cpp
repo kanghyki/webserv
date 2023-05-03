@@ -46,6 +46,9 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
 
   try {
     std::map<std::string, std::string> c = util::splitHeaderField(req.getField(header_field::COOKIE));
+    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+    std::cout << c[SessionManager::SESSION_KEY] << std::endl;
+    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
     std::cout << sm.isSessionAvailable(c[SessionManager::SESSION_KEY]) << std::endl;
     CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
     str = cgi.execute();
@@ -58,7 +61,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
 
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
     ret.addHeader(it->first, it->second);
-    if (it->first == "Set-Cookie")
+    if (it->first == "set-cookie")
       sm.addSession(it->second);
   }
 

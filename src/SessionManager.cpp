@@ -95,8 +95,10 @@ std::string SessionManager::generateRandomString(int ch) {
   return ret;
 }
 
-void SessionManager::addSession(const std::string& sessionID) {
+void SessionManager::addSession(const std::string& sv) {
   pthread_mutex_lock(&this->table_mutex);
-  this->table.insert(std::make_pair(sessionID, time(NULL)));
+  size_t start = sv.find(SessionManager::SESSION_KEY) + SessionManager::SESSION_KEY.length() + 1;
+  size_t end = sv.find("; ", start);
+  this->table.insert(std::make_pair(sv.substr(start, end - start), time(NULL)));
   pthread_mutex_unlock(&this->table_mutex);
 }
