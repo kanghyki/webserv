@@ -24,7 +24,7 @@ class SessionManager {
     std::string                   createSession(unsigned int expired_time);
     void                          removeSession(std::string sessionID);
     bool                          isSessionAvailable(std::string sessionID);
-    void                          addSession(const std::string& sessionID);
+    void                          addSession(const std::string& sessionID, unsigned int expired_time);
 
     // for debug
     void                          showSession();

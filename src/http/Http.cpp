@@ -63,7 +63,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
     ret.addHeader(it->first, it->second);
     if (it->first == "set-cookie")
-      sm.addSession(it->second);
+      sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
   }
 
 

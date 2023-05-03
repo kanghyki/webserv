@@ -286,7 +286,6 @@ void Server::closeSocket(int fd) {
   else
     log::info << "Closed client(" << fd << ")" << log::endl;
   clearReceived(fd);
-  this->connection.remove(fd);
 }
 
 const std::string Server::getData(int fd) const {
