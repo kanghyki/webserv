@@ -124,7 +124,7 @@ inline void Server::socketOpen(int servFd, sock& in) {
   if (listen_success == false)
     throw Server::ListenException();
 
-  log::info << "Listening... \"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"" << log::endl;
+  log::info << "Listening... (" << servFd << ") \n\n\"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n" << log::endl;
 }
 
 inline void Server::fdSetInit(fd_set& fs, int fd) {
@@ -191,7 +191,7 @@ int Server::acceptConnect(int server_fd) {
 
 //  if (this->connection.isRegistered(fd) == false)
 //    this->connection.add(fd);
-  log::info << "Accept " << inet_ntoa(client_addr.sin_addr) << ", create client(" << client_fd << ")" << log::endl;
+  log::info << "Accept client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << log::endl;
 
   return client_fd;
 }
