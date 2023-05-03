@@ -15,7 +15,7 @@ class LocationConfig: public CommonConfig {
     LocationConfig(const ServerConfig& config);
     ~LocationConfig();
     LocationConfig(const LocationConfig& obj);
-//    LocationConfig& operator=(const LocationConfig& obj);
+    LocationConfig& operator=(const LocationConfig& obj);
 
     std::string                         getPath() const;
     const std::vector<std::string>&     getLimitExcept() const;
@@ -32,6 +32,7 @@ class LocationConfig: public CommonConfig {
 
   private:
     static const bool                   DEFAULT_AUTOINDEX;
+    static const std::string            DEFAULT_PATH;
 
     std::string                         path;
     std::vector<std::string>            limitExcept;

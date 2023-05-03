@@ -24,23 +24,23 @@ ServerConfig::ServerConfig(const ServerConfig& obj):
   cgi(obj.getCGI()),
   locations(obj.getLocationConfig()) {}
 
-//ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
-//  if (this != &obj) {
-//    this->clientBodySize = obj.getClientBodySize();
-//    this->session_timeout = obj.getSessionTimeout();
-//    this->timeout = obj.getTimeout();
-//    this->root = obj.getRoot();
-//    this->errorPage = obj.getErrorPage();
-//    this->index = obj.getIndex();
-//
-//    this->port = obj.getPort();
-//    this->host = obj.getHost();
-//    this->serverName = obj.getServerName();
-//    this->cgi = obj.getCGI();
-//    this->locations = obj.getLocationConfig();
-//  }
-//  return *this;
-//}
+ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
+  if (this != &obj) {
+    this->clientBodySize = obj.getClientBodySize();
+    this->session_timeout = obj.getSessionTimeout();
+    this->timeout = obj.getTimeout();
+    this->root = obj.getRoot();
+    this->errorPage = obj.getErrorPage();
+    this->index = obj.getIndex();
+
+    this->port = obj.getPort();
+    this->host = obj.getHost();
+    this->serverName = obj.getServerName();
+    this->cgi = obj.getCGI();
+    this->locations = obj.getLocationConfig();
+  }
+  return *this;
+}
 
 const LocationConfig ServerConfig::findLocationConfig(std::string path) const {
   size_t      pos;

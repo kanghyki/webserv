@@ -20,7 +20,7 @@ HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
       req.getMethod() != request_method::PUT)
     throw (METHOD_NOT_ALLOWED);
 
-  log::debug << "Http -------------\n\
+  log::debug << log::endl << "Http -------------\n\
 Request Path: " << req.getPath() << "\n\
 Method: " << req.getMethod() << log::endl;
 

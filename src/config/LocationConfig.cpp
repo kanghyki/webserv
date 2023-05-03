@@ -1,14 +1,17 @@
 #include "./LocationConfig.hpp"
 #include "./ServerConfig.hpp"
 
-const bool LocationConfig::DEFAULT_AUTOINDEX = false;
+const bool        LocationConfig::DEFAULT_AUTOINDEX = false;
+const std::string LocationConfig::DEFAULT_PATH = "/";
 
 LocationConfig::LocationConfig():
   CommonConfig(),
+  path(DEFAULT_PATH),
   autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const ServerConfig& config):
   CommonConfig(config),
+  path(DEFAULT_PATH),
   autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const LocationConfig& obj):
@@ -21,22 +24,22 @@ LocationConfig::LocationConfig(const LocationConfig& obj):
 
 LocationConfig::~LocationConfig() {}
 
-//LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
-//  if (this != &obj) {
-//    this->clientBodySize = obj.getClientBodySize();
-//    this->root = obj.getRoot();
-//    this->errorPage = obj.getErrorPage();
-//    this->index = obj.getIndex();
-//
-//    this->path = obj.getPath();
-//    this->limitExcept = obj.getLimitExcept();
-//    this->returnRes = obj.getReturnRes();
-//    this->autoindex = obj.isAutoindex();
-//    this->locations = obj.getLocationConfig();
-//  }
-//
-//  return *this;
-//}
+LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
+  if (this != &obj) {
+    this->clientBodySize = obj.getClientBodySize();
+    this->root = obj.getRoot();
+    this->errorPage = obj.getErrorPage();
+    this->index = obj.getIndex();
+
+    this->path = obj.getPath();
+    this->limitExcept = obj.getLimitExcept();
+    this->returnRes = obj.getReturnRes();
+    this->autoindex = obj.isAutoindex();
+    this->locations = obj.getLocationConfig();
+  }
+
+  return *this;
+}
 
 // getter
 

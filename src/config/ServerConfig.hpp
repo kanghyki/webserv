@@ -12,10 +12,9 @@ class ServerConfig: public CommonConfig {
     ServerConfig();
     ServerConfig(const ServerConfig& obj);
     ~ServerConfig();
-//    ServerConfig& operator=(const ServerConfig& obj);
+    ServerConfig& operator=(const ServerConfig& obj);
 
     const LocationConfig                      findLocationConfig(std::string path) const;
-    const LocationConfig&                     findLocationConfigRoop(const LocationConfig& config, std::string path) const;
 
     int                                       getSessionTimeout() const;
     int                                       getTimeout() const;
@@ -46,6 +45,8 @@ class ServerConfig: public CommonConfig {
     std::string                               serverName;
     std::map<std::string, std::string>        cgi;
     std::vector<LocationConfig>               locations;
+
+    const LocationConfig&                     findLocationConfigRoop(const LocationConfig& config, std::string path) const;
 };
 
 #endif

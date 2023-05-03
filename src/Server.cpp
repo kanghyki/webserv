@@ -73,6 +73,7 @@ void Server::setFdMax(int fdMax) {
 
 inline int Server::socketInit(void) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
+  // FIXME:
   if (sock == SOCK_CLOSED)
     throw Server::InitException();
 
@@ -80,6 +81,7 @@ inline int Server::socketInit(void) {
 }
 
 inline void Server::socketaddrInit(const std::string& host, int port, sock& in) {
+  // FIXME:
   if (!memset(&in, 0, sizeof(in)))
     throw Server::InitException();
   in.sin_family = AF_INET;
@@ -95,7 +97,7 @@ inline void Server::socketOpen(int servFd, sock& in) {
 
   for (int i = 0; i < 10; ++i) {
     if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
-      log::warning << "bind failed.. retry..." << i << log::endl;
+      log::warning << "Bind failed... retry... " << i + 1 << log::endl;
     else {
       bind_success = true;
       break;
@@ -109,7 +111,7 @@ inline void Server::socketOpen(int servFd, sock& in) {
 
   for (int i = 0; i < 10; ++i) {
     if (listen(servFd, MANAGE_FD_MAX) == -1)
-      log::warning << "listen failed.. retry..." << i << log::endl;
+      log::warning << "Listen failed... retry... " << i + 1 << log::endl;
     else {
       listen_success = true;
       break;
@@ -197,6 +199,7 @@ void Server::receiveData(int fd) {
   int recv_size;
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
+  // FIXME:
   if (recv_size < 0) {
     log::warning << "recv failed" << log::endl;
     throw (RecvException());
@@ -204,7 +207,9 @@ void Server::receiveData(int fd) {
   else if (recv_size == 0) {
     FD_CLR(fd, &this->reads);
     clearReceived(fd);
-    if (close(fd) == -1) throw (CloseException());
+    // FIXME:
+    if (close(fd) == -1)
+      throw (CloseException());
     return ;
   }
   buf[recv_size] = 0;
@@ -239,13 +244,17 @@ bool Server::checkContentLength(int fd) {
 }
 
 void Server::receiveDone(int fd) {
-  HttpResponse res;
+  HttpRequest   req;
+  HttpResponse  res;
 
   FD_CLR(fd, &this->getReads());
   log::debug << "this->data[" << fd << "]\n" << this->recvTable[fd].data << log::endl;
-
+  
   try {
-    HttpRequest req(getData(fd), this->config.findServerConfig(""));
+    req.parse(getData(fd));
+    log::debug << "request good!" << log::endl;
+    req.setConfig(this->config.findServerConfig(req.getField("Host")));
+    log::debug << "config good!" << log::endl;
     clearReceived(fd);
     log::info << "Request from " << fd << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isCGI())
@@ -253,7 +262,8 @@ void Server::receiveDone(int fd) {
     else
       res = Http::processing(req);
   } catch (HttpStatus status) {
-    res = Http::getErrorPage(status, this->config.findServerConfig(""));
+    log::debug << "oh error!" << log::endl;
+    res = Http::getErrorPage(status, req.getServerConfig());
   }
 
   log::info << "Response to " << fd <<  ", Status=" << res.getStatusCode() << log::endl;
@@ -268,7 +278,9 @@ void Server::sendData(int fd, const std::string& data) {
 
 void Server::closeSocket(int fd) {
   FD_CLR(fd, &this->getWrites());
-  if (close(fd) == -1) throw (CloseException());
+  // FIXME:
+  if (close(fd) == -1)
+    throw (CloseException());
   clearReceived(fd);
 //  this->connection.remove(fd);
   log::info << "Closed client(" << fd << ")" << log::endl;
