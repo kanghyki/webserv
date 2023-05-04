@@ -158,7 +158,7 @@ void ConfigParser::parseKeepAliveRequests(ServerConfig& conf) {
 void ConfigParser::parseListen(ServerConfig& conf) {
   expectNextToken(Token::IDENT);
   std::vector<std::string> sp = util::split(curToken().getLiteral(), ':');
-  if (sp.size() != 2) throw std::runtime_error("listen error");
+  if (sp.size() != 2) throwError("listen error");
   conf.setHost(sp[0]);
   conf.setPort(atoi(sp[1]));
   expectNextToken(Token::SEMICOLON);
@@ -202,7 +202,7 @@ void ConfigParser::parseAutoindex(LocationConfig& conf) {
   expectNextToken(Token::IDENT);
   if (curToken().getLiteral() == "on") conf.setAutoindex(true);
   else if (curToken().getLiteral() == "off") conf.setAutoindex(false);
-  else throw std::runtime_error("autoindex error");
+  else throwError("autoindex error");
   expectNextToken(Token::SEMICOLON);
 }
 
@@ -211,7 +211,7 @@ void ConfigParser::parseReturn(LocationConfig& conf) {
   expectNextToken(Token::INT);
   int status_code = atoi(curToken().getLiteral());
   if (status_code != 301  && status_code != 307)
-    throw std::runtime_error("A value other than 301 or 307 is not supported by the return field");
+    throwError("A value other than 301 or 307 is not supported by the return field");
   expectNextToken(Token::IDENT);
   conf.setReturnRes(status_code, curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
@@ -307,35 +307,37 @@ void ConfigParser::expectCurToken(const std::string& expected) const {
     throwExpectError(expected);
 }
 
-void ConfigParser::throwExpectError(const std::string& expected) const throw (std::runtime_error) {
-  std::string errorMsg =
-    this->fileName
-    + " "
-    + std::to_string(curToken().getLineNumber())
-    + ":" + util::itoa(curToken().getPos())
-    + " expected \'" + expected + "\' but \'" + curToken().getLiteral() + "\'";
+std::string ConfigParser::errorPrefix() const {
+  return this->fileName + " " + std::to_string(curToken().getLineNumber()) + ":" + util::itoa(curToken().getPos()) + " ";
+}
+
+void ConfigParser::throwError(const std::string& desc) const throw (std::runtime_error) {
+  std::string errorMsg = errorPrefix() + desc;
 
   throw std::runtime_error(errorMsg);
 }
 
-void ConfigParser::throwBadSyntax() const throw (std::runtime_error){
-  std::string errorMsg =
-    this->fileName
-    + " "
-    + std::to_string(curToken().getLineNumber())
-    + ":" + util::itoa(curToken().getPos())
-    + " bad syntax \'" + curToken().getLiteral() + "\'";
+void ConfigParser::throwExpectError(const std::string& expected) const throw (std::runtime_error) {
+  throwError("expected \'" + expected + "\' but \'" + curToken().getLiteral() + "\'");
+}
 
-  throw std::runtime_error(errorMsg);
+void ConfigParser::throwBadSyntax() const throw (std::runtime_error){
+  throwError("bad syntax \'" + curToken().getLiteral() + "\'");
 }
 
 int ConfigParser::atoi(const std::string& s) const {
   int ret;
+
+  for (size_t i = 0; i < s.length(); ++i) {
+    if (std::isdigit(s[i]) == false)
+      throwBadSyntax();
+  }
 
   try {
     ret = std::atoi(s.c_str());
   } catch (std::exception& e) {
     throwBadSyntax();
   }
+
   return ret;
 }
