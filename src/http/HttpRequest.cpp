@@ -38,7 +38,6 @@ HttpRequest::HttpRequest(): cgi(false) {}
 
 HttpRequest::~HttpRequest() {}
 
-#include "../Logger.hpp"
 void HttpRequest::parse(std::string request, const Config& conf) {
   size_t pos;
 
@@ -171,7 +170,8 @@ std::string HttpRequest::getRelativePath() const {
 
   if (req_path.find(loc_path) != std::string::npos) {
 
-    if (req_path.length() == loc_path_len || req_path[loc_path_len] == '/') {
+    if (req_path != "/"
+        && (req_path.length() == loc_path_len || req_path[loc_path_len] == '/')) {
       req_path.replace(req_path.find(loc_path), loc_path_len, root_path);
     }
 
@@ -237,8 +237,6 @@ const std::string HttpRequest::getPathInfo() const {
 /*
  * -------------------------- Setter -------------------------------
  */
-
-#include "../Logger.hpp"
 
 void HttpRequest::setBody(const std::string& body) { this->body = body; }
 
