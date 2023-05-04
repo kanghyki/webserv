@@ -10,6 +10,7 @@ Server::Server(Config& config) :
   recvTable(MANAGE_FD_MAX),
   fdMax(FD_CLOSED),
   config(config),
+  connection(),
   sessionManager() {
     FD_ZERO(&this->reads);
     FD_ZERO(&this->writes);
@@ -145,16 +146,7 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-//    std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
-//    for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
-//      log::cout << INFO << "Client(" << timeout_fd_list[i] << ") timeout, closed\n";
-//
-//      FD_CLR(timeout_fd_list[i], &this->getReads());
-//      FD_CLR(timeout_fd_list[i], &this->getWrites());
-//      close(timeout_fd_list[i]);
-//      clearReceived(timeout_fd_list[i]);
-//      this->connection.remove(timeout_fd_list[i]);
-//    }
+    cleanUpTimeout();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
@@ -173,6 +165,18 @@ void Server::run(void) {
     if (close(this->listens_fd[i]) == -1) throw (CloseException());
 }
 
+void Server::cleanUpTimeout() {
+  std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
+  for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
+    log::warning << "Timeout client(" << timeout_fd_list[i] << "), closed" << log::endl;
+    FD_CLR(timeout_fd_list[i], &this->getReads());
+    FD_CLR(timeout_fd_list[i], &this->getWrites());
+    close(timeout_fd_list[i]);
+    clearReceived(timeout_fd_list[i]);
+    this->connection.remove(timeout_fd_list[i]);
+  }
+}
+
 int Server::acceptConnect(int server_fd) {
   struct sockaddr_in  client_addr;
   socklen_t           size;
@@ -189,9 +193,8 @@ int Server::acceptConnect(int server_fd) {
     this->setFdMax(client_fd);
 
 
-//  if (this->connection.isRegistered(fd) == false)
-//    this->connection.add(fd);
   log::info << "Accept client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << log::endl;
+  this->connection.add(client_fd);
 
   return client_fd;
 }
@@ -249,6 +252,7 @@ void Server::receiveDone(int fd) {
   HttpRequest   req;
   HttpResponse  res;
 
+  this->connection.remove(fd);
   FD_CLR(fd, &this->getReads());
   log::debug << "this->data[" << fd << "]\n" << this->recvTable[fd].data << log::endl;
   

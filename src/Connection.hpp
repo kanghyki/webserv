@@ -11,15 +11,17 @@ class Connection {
     Connection();
     ~Connection(void);
 
-    std::vector<int>      getTimeoutList(void);
-    void                  add(int fd, unsigned int timeout);
-    void                  remove(int fd);
-    bool                  isRegistered(int fd);
+    std::vector<int>          getTimeoutList();
+    void                      add(int fd);
+    void                      update(int fd, unsigned timeout);
+    void                      remove(int fd);
+    bool                      isRegistered(int fd);
 
   private:
+    static const unsigned int DEFAULT_TIMEOUT;
 
     // fd, time(sec)
-    std::map<int, time_t> table;
+    std::map<int, time_t>     table;
 };
 
 #endif

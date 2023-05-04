@@ -63,7 +63,7 @@ log::Error& log::Error::operator<<(unsigned short s) {
 log::Warning& log::Warning::operator<<(std::string s) {
   if (s == log::endl) {
     std::cout << timestamp()
-      << std::string(YELLOW) + "[Warning] " + std::string(RESET)
+      << std::string(YELLOW) + "[WARNING] " + std::string(RESET)
       << std::string(BOLD_YELLOW) << this->buf << std::string(RESET) << std::endl;
     this->buf.clear();
   }

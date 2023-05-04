@@ -1,9 +1,11 @@
 #include "./Connection.hpp"
+#include "./Logger.hpp"
+
+const unsigned int Connection::DEFAULT_TIMEOUT = 60;
 
 Connection::Connection() {}
 
-Connection::~Connection(void) {}
-#include <iostream>
+Connection::~Connection() {}
 
 std::vector<int> Connection::getTimeoutList(void) {
   std::vector<int> timeout_fd_list;
@@ -17,11 +19,18 @@ std::vector<int> Connection::getTimeoutList(void) {
   return timeout_fd_list;
 }
 
-void Connection::add(int fd, unsigned int timeout) {
+void Connection::add(int fd) {
+  log::debug << fd << " add timeout " << DEFAULT_TIMEOUT << log::endl;
+  this->table.insert(std::make_pair(fd, time(NULL) + DEFAULT_TIMEOUT));
+}
+
+void Connection::update(int fd, unsigned int timeout) {
+  this->table.erase(fd);
   this->table.insert(std::make_pair(fd, time(NULL) + timeout));
 }
 
 void Connection::remove(int fd) {
+  log::debug << fd << " erase timeout" << log::endl;
   this->table.erase(fd);
 }
 

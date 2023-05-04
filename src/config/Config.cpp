@@ -32,5 +32,6 @@ const ServerConfig& Config::findServerConfig(std::string reqHost) const {
       return *sit;
     }
   }
+  log::debug << "Default server config!" << log::endl;
   return this->servers[0];
 }

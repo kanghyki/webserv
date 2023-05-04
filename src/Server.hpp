@@ -100,8 +100,10 @@ class Server {
     bool              bodyRecvDone(int fd);
 
     const Config&     config;
-//    Connection        connection;
+    Connection        connection;
     SessionManager    sessionManager;
+
+    void              cleanUpTimeout();
 
   public:
     class InitException : public std::exception {
