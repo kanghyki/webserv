@@ -1,13 +1,14 @@
 #include "Server.hpp"
 #include "SessionManager.hpp"
 #include "Util.hpp"
+#include "http/HttpHeaderField.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
  */
 
 Server::Server(Config& config) :
-  recvTable(MANAGE_FD_MAX),
+  requests(MANAGE_FD_MAX),
   fdMax(FD_CLOSED),
   config(config),
   sessionManager() {
@@ -145,7 +146,6 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-    log::debug << "Selecting..." << log::endl;
 //    std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
 //    for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
 //      log::cout << INFO << "Client(" << timeout_fd_list[i] << ") timeout, closed\n";
@@ -209,54 +209,43 @@ void Server::receiveData(int fd) {
   }
   else if (recv_size == 0) {
     FD_CLR(fd, &this->reads);
-    clearReceived(fd);
+    clearRequest(fd);
     // FIXME:
     if (close(fd) == -1)
       throw (CloseException());
     return ;
   }
   buf[recv_size] = 0;
-  addData(fd, buf);
-  if (checkContentLength(fd) == true)
+  this->requests[fd].addRecvData(buf);
+  checkReceiveDone(fd);
+}
+
+void Server::checkReceiveDone(int fd) {
+  HttpRequest& req = this->requests[fd];
+
+  if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE)
+    recvHeader(req);
+
+  if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
+    if (req.getContentLength() == (int)req.getRecvData().length())
+      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+  }
+
+  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) 
     receiveDone(fd);
 }
 
-bool Server::checkContentLength(int fd) {
-  if (getStatus(fd) == HEADER_NOT_RECV)
-    recvHeader(fd);
-
-  if (getStatus(fd) == HEADER_RECV) {
-    size_t start = util::toLowerStr(getData(fd)).find("content-length: ");
-    if (start != std::string::npos) {
-      int len = parseContentLength(fd, start);
-      if (len == 0) return true;
-      else {
-        setStatus(fd, BODY_RECV);
-        setContentLength(fd, len);
-      }
-    }
-    else return true;
-  }
-
-  if (getStatus(fd) == BODY_RECV) {
-    if (bodyRecvDone(fd))
-      return true;
-  }
-
-  return false;
-}
-
 void Server::receiveDone(int fd) {
-  HttpRequest   req;
+  HttpRequest&   req = this->requests[fd];
   HttpResponse  res;
 
   FD_CLR(fd, &this->getReads());
-  log::debug << "this->data[" << fd << "]\n" << this->recvTable[fd].data << log::endl;
+  log::debug << "this->data[" << fd << "]\n" << this->requests[fd].getRecvData() << log::endl;
   
   try {
-    req.parse(getData(fd), this->config);
+    req.setConfig(this->config);
+    req.checkCGI(req.getPath(), req.getServerConfig());
     log::debug << "request good!" << log::endl;
-    clearReceived(fd);
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isCGI())
       res = Http::executeCGI(req, this->sessionManager);
@@ -275,6 +264,11 @@ void Server::sendData(int fd, const std::string& data) {
   FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     log::warning << "send failed" << log::endl;
+  clearRequest(fd);
+  std::cout << "@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+  std::cout << "clear request" << std::endl;
+  std::cout << this->requests[fd].getRecvData() << std::endl;
+  std::cout << "@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 }
 
 void Server::closeSocket(int fd) {
@@ -284,68 +278,72 @@ void Server::closeSocket(int fd) {
     throw (CloseException());
   else
     log::info << "Closed client(" << fd << ")" << log::endl;
-  clearReceived(fd);
-}
-
-const std::string Server::getData(int fd) const {
-  return this->recvTable[fd].data;
-}
-
-size_t Server::getContentLength(size_t fd) const {
-  return this->recvTable[fd].contentLength;
-}
-
-void Server::addData(int fd, const std::string& data) {
-  this->recvTable[fd].data += data;
-}
-
-void Server::setContentLength(int fd, int len) {
-  this->recvTable[fd].contentLength = len;
-}
-
-size_t Server::getHeaderPos(int fd) const {
-  return this->recvTable[fd].headerPos;
-}
-
-void Server::setHeaderPos(int fd, size_t pos) {
-  this->recvTable[fd].headerPos = pos;
 }
 
 void Server::clearReceived(int fd) {
-  this->recvTable[fd].data.clear();
-  this->recvTable[fd].contentLength = -1;
-  this->recvTable[fd].headerPos = 0;
-  this->recvTable[fd].status = HEADER_NOT_RECV;
+  HttpRequest& req = this->requests[fd];
+  
+  req.clearRecvData();
+  req.setContentLength(0);
 }
 
-int Server::getStatus(int fd) const {
-  return this->recvTable[fd].status;
-}
-
-void Server::setStatus(int fd, recvStatus status) {
-  this->recvTable[fd].status = status;
-}
-
-void Server::recvHeader(int fd) {
-  size_t pos = getData(fd).find("\r\n\r\n");
+void Server::recvHeader(HttpRequest& req) {
+  std::string recvData = req.getRecvData();
+  size_t pos = recvData.find("\r\n\r\n");
 
   if (pos != std::string::npos) {
-    setHeaderPos(fd, pos);
-    setStatus(fd, HEADER_RECV);
+    std::string header = recvData.substr(0, pos);
+    req.parseHeader(header);
+    std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
+    if (contentLength.empty()) {
+      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+      return;
+    }
+    else {
+      req.setContentLength(std::atoi(contentLength.c_str()));
+      req.setRecvData(recvData.substr(pos + 4));
+      req.setRecvStatus(HttpRequest::BODY_RECEIVE);
+    }
   }
 }
 
-int Server::parseContentLength(int fd, size_t start) {
-  size_t end = getData(fd).find("\r\n", start);
-
-  return std::atoi(getData(fd).substr(start + 16, end - start + 1).c_str());
+void Server::clearRequest(int fd) {
+  this->requests[fd] = HttpRequest();
 }
 
-bool Server::bodyRecvDone(int fd) {
-  if (getContentLength(fd) == getData(fd).substr(getHeaderPos(fd) + 4).length())
-    return true;
-  return false;
-}
+//const std::string Server::getData(int fd) const {
+//  return this->recvTable[fd].data;
+//}
+//
+//size_t Server::getContentLength(size_t fd) const {
+//  return this->recvTable[fd].contentLength;
+//}
+//
+//void Server::addData(int fd, const std::string& data) {
+//  this->recvTable[fd].data += data;
+//}
+//
+//void Server::setContentLength(int fd, int len) {
+//  this->recvTable[fd].contentLength = len;
+//}
+//
+//size_t Server::getHeaderPos(int fd) const {
+//  return this->recvTable[fd].headerPos;
+//}
+//
+//void Server::setHeaderPos(int fd, size_t pos) {
+//  this->recvTable[fd].headerPos = pos;
+//}
+//
+//
+//int Server::getStatus(int fd) const {
+//  return this->recvTable[fd].status;
+//}
+//
+//void Server::setStatus(int fd, recvStatus status) {
+//  this->recvTable[fd].status = status;
+//}
+
 
 const char* Server::InitException::what() const throw() {
   return "Server init failed";

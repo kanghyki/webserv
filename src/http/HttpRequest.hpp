@@ -22,11 +22,23 @@ namespace request_method {
 }
 
 class HttpRequest {
+  
   public:
+    enum recvStatus {
+      HEADER_RECEIVE,
+      BODY_RECEIVE,
+      RECEIVE_DONE
+    };
+
     HttpRequest();
     ~HttpRequest();
 
+
     void                                  parse(std::string request, const Config& conf);
+    void                                  parseHeader(const std::string &h) throw(HttpStatus);
+    void                                  setConfig(const Config& conf);
+    void                                  checkCGI(const std::string& path, const ServerConfig& sc);
+    
 
     std::string                           getMethod() const;
     std::string                           getPath() const;
@@ -42,12 +54,23 @@ class HttpRequest {
     const std::string                     getScriptPath() const;
     const std::string                     getCGIPath() const;
     const std::string                     getPathInfo() const;
+    std::string                           getRecvData() const;
+    int                                   getRecvStatus() const;
+    int                                   getContentLength() const;
+
 
     void                                  setBody(const std::string& body);
+    void                                  setRecvData(const std::string& data);
+    void                                  addRecvData(const std::string& data);
+    void                                  clearRecvData();
+    void                                  setRecvStatus(int status);
+    void                                  setContentLength(int len);
+
+//    HttpRequest& operator=(const HttpRequest& obj);
+
 
   private:
     HttpRequest(const HttpRequest& obj);
-    HttpRequest& operator=(const HttpRequest& obj);
 
     static const size_t                   URL_MAX_LENGTH;
 
@@ -64,8 +87,10 @@ class HttpRequest {
     std::string                           scriptPath;
     std::string                           cgiPath;
     std::string                           pathInfo;
+    std::string                           recvData;
+    int                                   recvStatus;
+    int                                   contentLength;
 
-    void                                  parseHeader(const std::string &h) throw(HttpStatus);
     void                                  parseStatusLine(const std::string &line);
 
     void                                  setURI(const std::string& URI);
@@ -75,7 +100,6 @@ class HttpRequest {
     void                                  validateMethod(const std::string &method);
     void                                  validateVersion(const std::string &path);
     void                                  validateURI(const std::string &version);
-    void                                  checkCGI(const std::string& path, const ServerConfig& sc);
 
     std::pair<std::string, std::string>   splitField(const std::string& line);
 

@@ -2,7 +2,7 @@
 
 const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 
-HttpRequest::HttpRequest(): cgi(false) {}
+HttpRequest::HttpRequest(): cgi(false), recvStatus(HEADER_RECEIVE) {}
 
 //HttpRequest::HttpRequest(const HttpRequest& obj):
 //  method(obj.method),
@@ -61,7 +61,9 @@ void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
   vs = util::split(h, CRLF);
   it = vs.begin();
   parseStatusLine(*it);
+  std::cout << "status line : " << *it << std::endl;
   while (++it != vs.end()) {
+    std::cout << "it : " << *it << std::endl;
     std::pair<std::string, std::string> ret = splitField(*it);
     this->field.insert(ret);
   }
@@ -234,6 +236,19 @@ const std::string HttpRequest::getPathInfo() const {
   return this->pathInfo;
 }
 
+std::string HttpRequest::getRecvData() const {
+  return this->recvData;
+}
+
+int HttpRequest::getRecvStatus() const {
+  return this->recvStatus;
+}
+
+int HttpRequest::getContentLength() const {
+  return this->contentLength;
+}
+
+
 /*
  * -------------------------- Setter -------------------------------
  */
@@ -260,6 +275,33 @@ void HttpRequest::setVersion(const std::string& version) {
   validateVersion(version);
 
   this->version = version;
+}
+
+void HttpRequest::setRecvData(const std::string& data) {
+  this->recvData.clear();
+  this->recvData = data;
+}
+
+void HttpRequest::addRecvData(const std::string& data) {
+  this->recvData += data;
+}
+
+void HttpRequest::setRecvStatus(int status) {
+  this->recvStatus = status;
+}
+
+void HttpRequest::setContentLength(int len) {
+  this->contentLength = len;
+}
+
+void HttpRequest::setConfig(const Config& conf) {
+  this->sc = conf.findServerConfig(getField("Host"));
+  log::debug << "this server server_name:" << this->sc.getServerName() << log::endl;
+  this->lc = this->sc.findLocationConfig(this->getPath());
+}
+
+void HttpRequest::clearRecvData() {
+  this->recvData.clear();
 }
 
 //void HttpRequest::parseCacheControl(const std::string &s) {

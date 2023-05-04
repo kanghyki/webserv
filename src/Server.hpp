@@ -9,6 +9,7 @@
 # include "./http/HttpResponse.hpp"
 # include "./http/Http.hpp"
 # include "./http/HttpStatus.hpp"
+# include "./http/HttpHeaderField.hpp"
 # include "./Logger.hpp"
 
 # include <arpa/inet.h>
@@ -36,8 +37,6 @@ class Server {
     static const int FD_CLOSED = -1;
     static const int BUF_SIZE = 1024;
     static const int MANAGE_FD_MAX = 1024;
-//    static const int HEADER_NOT_RECV = -1;
-//    static const int HEADER_RECV = 0;
 
     struct received {
       std::string data;
@@ -46,13 +45,13 @@ class Server {
       int         status;
     };
 
-    enum recvStatus {
-      HEADER_NOT_RECV,
-      HEADER_RECV,
-      BODY_RECV
-    };
+//    enum recvStatus {
+//      HEADER_NOT_RECV,
+//      HEADER_RECV,
+//      BODY_RECV
+//    };
 
-    std::vector<struct received> recvTable;
+    std::vector<HttpRequest> requests;
 
 //    std::vector<std::string> data;
 //    std::vector<int> contentLengths;
@@ -78,26 +77,24 @@ class Server {
 
     int acceptConnect(int server_fd);
     void receiveData(int fd);
-    bool checkContentLength(int fd);
+    void checkReceiveDone(int fd);
     void sendData(int fd, const std::string& data);
     void closeSocket(int fd);
     void receiveDone(int fd);
+    void clearRequest(int fd);
 
-    const std::string getData(int fd) const;
-    size_t            getContentLength(size_t fd) const;
-    size_t            getHeaderPos(int fd) const;
-    int               getStatus(int fd) const;
-
-    void              addData(int fd, const std::string& data);
-    void              setContentLength(int fd, int len);
-    void              setHeaderPos(int fd, size_t pos);
-    void              setStatus(int fd, recvStatus status);
+//    const std::string getData(int fd) const;
+//    size_t            getContentLength(size_t fd) const;
+//    size_t            getHeaderPos(int fd) const;
+//    int               getStatus(int fd) const;
+//
+//    void              addData(int fd, const std::string& data);
+//    void              setContentLength(int fd, int len);
+//    void              setHeaderPos(int fd, size_t pos);
+//    void              setStatus(int fd, recvStatus status);
 
     void              clearReceived(int fd);
-
-    void              recvHeader(int fd);
-    int               parseContentLength(int fd, size_t start);
-    bool              bodyRecvDone(int fd);
+    void              recvHeader(HttpRequest& req);
 
     const Config&     config;
 //    Connection        connection;
