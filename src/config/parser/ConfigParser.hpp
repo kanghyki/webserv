@@ -29,8 +29,16 @@ class ConfigParser {
     LocationConfig            parseLocation(LocationConfig& conf);
     void                      parseCommon(CommonConfig& conf);
 
+
+    // http
+    void                      parseClientHeaderTimeout(HttpConfig& conf);
+    void                      parseClientBodyTimeout(HttpConfig& conf);
+    void                      parseSendTimeout(HttpConfig& conf);
+
     // server
     void                      parseSessionTimeout(ServerConfig& conf);
+    void                      parseKeepAliveTimeout(ServerConfig& conf);
+    void                      parseKeepAliveRequests(ServerConfig& conf);
     void                      parseListen(ServerConfig& conf);
     void                      parseServerName(ServerConfig& conf);
     void                      parseCGI(ServerConfig& conf);

@@ -28,6 +28,9 @@ HttpConfig ConfigParser::parseHttp() {
   expectNextToken(Token::LBRACE);
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::SERVER)) conf.addServerConfig(parseServer(conf));
+    else if (curToken().is(Token::CLIENT_HEADER_TIMEOUT)) parseClientHeaderTimeout(conf);
+    else if (curToken().is(Token::CLIENT_BODY_TIMEOUT)) parseClientBodyTimeout(conf);
+    else if (curToken().is(Token::SEND_TIMEOUT)) parseSendTimeout(conf);
     else if (curToken().isCommon()) parseCommon(conf);
     else throwBadSyntax();
   }
@@ -44,6 +47,8 @@ ServerConfig ConfigParser::parseServer(HttpConfig& httpConf) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::SESSION_TIMEOUT)) parseSessionTimeout(conf);
+    else if (curToken().is(Token::KEEPALIVE_TIMEOUT)) parseKeepAliveTimeout(conf);
+    else if (curToken().is(Token::KEEPALIVE_REQUESTS)) parseKeepAliveRequests(conf);
     else if (curToken().is(Token::LISTEN)) parseListen(conf);
     else if (curToken().is(Token::SERVER_NAME)) parseServerName(conf);
     else if (curToken().is(Token::CGI)) parseCGI(conf);
@@ -99,6 +104,31 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
   else if (curToken().is(Token::INDEX)) parseIndex(conf);
 }
 
+// http
+// http
+// http
+
+// client_header_timeout [second(int)];
+void ConfigParser::parseClientHeaderTimeout(HttpConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setClientHeaderTimeout(atoi(curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
+}
+
+// client_body_timeout [second(int)];
+void ConfigParser::parseClientBodyTimeout(HttpConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setClientBodyTimeout(atoi(curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
+}
+
+// send_timeout [second(int)];
+void ConfigParser::parseSendTimeout(HttpConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setSendTimeout(atoi(curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
+}
+
 // server
 // server
 // server
@@ -107,6 +137,20 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
 void ConfigParser::parseSessionTimeout(ServerConfig& conf) {
   expectNextToken(Token::INT);
   conf.setSessionTimeout(atoi(curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
+}
+
+// keepalive_timeout [second(int)];
+void ConfigParser::parseKeepAliveTimeout(ServerConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setKeepAliveTimeout(atoi(curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
+}
+
+// keepalive_requests [second(int)];
+void ConfigParser::parseKeepAliveRequests(ServerConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setKeepAliveRequests(atoi(curToken().getLiteral()));
   expectNextToken(Token::SEMICOLON);
 }
 

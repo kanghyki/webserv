@@ -47,8 +47,13 @@ class Token {
     static const std::string  RETURN;
     static const std::string  SESSION_TIMEOUT;
     static const std::string  CGI;
+    static const std::string  CLIENT_BODY_TIMEOUT;
+    static const std::string  CLIENT_HEADER_TIMEOUT;
+    static const std::string  SEND_TIMEOUT;
+    static const std::string  KEEPALIVE_TIMEOUT;
+    static const std::string  KEEPALIVE_REQUESTS;
 
-    enum { KEYWORD_SIZE = 14 };
+    enum { KEYWORD_SIZE = 19 };
     static const int          IDENT_IDX;
     static const int          TYPE_IDX;
     static const std::string  keyword[KEYWORD_SIZE][2];

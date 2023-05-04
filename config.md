@@ -24,6 +24,22 @@ example) index hello.html;
 ```
 
 # Http
+```
+1.
+client_header_timeout [second(int)];
+default value) 60
+example) client_header_timeout 50;
+
+2.
+client_body_timeout [second(int)];
+default value) 60
+example) client_body_timeout 50;
+
+3.
+send_timeout [second(int)];
+default value) 60
+example) send_timeout 50;
+```
 
 # Server
 ```
@@ -33,11 +49,21 @@ default value) 600
 example) session_timeout 30;
 
 2.
+keepalive_timeout [second(int)];
+default value) 60
+example) keepalive_timeout 30;
+
+3.
+keepalive_requests [second(int)];
+default value) 1000
+example) keepalive_requests 500;
+
+4.
 listen [host(ident)]:[port(int)];
 default value) 127.0.0.1:80
 example) listen 192.168.0.1:4242;
 
-3.
+5.
 server_name [path(ident)];
 default value) NONE
 example) server_name webserv.42.kr;

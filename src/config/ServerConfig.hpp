@@ -20,6 +20,8 @@ class ServerConfig: public CommonConfig {
     const LocationConfig                      findLocationConfig(std::string path) const;
 
     int                                       getSessionTimeout() const;
+    int                                       getKeepAliveTimeout() const;
+    int                                       getKeepAliveRequests() const;
     short                                     getPort() const;
     std::string                               getHost() const;
     std::string                               getServerName() const;
@@ -27,6 +29,8 @@ class ServerConfig: public CommonConfig {
     const std::vector<LocationConfig>&        getLocationConfig() const;
 
     void                                      setSessionTimeout(int n);
+    void                                      setKeepAliveTimeout(int n);
+    void                                      setKeepAliveRequests(int n);
     void                                      setPort(short port);
     void                                      setHost(std::string host);
     void                                      setServerName(std::string serverName);
@@ -35,10 +39,14 @@ class ServerConfig: public CommonConfig {
 
   private:
     static const int                          DEFAULT_SESSION_TIMEOUT;
+    static const int                          DEFAULT_KEEPALIVE_TIMEOUT;
+    static const int                          DEFAULT_KEEPALIVE_REQUESTS;
     static const short                        DEFAULT_PORT;
     static const std::string                  DEFAULT_HOST;
 
     int                                       session_timeout;
+    int                                       keepalive_timeout;
+    int                                       keepalive_requests;
     short                                     port;
     std::string                               host;
     std::string                               serverName;

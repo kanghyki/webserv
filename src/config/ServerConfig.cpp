@@ -2,12 +2,16 @@
 #include "./HttpConfig.hpp"
 
 const int         ServerConfig::DEFAULT_SESSION_TIMEOUT = 600;
+const int         ServerConfig::DEFAULT_KEEPALIVE_TIMEOUT = 60;
+const int         ServerConfig::DEFAULT_KEEPALIVE_REQUESTS = 1000;
 const short       ServerConfig::DEFAULT_PORT = 80;
 const std::string ServerConfig::DEFAULT_HOST = "127.0.0.1";
 
 ServerConfig::ServerConfig():
   CommonConfig(),
   session_timeout(DEFAULT_SESSION_TIMEOUT),
+  keepalive_timeout(DEFAULT_KEEPALIVE_TIMEOUT),
+  keepalive_requests(DEFAULT_KEEPALIVE_REQUESTS),
   port(DEFAULT_PORT),
   host(DEFAULT_HOST) {}
 
@@ -16,6 +20,8 @@ ServerConfig::~ServerConfig() {}
 ServerConfig::ServerConfig(const HttpConfig& config):
   CommonConfig(config),
   session_timeout(DEFAULT_SESSION_TIMEOUT),
+  keepalive_timeout(DEFAULT_KEEPALIVE_TIMEOUT),
+  keepalive_requests(DEFAULT_KEEPALIVE_REQUESTS),
   port(DEFAULT_PORT),
   host(DEFAULT_HOST) {
 }
@@ -23,6 +29,8 @@ ServerConfig::ServerConfig(const HttpConfig& config):
 ServerConfig::ServerConfig(const ServerConfig& obj):
   CommonConfig(obj),
   session_timeout(obj.getSessionTimeout()),
+  keepalive_timeout(obj.getKeepAliveTimeout()),
+  keepalive_requests(obj.getKeepAliveRequests()),
   port(obj.getPort()),
   host(obj.getHost()),
   serverName(obj.getServerName()),
@@ -32,11 +40,13 @@ ServerConfig::ServerConfig(const ServerConfig& obj):
 ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
   if (this != &obj) {
     this->clientBodySize = obj.getClientBodySize();
-    this->session_timeout = obj.getSessionTimeout();
     this->root = obj.getRoot();
     this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
 
+    this->session_timeout = obj.getSessionTimeout();
+    this->keepalive_timeout = obj.getKeepAliveTimeout();
+    this->keepalive_requests = obj.getKeepAliveRequests();
     this->port = obj.getPort();
     this->host = obj.getHost();
     this->serverName = obj.getServerName();
@@ -95,8 +105,12 @@ const LocationConfig& ServerConfig::findLocationConfigRoop(const LocationConfig&
 }
 
 // getter
-//
+
 int ServerConfig::getSessionTimeout() const { return this->session_timeout; }
+
+int ServerConfig::getKeepAliveTimeout() const { return this->keepalive_timeout; }
+
+int ServerConfig::getKeepAliveRequests() const { return this->keepalive_requests; }
 
 short ServerConfig::getPort() const { return this->port; }
 
@@ -109,8 +123,12 @@ const std::map<std::string, std::string>& ServerConfig::getCGI() const { return 
 const std::vector<LocationConfig>& ServerConfig::getLocationConfig() const { return this->locations; }
 
 // setter
-//
+
 void ServerConfig::setSessionTimeout(int n) { this->session_timeout = n; }
+
+void ServerConfig::setKeepAliveTimeout(int n) { this->keepalive_timeout = n; }
+
+void ServerConfig::setKeepAliveRequests(int n) { this->keepalive_requests = n; }
 
 void ServerConfig::setPort(short port) { this->port = port; }
 

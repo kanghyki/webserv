@@ -22,6 +22,11 @@ const std::string Token::AUTOINDEX                = "autoindex";
 const std::string Token::RETURN                   = "return";
 const std::string Token::SESSION_TIMEOUT          = "session_timeout";
 const std::string Token::CGI                      = "cgi";
+const std::string Token::CLIENT_BODY_TIMEOUT      = "client_body_timeout";
+const std::string Token::CLIENT_HEADER_TIMEOUT    = "client_header_timeout";
+const std::string Token::SEND_TIMEOUT             = "send_timeout";
+const std::string Token::KEEPALIVE_TIMEOUT        = "keepalive_timeout";
+const std::string Token::KEEPALIVE_REQUESTS       = "keepalive_requests";
 
 const int         Token::IDENT_IDX                = 0;
 const int         Token::TYPE_IDX                 = 1;
@@ -41,6 +46,11 @@ const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"return",                                     Token::RETURN},
   {"session_timeout",                            Token::SESSION_TIMEOUT},
   {"cgi",                                        Token::CGI},
+  {"client_body_timeout",                        Token::CLIENT_BODY_TIMEOUT},
+  {"client_header_timeout",                      Token::CLIENT_HEADER_TIMEOUT},
+  {"send_timeout",                               Token::SEND_TIMEOUT},
+  {"keepalive_timeout",                          Token::KEEPALIVE_TIMEOUT},
+  {"keepalive_requests",                         Token::KEEPALIVE_REQUESTS},
 };
 
 Token::Token():
