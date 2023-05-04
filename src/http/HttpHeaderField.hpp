@@ -63,6 +63,7 @@ namespace header_field {
   const std::string USER_AGENT            =   "user-agent";
   const std::string SET_COOKIE            =   "set-cookie";
   const std::string COOKIE                =   "cookie";
+  const std::string CONNECTION            =   "connection";
 }
 
 #endif

@@ -30,6 +30,12 @@ class HttpRequest {
       RECEIVE_DONE
     };
 
+    enum reqType {
+      KEEP_ALIVE,
+      CLOSE,
+      CHUNKED
+    };
+
     HttpRequest();
     ~HttpRequest();
 
@@ -57,7 +63,7 @@ class HttpRequest {
     std::string                           getRecvData() const;
     int                                   getRecvStatus() const;
     int                                   getContentLength() const;
-
+    int                                   getReqType() const;
 
     void                                  setBody(const std::string& body);
     void                                  setRecvData(const std::string& data);
@@ -65,6 +71,8 @@ class HttpRequest {
     void                                  clearRecvData();
     void                                  setRecvStatus(int status);
     void                                  setContentLength(int len);
+    void                                  setReqType(int type);
+    void                                  setReqType(const std::string& type);
 
 //    HttpRequest& operator=(const HttpRequest& obj);
 
@@ -90,6 +98,7 @@ class HttpRequest {
     std::string                           recvData;
     int                                   recvStatus;
     int                                   contentLength;
+    int                                   reqType;
 
     void                                  parseStatusLine(const std::string &line);
 

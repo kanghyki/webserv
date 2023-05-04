@@ -2,7 +2,7 @@
 
 const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 
-HttpRequest::HttpRequest(): cgi(false), recvStatus(HEADER_RECEIVE) {}
+HttpRequest::HttpRequest(): cgi(false), recvStatus(HEADER_RECEIVE), reqType(KEEP_ALIVE) {}
 
 //HttpRequest::HttpRequest(const HttpRequest& obj):
 //  method(obj.method),
@@ -248,6 +248,10 @@ int HttpRequest::getContentLength() const {
   return this->contentLength;
 }
 
+int HttpRequest::getReqType() const {
+  return this->reqType;
+}
+
 
 /*
  * -------------------------- Setter -------------------------------
@@ -303,6 +307,19 @@ void HttpRequest::setConfig(const Config& conf) {
 void HttpRequest::clearRecvData() {
   this->recvData.clear();
 }
+
+void HttpRequest::setReqType(int type) {
+  this->reqType = type;
+}
+
+void HttpRequest::setReqType(const std::string& type) {
+  std::string ct = util::toLowerStr(type);
+  if (ct == "keep-alive")
+    this->setReqType(KEEP_ALIVE);
+  else if (ct == "close")
+    this->setReqType(CLOSE);
+}
+
 
 //void HttpRequest::parseCacheControl(const std::string &s) {
 //}

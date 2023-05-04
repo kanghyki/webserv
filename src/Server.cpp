@@ -164,8 +164,13 @@ void Server::run(void) {
         else
           receiveData(i);
       }
-      if (FD_ISSET(i, &writesCpy))
-        closeSocket(i);
+      if (FD_ISSET(i, &writesCpy)) {
+        if (this->requests[i].getReqType() == HttpRequest::CLOSE)
+          closeSocket(i);
+        // 강현이 타임아웃 적용해서 keep alive 끊으면 되고, chunked 구현하면 될 듯?
+
+
+      }
 
     }
   }
@@ -239,7 +244,7 @@ void Server::receiveDone(int fd) {
   HttpRequest&   req = this->requests[fd];
   HttpResponse  res;
 
-  FD_CLR(fd, &this->getReads());
+//  FD_CLR(fd, &this->getReads());
   log::debug << "this->data[" << fd << "]\n" << this->requests[fd].getRecvData() << log::endl;
   
   try {
@@ -261,14 +266,10 @@ void Server::receiveDone(int fd) {
 }
 
 void Server::sendData(int fd, const std::string& data) {
+  clearRequest(fd);
   FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     log::warning << "send failed" << log::endl;
-  clearRequest(fd);
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-  std::cout << "clear request" << std::endl;
-  std::cout << this->requests[fd].getRecvData() << std::endl;
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 }
 
 void Server::closeSocket(int fd) {
@@ -294,6 +295,7 @@ void Server::recvHeader(HttpRequest& req) {
   if (pos != std::string::npos) {
     std::string header = recvData.substr(0, pos);
     req.parseHeader(header);
+    req.setReqType(req.getField(header_field::CONNECTION));
     std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
     if (contentLength.empty()) {
       req.setRecvStatus(HttpRequest::RECEIVE_DONE);
