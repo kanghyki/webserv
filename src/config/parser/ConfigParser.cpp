@@ -210,8 +210,10 @@ void ConfigParser::parseAutoindex(LocationConfig& conf) {
 void ConfigParser::parseReturn(LocationConfig& conf) {
   expectNextToken(Token::INT);
   int status_code = atoi(curToken().getLiteral());
+  if (status_code != 301  && status_code != 307)
+    throw std::runtime_error("A value other than 301 or 307 is not supported by the return field");
   expectNextToken(Token::IDENT);
-  conf.addReturnRes(std::pair<int, std::string>(status_code, curToken().getLiteral()));
+  conf.setReturnRes(status_code, curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }
 
