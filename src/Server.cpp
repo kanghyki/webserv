@@ -16,7 +16,7 @@ Server::Server(Config& config) :
     FD_ZERO(&this->writes);
     FD_ZERO(&this->listens);
 
-    std::vector<ServerConfig> servers = this->config.getServerConfig();
+    std::vector<ServerConfig> servers = this->config.getHttpConfig().getServerConfig();
     for (std::vector<ServerConfig>::iterator sit = servers.begin(); sit != servers.end(); ++sit) {
       sockaddr_in sock;
       int fd = socketInit();
@@ -255,7 +255,7 @@ void Server::receiveDone(int fd) {
   this->connection.remove(fd);
   FD_CLR(fd, &this->getReads());
   log::debug << "this->data[" << fd << "]\n" << this->recvTable[fd].data << log::endl;
-  
+
   try {
     req.parse(getData(fd), this->config);
     log::debug << "request good!" << log::endl;

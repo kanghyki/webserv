@@ -7,9 +7,12 @@
 # include <string>
 # include <vector>
 
+class HttpConfig;
+
 class ServerConfig: public CommonConfig {
   public:
     ServerConfig();
+    ServerConfig(const HttpConfig& config);
     ServerConfig(const ServerConfig& obj);
     ~ServerConfig();
     ServerConfig& operator=(const ServerConfig& obj);
@@ -17,7 +20,6 @@ class ServerConfig: public CommonConfig {
     const LocationConfig                      findLocationConfig(std::string path) const;
 
     int                                       getSessionTimeout() const;
-    int                                       getTimeout() const;
     short                                     getPort() const;
     std::string                               getHost() const;
     std::string                               getServerName() const;
@@ -25,7 +27,6 @@ class ServerConfig: public CommonConfig {
     const std::vector<LocationConfig>&        getLocationConfig() const;
 
     void                                      setSessionTimeout(int n);
-    void                                      setTimeout(int n);
     void                                      setPort(short port);
     void                                      setHost(std::string host);
     void                                      setServerName(std::string serverName);
@@ -34,12 +35,10 @@ class ServerConfig: public CommonConfig {
 
   private:
     static const int                          DEFAULT_SESSION_TIMEOUT;
-    static const int                          DEFAULT_TIMEOUT;
     static const short                        DEFAULT_PORT;
     static const std::string                  DEFAULT_HOST;
 
     int                                       session_timeout;
-    int                                       timeout;
     short                                     port;
     std::string                               host;
     std::string                               serverName;

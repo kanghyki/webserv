@@ -33,16 +33,11 @@ default value) 600
 example) session_timeout 30;
 
 2.
-timeout [second(int)];
-default value) 60
-example) timeout 35;
-
-3.
 listen [host(ident)]:[port(int)];
 default value) 127.0.0.1:80
 example) listen 192.168.0.1:4242;
 
-4.
+3.
 server_name [path(ident)];
 default value) NONE
 example) server_name webserv.42.kr;

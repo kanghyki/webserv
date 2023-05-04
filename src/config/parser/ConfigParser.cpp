@@ -6,31 +6,44 @@ ConfigParser::ConfigParser() {
 
 ConfigParser::~ConfigParser() {};
 
-Config ConfigParser::parse(const std::string& fileName) throw(std::runtime_error) {
+Config ConfigParser::parse(const std::string& fileName) throw (std::runtime_error) {
   Config conf;
 
   generateToken(fileName);
   while (curToken().isNot(Token::END_OF_FILE)) {
-    if (curToken().is(Token::SERVER)) conf.addServerConfig(parseServer());
+    if (curToken().is(Token::HTTP)) conf.setHttpConfig(parseHttp());
     else throwBadSyntax();
     nextToken();
   }
   expectCurToken(Token::END_OF_FILE);
 
-  if (conf.getServerConfig().size() == 0) throw (std::runtime_error("No server config found"));
+  if (conf.getHttpConfig().getServerConfig().size() == 0) throw (std::runtime_error("No server config found"));
 
   return conf;
 }
 
-ServerConfig ConfigParser::parseServer() {
-  ServerConfig conf;
+HttpConfig ConfigParser::parseHttp() {
+  HttpConfig conf;
+
+  expectNextToken(Token::LBRACE);
+  for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
+    if (curToken().is(Token::SERVER)) conf.addServerConfig(parseServer(conf));
+    else if (curToken().isCommon()) parseCommon(conf);
+    else throwBadSyntax();
+  }
+  expectCurToken(Token::RBRACE);
+
+  return conf;
+}
+
+ServerConfig ConfigParser::parseServer(HttpConfig& httpConf) {
+  ServerConfig conf(httpConf);
 
   expectNextToken(Token::LBRACE);
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
     else if (curToken().is(Token::SESSION_TIMEOUT)) parseSessionTimeout(conf);
-    else if (curToken().is(Token::TIMEOUT)) parseTimeout(conf);
     else if (curToken().is(Token::LISTEN)) parseListen(conf);
     else if (curToken().is(Token::SERVER_NAME)) parseServerName(conf);
     else if (curToken().is(Token::CGI)) parseCGI(conf);
@@ -94,13 +107,6 @@ void ConfigParser::parseCommon(CommonConfig& conf) {
 void ConfigParser::parseSessionTimeout(ServerConfig& conf) {
   expectNextToken(Token::INT);
   conf.setSessionTimeout(atoi(curToken().getLiteral()));
-  expectNextToken(Token::SEMICOLON);
-}
-
-// timeout [second(int)];
-void ConfigParser::parseTimeout(ServerConfig& conf) {
-  expectNextToken(Token::INT);
-  conf.setTimeout(atoi(curToken().getLiteral()));
   expectNextToken(Token::SEMICOLON);
 }
 

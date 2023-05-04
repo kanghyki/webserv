@@ -23,14 +23,14 @@ class ConfigParser {
     std::vector<Token>        tokens;
     std::string               fileName;
 
-    ServerConfig              parseServer();
+    HttpConfig                parseHttp();
+    ServerConfig              parseServer(HttpConfig& httpConf);
     LocationConfig            parseLocation(ServerConfig& conf);
     LocationConfig            parseLocation(LocationConfig& conf);
     void                      parseCommon(CommonConfig& conf);
 
     // server
     void                      parseSessionTimeout(ServerConfig& conf);
-    void                      parseTimeout(ServerConfig& conf);
     void                      parseListen(ServerConfig& conf);
     void                      parseServerName(ServerConfig& conf);
     void                      parseCGI(ServerConfig& conf);

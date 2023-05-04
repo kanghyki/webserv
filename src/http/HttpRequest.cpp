@@ -47,7 +47,7 @@ void HttpRequest::parse(std::string request, const Config& conf) {
     setBody(request.substr(pos + (CRLF + CRLF).length()));
   }
 
-  this->sc = conf.findServerConfig(getField("Host"));
+  this->sc = conf.getHttpConfig().findServerConfig(getField("Host"));
   log::debug << "this server server_name:" << this->sc.getServerName() << log::endl;
   this->lc = this->sc.findLocationConfig(this->getPath());
 

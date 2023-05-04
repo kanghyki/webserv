@@ -22,6 +22,7 @@ SRCS			=	main.cpp\
 						Connection.cpp\
 						Config.cpp\
 						CommonConfig.cpp\
+						HttpConfig.cpp\
 						ServerConfig.cpp\
 						LocationConfig.cpp\
 						Token.cpp\
