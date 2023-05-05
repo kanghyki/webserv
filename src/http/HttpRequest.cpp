@@ -2,7 +2,11 @@
 
 const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 
-HttpRequest::HttpRequest(): cgi(false), recvStatus(HEADER_RECEIVE), reqType(KEEP_ALIVE) {}
+HttpRequest::HttpRequest(): 
+  cgi(false), 
+  recvStatus(HEADER_RECEIVE), 
+  reqType(KEEP_ALIVE),
+  errorStatus(OK) {}
 
 //HttpRequest::HttpRequest(const HttpRequest& obj):
 //  method(obj.method),
@@ -252,6 +256,14 @@ int HttpRequest::getReqType() const {
   return this->reqType;
 }
 
+HttpStatus HttpRequest::getErrorStatus() const {
+  return this->errorStatus;
+}
+bool HttpRequest::isError() const {
+  if (this->errorStatus > 0)
+    return true;
+  return false;
+}
 
 /*
  * -------------------------- Setter -------------------------------
@@ -316,6 +328,10 @@ void HttpRequest::setReqType(const std::string& type) {
     this->setReqType(KEEP_ALIVE);
   else if (ct == "close")
     this->setReqType(CLOSE);
+}
+
+void HttpRequest::setErrorStatus(HttpStatus status) {
+  this->errorStatus = status;
 }
 
 

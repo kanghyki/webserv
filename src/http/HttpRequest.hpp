@@ -65,6 +65,8 @@ class HttpRequest {
     int                                   getRecvStatus() const;
     int                                   getContentLength() const;
     int                                   getReqType() const;
+    HttpStatus                            getErrorStatus() const;
+    bool                                  isError() const;
 
     void                                  setBody(const std::string& body);
     void                                  setRecvData(const std::string& data);
@@ -74,6 +76,7 @@ class HttpRequest {
     void                                  setContentLength(int len);
     void                                  setReqType(int type);
     void                                  setReqType(const std::string& type);
+    void                                  setErrorStatus(HttpStatus status);
 
 //    HttpRequest& operator=(const HttpRequest& obj);
 
@@ -100,6 +103,7 @@ class HttpRequest {
     int                                   recvStatus;
     int                                   contentLength;
     int                                   reqType;
+    HttpStatus                            errorStatus;
 
     void                                  parseStatusLine(const std::string &line);
 

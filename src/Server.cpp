@@ -159,6 +159,9 @@ void Server::run(void) {
       if (FD_ISSET(i, &writesCpy)) {
         if (this->requests[i].getReqType() == HttpRequest::CLOSE)
           closeSocket(i);
+        if (this->requests[i].getReqType() == HttpRequest::CHUNKED) {
+
+        }
         // 강현이 타임아웃 적용해서 keep alive 끊으면 되고, chunked 구현하면 될 듯?
 
 
@@ -252,6 +255,8 @@ void Server::receiveDone(int fd) {
   this->connection.remove(fd);
 
   try {
+    if (req.isError())
+      throw req.getErrorStatus();
     req.setConfig(this->config);
     req.checkCGI(req.getPath(), req.getServerConfig());
     log::debug << "request good!" << log::endl;
@@ -283,6 +288,7 @@ void Server::closeSocket(int fd) {
     throw (CloseException());
   else
     log::info << "Closed client(" << fd << ")" << log::endl;
+  this->requests[fd] = HttpRequest();
 }
 
 void Server::clearReceived(int fd) {
@@ -298,8 +304,14 @@ void Server::recvHeader(HttpRequest& req) {
 
   if (pos != std::string::npos) {
     std::string header = recvData.substr(0, pos);
-    req.parseHeader(header);
-    req.setReqType(req.getField(header_field::CONNECTION));
+    try {
+      req.parseHeader(header);
+      req.setReqType(req.getField(header_field::CONNECTION));
+    } catch (HttpStatus s) {
+      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+      req.setErrorStatus(s);
+      return;
+    }
     std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
     if (contentLength.empty()) {
       req.setRecvStatus(HttpRequest::RECEIVE_DONE);
@@ -314,7 +326,9 @@ void Server::recvHeader(HttpRequest& req) {
 }
 
 void Server::clearRequest(int fd) {
+  int tmp = this->requests[fd].getReqType();
   this->requests[fd] = HttpRequest();
+  this->requests[fd].setReqType(tmp);
 }
 
 //const std::string Server::getData(int fd) const {
