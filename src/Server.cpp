@@ -256,7 +256,7 @@ void Server::checkReceiveDone(int fd) {
 }
 
 void Server::receiveDone(int fd) {
-  HttpRequest&   req = this->requests[fd];
+  HttpRequest&  req = this->requests[fd];
   HttpResponse  res;
 
   log::debug << "this->data[" << fd << "]\n" << this->requests[fd].getRecvData() << log::endl;
@@ -267,6 +267,9 @@ void Server::receiveDone(int fd) {
       throw req.getErrorStatus();
     req.setConfig(this->config);
     req.checkCGI(req.getPath(), req.getServerConfig());
+    if (req.getReqType() == HttpRequest::CHUNKED) {
+
+    }
     log::debug << "request good!" << log::endl;
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isCGI())
@@ -319,7 +322,7 @@ void Server::recvHeader(HttpRequest& req) {
     std::string header = recvData.substr(0, pos);
     try {
       req.parseHeader(header);
-      req.setReqType(req.getField(header_field::CONNECTION));
+      req.setReqType();
     } catch (HttpStatus s) {
       req.setRecvStatus(HttpRequest::RECEIVE_DONE);
       req.setErrorStatus(s);
@@ -344,6 +347,7 @@ void Server::clearRequest(int fd) {
   req.setContentLength(0);
   req.setRecvStatus(HttpRequest::HEADER_RECEIVE);
   req.setCgi(false);
+  req.setErrorStatus(OK);
 }
 
 //const std::string Server::getData(int fd) const {

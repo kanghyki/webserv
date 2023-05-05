@@ -1,4 +1,5 @@
 #include "./HttpRequest.hpp"
+#include "HttpHeaderField.hpp"
 
 const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 
@@ -158,6 +159,10 @@ void HttpRequest::checkCGI(const std::string& path, const ServerConfig& sc) {
       break;
     }
   }
+}
+
+void HttpRequest::unChunked(void) {
+
 }
 
 /*
@@ -338,6 +343,18 @@ void HttpRequest::setCgi(bool cgi) {
   this->cgi = cgi;
 }
 
+void HttpRequest::setReqType() {
+  std::string s = util::toLowerStr(this->getField(header_field::TRANSFER_ENCODING));
+  if (s == "chunked")
+    this->setReqType(CHUNKED);
+  else {
+    s = util::toLowerStr(this->getField(header_field::CONNECTION));
+    if (s == "keep-alive")
+      this->setReqType(KEEP_ALIVE);
+    else if (s == "close")
+      this->setReqType(CLOSE);
+  }
+}
 
 //void HttpRequest::parseCacheControl(const std::string &s) {
 //}
