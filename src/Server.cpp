@@ -152,7 +152,7 @@ void Server::run(void) {
 
       if (FD_ISSET(i, &this->writes)) {
         if (FD_ISSET(i, &writesCpy)) {
-          if (this->requests[i].getConnection() == HttpRequest::CLOSE) {
+          if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE) {
             FD_CLR(i, &this->getWrites());
             FD_CLR(i, &this->getReads());
             // FIXME:
@@ -223,9 +223,9 @@ void Server::receiveData(int fd) {
   buf[recv_size] = 0;
   // TODO: 연속으로 받은 데이터 처리
   this->recvs[fd] += buf;
-//  log::debug << "========================" << log::endl;
-//  log::debug << this->recvs[fd] << log::endl;
-//  log::debug << "========================" << log::endl;
+  log::debug << "========================" << log::endl;
+  log::debug << this->recvs[fd] << log::endl;
+  log::debug << "========================" << log::endl;
   checkReceiveDone(fd);
 }
 
@@ -248,14 +248,14 @@ void Server::checkReceiveDone(int fd) {
   // @@@@ Body 받는 부분
   if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
     log::debug << "body recieve!" << log::endl;
-    log::debug << "Transfer_encoding = " << req.getTransferEncoding() << log::endl;
+    log::debug << "Transfer_encoding = " << req.getHeader().getTransferEncoding() << log::endl;
 
 //    if (this->recvs[fd].length() > static_cast<size_t>(req.getLocationConfig().getClientBodySize())) {
 //      req.setErrorStatus(PAYLOAD_TOO_LARGE);
 //      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
 //    }
     // chunked로 온 요청 처리
-    if (req.getTransferEncoding() == HttpRequest::CHUNKED) {
+    if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       // FIXME: localhost:8000/r/n 을 찾음,, 헤더 잘라놔서 괜찮을 듯 이제
       // 종료 조건
       if (this->recvs[fd].find("0\r\n") != std::string::npos) {
@@ -264,7 +264,7 @@ void Server::checkReceiveDone(int fd) {
       }
     }
     // 일반 요청 처리
-    else if (req.getTransferEncoding() == HttpRequest::UNSET) {
+    else if (req.getHeader().getTransferEncoding() == HttpRequestHeader::UNSET) {
         log::debug << "unchunked find!" << log::endl;
       // 종료 조건
       if (req.getContentLength() == (int)recvs[fd].length())
@@ -280,8 +280,8 @@ void Server::checkReceiveDone(int fd) {
     // 지금까지 받은 데이터를 body 에 담기
     req.setBody(this->recvs[fd]);
     this->recvs[fd] = "";
-    if (req.getTransferEncoding() == HttpRequest::CHUNKED)
-      req.unChunked();
+    if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED)
+      req.unchunk();
 
     // Response 만들러 ㄱ
     receiveDone(fd);
@@ -300,9 +300,10 @@ void Server::recvHeader(int fd, HttpRequest& req) {
     this->recvs[fd] = this->recvs[fd].substr(pos + 4);
 
     try {
-      req.parseHeader(header);
-      req.setConfig(this->config);
-      req.checkCGI();
+      req.parse(header, this->config);
+//      req.parseHeader(header);
+//      req.setConfig(this->config);
+//      req.checkCGI();
       // FIXME: uhmm....... 고민해보기
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
@@ -312,13 +313,13 @@ void Server::recvHeader(int fd, HttpRequest& req) {
     }
 
     // chunked 요청일 경우
-    if (req.getTransferEncoding() == HttpRequest::CHUNKED) {
+    if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       log::warning << "It is chunked" << log::endl;
       req.setRecvStatus(HttpRequest::BODY_RECEIVE);
     }
     // 일반 요청일 경우
     else {
-      std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
+      std::string contentLength = req.getHeader().get(HttpRequestHeader::CONTENT_LENGTH);
       // content 가 없을 경우
       if (contentLength.empty())
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
@@ -373,20 +374,6 @@ void Server::closeSocket(int fd) {
   this->requests[fd] = HttpRequest();
 }
 
-//void Server::clearReceived(int fd) {
-//  HttpRequest& req = this->requests[fd];
-//
-//  req.setContentLength(0);
-//}
-
-//void Server::clearRequest(int fd) {
-//  HttpRequest& req = this->requests[fd];
-//  req.setContentLength(0);
-//  req.setRecvStatus(HttpRequest::HEADER_RECEIVE);
-//  req.setCgi(false);
-//  req.setErrorStatus(OK);
-//}
-
 void Server::cleanUp() {
   std::set<int> fd_list;
 
@@ -424,15 +411,3 @@ const char* Server::BindException::what() const throw() {
 const char* Server::ListenException::what() const throw() {
   return "Server listen failed";
 }
-
-//const char* Server::CloseException::what() const throw() {
-//  return "Server close failed";
-//}
-//
-//const char* Server::RecvException::what() const throw() {
-//  return "Server recv failed";
-//}
-
-/*
- * ---------------------- Non-Member Function ----------------------
- */

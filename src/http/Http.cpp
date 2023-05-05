@@ -52,7 +52,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
   std::map<std::string, std::string> header;
 
   try {
-    std::map<std::string, std::string> c = util::splitHeaderField(req.getField(header_field::COOKIE));
+    std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
     std::cout << c[SessionManager::SESSION_KEY] << std::endl;
     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;

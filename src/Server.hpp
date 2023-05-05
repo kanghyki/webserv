@@ -42,25 +42,12 @@ class Server {
     std::vector<HttpRequest> requests;
     std::vector<std::string> recvs;
 
-//    enum recvStatus {
-//      HEADER_NOT_RECV,
-//      HEADER_RECV,
-//      BODY_RECV
-//    };
-
-//    std::vector<std::string> data;
-//    std::vector<int> contentLengths;
-//    std::vector<size_t> headerPos;
-
-//    int servFd;
     int fdMax;
     fd_set listens;
     fd_set reads;
     fd_set writes;
     std::vector<int> listens_fd;
-//    sock in;
 
-//    int getServFd(void) const;
     fd_set& getReads(void);
     fd_set& getWrites(void);
 
@@ -76,19 +63,7 @@ class Server {
     void sendData(int fd, const std::string& data);
     void closeSocket(int fd);
     void receiveDone(int fd);
-//    void clearRequest(int fd);
 
-//    const std::string getData(int fd) const;
-//    size_t            getContentLength(size_t fd) const;
-//    size_t            getHeaderPos(int fd) const;
-//    int               getStatus(int fd) const;
-//
-//    void              addData(int fd, const std::string& data);
-//    void              setContentLength(int fd, int len);
-//    void              setHeaderPos(int fd, size_t pos);
-//    void              setStatus(int fd, recvStatus status);
-
-//    void              clearReceived(int fd);
     void              recvHeader(int fd, HttpRequest& req);
 
     const Config&     config;
@@ -112,16 +87,6 @@ class Server {
       public:
         const char* what(void) const throw();
     };
-
-//    class CloseException : public std::exception {
-//      public:
-//        const char* what(void) const throw();
-//    };
-//
-//    class RecvException : public std::exception {
-//      public:
-//        const char* what(void) const throw();
-//    };
 };
 
 #endif
