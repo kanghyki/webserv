@@ -52,6 +52,7 @@ std::string HttpResponse::toString() throw() {
 
   this->statusText = getStatusText(this->statusCode);
   addHeader(header_field::CONTENT_LENGTH, util::itoa(body.length()));
+  addHeader("Date", getCurrentTimeStr());
   ret = makeStatusLine();
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
     ret += makeHeaderField(it->first, it->second);
@@ -77,7 +78,7 @@ std::string HttpResponse::getCurrentTimeStr() const {
 
   curr_time = time(NULL);
   tm *time = gmtime(&curr_time);
-  strftime(buf, 100, "%a, %d %b %Y %X %Z", time);
+  strftime(buf, 100, "%a, %d %b %Y %X GMT", time);
 
   return buf;
 }
