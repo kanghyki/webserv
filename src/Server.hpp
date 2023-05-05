@@ -70,7 +70,7 @@ class Server {
     Connection        connection;
     SessionManager    sessionManager;
 
-    void              cleanUp();
+    void              cleanUpConnection();
 
   public:
     class InitException : public std::exception {

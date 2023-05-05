@@ -39,13 +39,14 @@ void HttpRequest::parse(const std::string& req, const Config& conf) throw (HttpR
   size_t pos;
 
   // Request line
-  if ((pos = req.find(CRLF)) != std::string::npos)
+  log::debug << "req:\n" << req << log::endl;
+  if ((pos = req.find("\r\n")) != std::string::npos)
     parseStatusLine(req.substr(0, pos));
   else
     throw BAD_REQUEST;
 
   // Request header
-  header.parse(req.substr(pos + CRLF.length()));
+  this->header.parse(req.substr(pos + 2));
 
   // Set config
   this->sc = conf.getHttpConfig().findServerConfig(this->header.get("Host"));

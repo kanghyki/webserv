@@ -146,7 +146,7 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-    cleanUp();
+    cleanUpConnection();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
 
@@ -210,22 +210,26 @@ void Server::receiveData(int fd) {
   int recv_size;
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
-  // FIXME:
   if (recv_size <= 0) {
-    log::warning << "recv <= 0" << log::endl;
+
+    // for debug
+    if (recv_size < 0)
+      log::warning << "recv < 0" << log::endl;
+    else
+      log::warning << "recv == 0 client(" << fd  << ") was disconnetd" << log::endl;
+
     FD_CLR(fd, &this->reads);
-    this->recvs[fd] = "";
+    this->recvs[fd].clear();
     this->requests[fd] = HttpRequest();
     if (close(fd) == -1)
       log::warning << "close -1" << log::endl;
     return ;
   }
   buf[recv_size] = 0;
-  // TODO: 연속으로 받은 데이터 처리
   this->recvs[fd] += buf;
-  log::debug << "========================" << log::endl;
-  log::debug << this->recvs[fd] << log::endl;
-  log::debug << "========================" << log::endl;
+//  log::debug << "========================" << log::endl;
+//  log::debug << this->recvs[fd] << log::endl;
+//  log::debug << "========================" << log::endl;
   checkReceiveDone(fd);
 }
 
@@ -279,7 +283,7 @@ void Server::checkReceiveDone(int fd) {
 
     // 지금까지 받은 데이터를 body 에 담기
     req.setBody(this->recvs[fd]);
-    this->recvs[fd] = "";
+    this->recvs[fd].clear();
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED)
       req.unchunk();
 
@@ -290,21 +294,18 @@ void Server::checkReceiveDone(int fd) {
 
 void Server::recvHeader(int fd, HttpRequest& req) {
   log::debug << "recvHeader!" << log::endl;
-//  log::debug << this->recvs[fd] << log::endl;
   size_t pos = this->recvs[fd].find("\r\n\r\n");
 
   if (pos != std::string::npos) {
     log::debug << "header find!" << log::endl;
-    // recvs 에 헤더를 제외한 부분 넣었음
+
     std::string header = this->recvs[fd].substr(0, pos);
-    this->recvs[fd] = this->recvs[fd].substr(pos + 4);
+    std::string left = this->recvs[fd].substr(pos + 4);
+    this->recvs[fd].clear();
+    this->recvs[fd] = left;
 
     try {
       req.parse(header, this->config);
-//      req.parseHeader(header);
-//      req.setConfig(this->config);
-//      req.checkCGI();
-      // FIXME: uhmm....... 고민해보기
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
       req.setRecvStatus(HttpRequest::RECEIVE_DONE);
@@ -314,12 +315,13 @@ void Server::recvHeader(int fd, HttpRequest& req) {
 
     // chunked 요청일 경우
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
-      log::warning << "It is chunked" << log::endl;
+      log::debug << "It is chunked" << log::endl;
       req.setRecvStatus(HttpRequest::BODY_RECEIVE);
     }
     // 일반 요청일 경우
     else {
       std::string contentLength = req.getHeader().get(HttpRequestHeader::CONTENT_LENGTH);
+      log::debug << "It is not chunked" << log::endl;
       // content 가 없을 경우
       if (contentLength.empty())
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
@@ -329,6 +331,9 @@ void Server::recvHeader(int fd, HttpRequest& req) {
         req.setRecvStatus(HttpRequest::BODY_RECEIVE);
       }
     }
+  }
+  else {
+    log::debug << "recvHeader \\r\\n\\r\\n not found" << log::endl;
   }
 }
 
@@ -340,18 +345,17 @@ void Server::receiveDone(int fd) {
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isError())
       throw req.getErrorStatus();
-    res = Http::processing(req, this->sessionManager);
+    else
+      res = Http::processing(req, this->sessionManager);
   } catch (HttpStatus status) {
     res = Http::getErrorPage(status, req.getServerConfig());
   }
 
   int reqs = this->connection.updateRequests(fd, req.getServerConfig());
-
-  this->requests[fd] = HttpRequest();
-
   res.addHeader("Keep-Alive", "timeout=" + util::itoa(req.getServerConfig().getKeepAliveTimeout()) + ", max=" + util::itoa(reqs));
 
   log::info << "<= Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
+  this->requests[fd] = HttpRequest();
   sendData(fd, res.toString());
 }
 
@@ -374,7 +378,7 @@ void Server::closeSocket(int fd) {
   this->requests[fd] = HttpRequest();
 }
 
-void Server::cleanUp() {
+void Server::cleanUpConnection() {
   std::set<int> fd_list;
 
   fd_list = this->connection.getTimeoutList();
