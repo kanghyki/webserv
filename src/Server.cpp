@@ -259,6 +259,8 @@ void Server::checkReceiveDone(int fd) {
   }
 
   if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) {
+    if (req.getReqType() == HttpRequest::CHUNKED)
+      req.unChunked();
     req.setBody(req.getRecvData());
     receiveDone(fd);
   }
@@ -276,9 +278,6 @@ void Server::receiveDone(int fd) {
       throw req.getErrorStatus();
     req.setConfig(this->config);
     req.checkCGI(req.getPath(), req.getServerConfig());
-    if (req.getReqType() == HttpRequest::CHUNKED) {
-
-    }
     log::debug << "request good!" << log::endl;
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isCGI())
