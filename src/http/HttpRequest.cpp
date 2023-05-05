@@ -8,6 +8,7 @@ HttpRequest::HttpRequest():
   te(UNSET),
   cgi(false),
   rs(HEADER_RECEIVE),
+  contentLength(0),
   reqType(KEEP_ALIVE),
   errorStatus(OK) {}
 
@@ -75,14 +76,12 @@ void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
   }
 
   std::string ss = util::toLowerStr(this->getField(header_field::CONNECTION));
-  log::info << "11: " << ss << log::endl;
   if (ss == "keep-alive")
     this->setConnection(KEEP_ALIVE);
   else if (ss == "close")
     this->setConnection(CLOSE);
 
   std::string s = util::toLowerStr(this->getField(header_field::TRANSFER_ENCODING));
-  log::info << "22: " << s << log::endl;
   if (s == "chunked")
     this->setTransferEncoding(CHUNKED);
 }
@@ -161,10 +160,11 @@ std::pair<std::string, std::string> HttpRequest::splitField(const std::string& l
   return std::make_pair(field, value);
 }
 
-void HttpRequest::checkCGI(const std::string& path, const ServerConfig& sc) {
-  std::map<std::string, std::string>::iterator it;
-  std::map<std::string, std::string> cgi = sc.getCGI();
+void HttpRequest::checkCGI() {
   size_t pos;
+  std::string path = getPath();
+  std::map<std::string, std::string>::iterator it;
+  std::map<std::string, std::string> cgi = this->sc.getCGI();
 
   for (it = cgi.begin(); it != cgi.end(); ++it) {
     if ((pos = path.find(it->first)) != std::string::npos) {
@@ -371,9 +371,9 @@ void HttpRequest::setConfig(const Config& conf) {
   this->lc = this->sc.findLocationConfig(this->getPath());
 }
 
-void HttpRequest::clearRecvData() {
-  this->recvData.clear();
-}
+//void HttpRequest::clearRecvData() {
+//  this->recvData.clear();
+//}
 
 //void HttpRequest::setReqType(int type) {
 //  this->reqType = type;

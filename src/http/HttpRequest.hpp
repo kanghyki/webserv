@@ -67,7 +67,7 @@ class HttpRequest {
 //    void                                  parse(std::string request, const Config& conf);
     void                                  parseHeader(const std::string &h) throw(HttpStatus);
     void                                  setConfig(const Config& conf);
-    void                                  checkCGI(const std::string& path, const ServerConfig& sc);
+    void                                  checkCGI();
 
     std::string                           getMethod() const;
     std::string                           getPath() const;
@@ -93,7 +93,7 @@ class HttpRequest {
     void                                  setBody(const std::string& body);
 //    void                                  setRecvData(const std::string& data);
 //    void                                  addRecvData(const std::string& data);
-    void                                  clearRecvData();
+//    void                                  clearRecvData();
     void                                  setRecvStatus(recvStatus status);
     void                                  setContentLength(int len);
 //    void                                  setReqType(int type);
@@ -125,7 +125,7 @@ class HttpRequest {
     std::string                           scriptPath;
     std::string                           cgiPath;
     std::string                           pathInfo;
-    std::string                           recvData;
+//    std::string                           recvData;
     recvStatus                            rs;
     int                                   contentLength;
     int                                   reqType;

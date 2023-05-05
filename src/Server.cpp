@@ -157,7 +157,7 @@ void Server::run(void) {
             FD_CLR(i, &this->getReads());
             // FIXME:
             if (close(i) == -1)
-              throw (CloseException());
+              log::warning << "close -1" << log::endl;
             else
               log::info << "Closed client(" << i << ")" << log::endl;
           }
@@ -178,7 +178,8 @@ void Server::run(void) {
   }
 
   for (size_t i = 0; i < this->listens_fd.size(); ++i)
-    if (close(this->listens_fd[i]) == -1) throw (CloseException());
+    if (close(this->listens_fd[i]) == -1)
+      log::warning << "close -1" << log::endl;
 }
 
 
@@ -210,31 +211,27 @@ void Server::receiveData(int fd) {
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   // FIXME:
-  if (recv_size < 0) {
-    log::warning << "recv failed" << log::endl;
-    throw (RecvException());
-  }
-  else if (recv_size == 0) {
+  if (recv_size <= 0) {
+    log::warning << "recv <= 0" << log::endl;
     FD_CLR(fd, &this->reads);
-    clearRequest(fd);
-    // FIXME:
+    this->recvs[fd] = "";
+    this->requests[fd] = HttpRequest();
     if (close(fd) == -1)
-      throw (CloseException());
+      log::warning << "close -1" << log::endl;
     return ;
   }
   buf[recv_size] = 0;
   // TODO: 연속으로 받은 데이터 처리
   this->recvs[fd] += buf;
-  log::debug << "========================" << log::endl;
-  log::debug << this->recvs[fd] << log::endl;
-  log::debug << "========================" << log::endl;
-//  this->requests[fd].addRecvData(buf);
+//  log::debug << "========================" << log::endl;
+//  log::debug << this->recvs[fd] << log::endl;
+//  log::debug << "========================" << log::endl;
   checkReceiveDone(fd);
 }
 
 void Server::checkReceiveDone(int fd) {
   HttpRequest& req = this->requests[fd];
-  
+
   log::debug << "HttpRequest::recvStatus = ";
   if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE)
     log::debug << "HEADER" << log::endl;
@@ -253,7 +250,10 @@ void Server::checkReceiveDone(int fd) {
     log::debug << "body recieve!" << log::endl;
     log::debug << "Transfer_encoding = " << req.getTransferEncoding() << log::endl;
 
-
+//    if (this->recvs[fd].length() > static_cast<size_t>(req.getLocationConfig().getClientBodySize())) {
+//      req.setErrorStatus(PAYLOAD_TOO_LARGE);
+//      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+//    }
     // chunked로 온 요청 처리
     if (req.getTransferEncoding() == HttpRequest::CHUNKED) {
       // FIXME: localhost:8000/r/n 을 찾음,, 헤더 잘라놔서 괜찮을 듯 이제
@@ -280,7 +280,6 @@ void Server::checkReceiveDone(int fd) {
     // 지금까지 받은 데이터를 body 에 담기
     req.setBody(this->recvs[fd]);
     this->recvs[fd] = "";
-    // FIXME: 단일 요청으로 chunked 수신 가능해야 함
     if (req.getTransferEncoding() == HttpRequest::CHUNKED)
       req.unChunked();
 
@@ -291,7 +290,7 @@ void Server::checkReceiveDone(int fd) {
 
 void Server::recvHeader(int fd, HttpRequest& req) {
   log::debug << "recvHeader!" << log::endl;
-  log::debug << this->recvs[fd] << log::endl;
+//  log::debug << this->recvs[fd] << log::endl;
   size_t pos = this->recvs[fd].find("\r\n\r\n");
 
   if (pos != std::string::npos) {
@@ -302,6 +301,8 @@ void Server::recvHeader(int fd, HttpRequest& req) {
 
     try {
       req.parseHeader(header);
+      req.setConfig(this->config);
+      req.checkCGI();
       // FIXME: uhmm....... 고민해보기
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
@@ -334,26 +335,22 @@ void Server::receiveDone(int fd) {
   HttpRequest&  req = this->requests[fd];
   HttpResponse  res;
 
-  log::debug << "this->reuests[" << fd << "]\n" << req.getBody() << log::endl;
-  clearRequest(fd);
-
   try {
+    log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isError())
       throw req.getErrorStatus();
-    req.setConfig(this->config);
-    // FIXME: DUPLICATED?
-    req.checkCGI(req.getPath(), req.getServerConfig());
-    log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     res = Http::processing(req, this->sessionManager);
   } catch (HttpStatus status) {
     res = Http::getErrorPage(status, req.getServerConfig());
   }
 
   int reqs = this->connection.updateRequests(fd, req.getServerConfig());
+
+  this->requests[fd] = HttpRequest();
+
   res.addHeader("Keep-Alive", "timeout=" + util::itoa(req.getServerConfig().getKeepAliveTimeout()) + ", max=" + util::itoa(reqs));
 
   log::info << "<= Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
-  log::debug << res.toString() << log::endl;
   sendData(fd, res.toString());
 }
 
@@ -368,52 +365,49 @@ void Server::sendData(int fd, const std::string& data) {
 void Server::closeSocket(int fd) {
   FD_CLR(fd, &this->getWrites());
   FD_CLR(fd, &this->getReads());
-  // FIXME:
   if (close(fd) == -1)
-    throw (CloseException());
+    log::warning << "close -1" << log::endl;
   else
     log::info << "Closed client(" << fd << ")" << log::endl;
 
   this->requests[fd] = HttpRequest();
 }
 
-void Server::clearReceived(int fd) {
-  HttpRequest& req = this->requests[fd];
+//void Server::clearReceived(int fd) {
+//  HttpRequest& req = this->requests[fd];
+//
+//  req.setContentLength(0);
+//}
 
-  req.clearRecvData();
-  req.setContentLength(0);
-}
-
-void Server::clearRequest(int fd) {
-  HttpRequest& req = this->requests[fd];
-  req.clearRecvData();
-  req.setContentLength(0);
-  req.setRecvStatus(HttpRequest::HEADER_RECEIVE);
-  req.setCgi(false);
-  req.setErrorStatus(OK);
-}
+//void Server::clearRequest(int fd) {
+//  HttpRequest& req = this->requests[fd];
+//  req.setContentLength(0);
+//  req.setRecvStatus(HttpRequest::HEADER_RECEIVE);
+//  req.setCgi(false);
+//  req.setErrorStatus(OK);
+//}
 
 void Server::cleanUp() {
   std::set<int> fd_list;
 
   fd_list = this->connection.getTimeoutList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
-    log::warning << "Timeout client(" << *it << "), closed" << log::endl;
+    log::info << "Timeout client(" << *it << "), closed" << log::endl;
     FD_CLR(*it, &this->getReads());
     FD_CLR(*it, &this->getWrites());
     close(*it);
-    clearRequest(*it);
+    this->requests[*it] = HttpRequest();
     this->connection.remove(*it);
     this->connection.removeRequests(*it);
   }
 
   fd_list = this->connection.getMaxRequestList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
-    log::warning << "max request client(" << *it << "), closed" << log::endl;
+    log::info << "max request client(" << *it << "), closed" << log::endl;
     FD_CLR(*it, &this->getReads());
     FD_CLR(*it, &this->getWrites());
     close(*it);
-    clearRequest(*it);
+    this->requests[*it] = HttpRequest();
     this->connection.remove(*it);
     this->connection.removeRequests(*it);
   }
@@ -431,13 +425,13 @@ const char* Server::ListenException::what() const throw() {
   return "Server listen failed";
 }
 
-const char* Server::CloseException::what() const throw() {
-  return "Server close failed";
-}
-
-const char* Server::RecvException::what() const throw() {
-  return "Server recv failed";
-}
+//const char* Server::CloseException::what() const throw() {
+//  return "Server close failed";
+//}
+//
+//const char* Server::RecvException::what() const throw() {
+//  return "Server recv failed";
+//}
 
 /*
  * ---------------------- Non-Member Function ----------------------
