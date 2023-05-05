@@ -3,9 +3,11 @@
 
 const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 
-HttpRequest::HttpRequest(): 
-  cgi(false), 
-  recvStatus(HEADER_RECEIVE), 
+HttpRequest::HttpRequest():
+  conn(KEEP_ALIVE),
+  te(UNSET),
+  cgi(false),
+  rs(HEADER_RECEIVE),
   reqType(KEEP_ALIVE),
   errorStatus(OK) {}
 
@@ -43,20 +45,20 @@ HttpRequest::HttpRequest():
 
 HttpRequest::~HttpRequest() {}
 
-void HttpRequest::parse(std::string request, const Config& conf) {
-  size_t pos;
-
-  if ((pos = request.find(CRLF + CRLF)) != std::string::npos) {
-    parseHeader(request.substr(0, pos));
-    setBody(request.substr(pos + (CRLF + CRLF).length()));
-  }
-
-  this->sc = conf.getHttpConfig().findServerConfig(getField("Host"));
-  log::debug << "this server server_name:" << this->sc.getServerName() << log::endl;
-  this->lc = this->sc.findLocationConfig(this->getPath());
-
-  checkCGI(getPath(), getServerConfig());
-}
+//void HttpRequest::parse(std::string request, const Config& conf) {
+//  size_t pos;
+//
+//  if ((pos = request.find(CRLF + CRLF)) != std::string::npos) {
+//    parseHeader(request.substr(0, pos));
+//    setBody(request.substr(pos + (CRLF + CRLF).length()));
+//  }
+//
+//  this->sc = conf.getHttpConfig().findServerConfig(getField("Host"));
+//  log::debug << "this server server_name:" << this->sc.getServerName() << log::endl;
+//  this->lc = this->sc.findLocationConfig(this->getPath());
+//
+//  checkCGI(getPath(), getServerConfig());
+//}
 
 void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
   std::vector<std::string>            vs;
@@ -71,6 +73,18 @@ void HttpRequest::parseHeader(const std::string& h) throw(HttpStatus) {
     std::pair<std::string, std::string> ret = splitField(*it);
     this->field.insert(ret);
   }
+
+  std::string ss = util::toLowerStr(this->getField(header_field::CONNECTION));
+  log::info << "11: " << ss << log::endl;
+  if (ss == "keep-alive")
+    this->setConnection(KEEP_ALIVE);
+  else if (ss == "close")
+    this->setConnection(CLOSE);
+
+  std::string s = util::toLowerStr(this->getField(header_field::TRANSFER_ENCODING));
+  log::info << "22: " << s << log::endl;
+  if (s == "chunked")
+    this->setTransferEncoding(CHUNKED);
 }
 
 void HttpRequest::parseStatusLine(const std::string& line) {
@@ -281,21 +295,21 @@ const std::string HttpRequest::getPathInfo() const {
   return this->pathInfo;
 }
 
-std::string HttpRequest::getRecvData() const {
-  return this->recvData;
-}
+//std::string HttpRequest::getRecvData() const {
+//  return this->recvData;
+//}
 
-int HttpRequest::getRecvStatus() const {
-  return this->recvStatus;
+HttpRequest::recvStatus HttpRequest::getRecvStatus() const {
+  return this->rs;
 }
 
 int HttpRequest::getContentLength() const {
   return this->contentLength;
 }
 
-int HttpRequest::getReqType() const {
-  return this->reqType;
-}
+//int HttpRequest::getReqType() const {
+//  return this->reqType;
+//}
 
 HttpStatus HttpRequest::getErrorStatus() const {
   return this->errorStatus;
@@ -332,18 +346,18 @@ void HttpRequest::setVersion(const std::string& version) {
   this->version = version;
 }
 
-void HttpRequest::setRecvData(const std::string& data) {
-  this->recvData.clear();
-  log::debug << "setRecvData:" << data << log::endl;
-  this->recvData = data;
-}
+//void HttpRequest::setRecvData(const std::string& data) {
+//  this->recvData.clear();
+//  log::debug << "setRecvData:" << data << log::endl;
+//  this->recvData = data;
+//}
+//
+//void HttpRequest::addRecvData(const std::string& data) {
+//  this->recvData += data;
+//}
 
-void HttpRequest::addRecvData(const std::string& data) {
-  this->recvData += data;
-}
-
-void HttpRequest::setRecvStatus(int status) {
-  this->recvStatus = status;
+void HttpRequest::setRecvStatus(recvStatus status) {
+  this->rs = status;
 }
 
 void HttpRequest::setContentLength(int len) {
@@ -360,17 +374,17 @@ void HttpRequest::clearRecvData() {
   this->recvData.clear();
 }
 
-void HttpRequest::setReqType(int type) {
-  this->reqType = type;
-}
+//void HttpRequest::setReqType(int type) {
+//  this->reqType = type;
+//}
 
-void HttpRequest::setReqType(const std::string& type) {
-  std::string ct = util::toLowerStr(type);
-  if (ct == "keep-alive")
-    this->setReqType(KEEP_ALIVE);
-  else if (ct == "close")
-    this->setReqType(CLOSE);
-}
+//void HttpRequest::setReqType(const std::string& type) {
+//  std::string ct = util::toLowerStr(type);
+//  if (ct == "keep-alive")
+//    this->setReqType(KEEP_ALIVE);
+//  else if (ct == "close")
+//    this->setReqType(CLOSE);
+//}
 
 void HttpRequest::setErrorStatus(HttpStatus status) {
   this->errorStatus = status;
@@ -380,18 +394,18 @@ void HttpRequest::setCgi(bool cgi) {
   this->cgi = cgi;
 }
 
-void HttpRequest::setReqType() {
-  std::string s = util::toLowerStr(this->getField(header_field::TRANSFER_ENCODING));
-  if (s == "chunked")
-    this->setReqType(CHUNKED);
-  else {
-    s = util::toLowerStr(this->getField(header_field::CONNECTION));
-    if (s == "keep-alive")
-      this->setReqType(KEEP_ALIVE);
-    else if (s == "close")
-      this->setReqType(CLOSE);
-  }
-}
+//void HttpRequest::setReqType() {
+//  std::string s = util::toLowerStr(this->getField(header_field::TRANSFER_ENCODING));
+//  if (s == "chunked")
+//    this->setReqType(CHUNKED);
+//  else {
+//    s = util::toLowerStr(this->getField(header_field::CONNECTION));
+//    if (s == "keep-alive")
+//      this->setReqType(KEEP_ALIVE);
+//    else if (s == "close")
+//      this->setReqType(CLOSE);
+//  }
+//}
 
 //void HttpRequest::parseCacheControl(const std::string &s) {
 //}

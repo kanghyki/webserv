@@ -23,7 +23,7 @@ namespace request_method {
 }
 
 class HttpRequest {
-  
+
   public:
     enum recvStatus {
       HEADER_RECEIVE,
@@ -31,21 +31,43 @@ class HttpRequest {
       RECEIVE_DONE
     };
 
-    enum reqType {
+    enum connection {
       KEEP_ALIVE,
-      CLOSE,
+      CLOSE
+    };
+    connection conn;
+
+    connection getConnection() const {
+      return this->conn;
+    }
+
+    void  setConnection(connection conn) {
+      this->conn = conn;
+    }
+
+    enum transfer_encoding {
+      UNSET,
       CHUNKED
     };
+
+    transfer_encoding te;
+
+    transfer_encoding getTransferEncoding() const {
+      return this->te;
+    }
+
+    void setTransferEncoding(transfer_encoding te) {
+      this->te = te;
+    }
 
     HttpRequest();
     ~HttpRequest();
 
 
-    void                                  parse(std::string request, const Config& conf);
+//    void                                  parse(std::string request, const Config& conf);
     void                                  parseHeader(const std::string &h) throw(HttpStatus);
     void                                  setConfig(const Config& conf);
     void                                  checkCGI(const std::string& path, const ServerConfig& sc);
-    
 
     std::string                           getMethod() const;
     std::string                           getPath() const;
@@ -61,22 +83,22 @@ class HttpRequest {
     const std::string                     getScriptPath() const;
     const std::string                     getCGIPath() const;
     const std::string                     getPathInfo() const;
-    std::string                           getRecvData() const;
-    int                                   getRecvStatus() const;
+//    std::string                           getRecvData() const;
+    recvStatus                            getRecvStatus() const;
     int                                   getContentLength() const;
-    int                                   getReqType() const;
+//    int                                   getReqType() const;
     HttpStatus                            getErrorStatus() const;
     bool                                  isError() const;
 
     void                                  setBody(const std::string& body);
-    void                                  setRecvData(const std::string& data);
-    void                                  addRecvData(const std::string& data);
+//    void                                  setRecvData(const std::string& data);
+//    void                                  addRecvData(const std::string& data);
     void                                  clearRecvData();
-    void                                  setRecvStatus(int status);
+    void                                  setRecvStatus(recvStatus status);
     void                                  setContentLength(int len);
-    void                                  setReqType(int type);
-    void                                  setReqType(const std::string& type);
-    void                                  setReqType(void);
+//    void                                  setReqType(int type);
+//    void                                  setReqType(const std::string& type);
+//    void                                  setReqType(void);
     void                                  setErrorStatus(HttpStatus status);
     void                                  setCgi(bool cgi);
 
@@ -104,7 +126,7 @@ class HttpRequest {
     std::string                           cgiPath;
     std::string                           pathInfo;
     std::string                           recvData;
-    int                                   recvStatus;
+    recvStatus                            rs;
     int                                   contentLength;
     int                                   reqType;
     HttpStatus                            errorStatus;

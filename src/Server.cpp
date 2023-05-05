@@ -1,5 +1,5 @@
-#include "Server.hpp"
-#include "http/HttpRequest.hpp"
+#include "./Server.hpp"
+#include "./http/HttpRequest.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
@@ -7,6 +7,7 @@
 
 Server::Server(Config& config) :
   requests(MANAGE_FD_MAX),
+  recvs(MANAGE_FD_MAX),
   fdMax(FD_CLOSED),
   config(config),
   connection(config),
@@ -151,7 +152,7 @@ void Server::run(void) {
 
       if (FD_ISSET(i, &this->writes)) {
         if (FD_ISSET(i, &writesCpy)) {
-          if (this->requests[i].getReqType() == HttpRequest::CLOSE) {
+          if (this->requests[i].getConnection() == HttpRequest::CLOSE) {
             FD_CLR(i, &this->getWrites());
             FD_CLR(i, &this->getReads());
             // FIXME:
@@ -180,31 +181,6 @@ void Server::run(void) {
     if (close(this->listens_fd[i]) == -1) throw (CloseException());
 }
 
-void Server::cleanUp() {
-  std::set<int> fd_list;
-
-  fd_list = this->connection.getTimeoutList();
-  for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
-    log::warning << "Timeout client(" << *it << "), closed" << log::endl;
-    FD_CLR(*it, &this->getReads());
-    FD_CLR(*it, &this->getWrites());
-    close(*it);
-    clearRequest(*it);
-    this->connection.remove(*it);
-    this->connection.removeRequests(*it);
-  }
-
-  fd_list = this->connection.getMaxRequestList();
-  for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
-    log::warning << "max request client(" << *it << "), closed" << log::endl;
-    FD_CLR(*it, &this->getReads());
-    FD_CLR(*it, &this->getWrites());
-    close(*it);
-    clearRequest(*it);
-    this->connection.remove(*it);
-    this->connection.removeRequests(*it);
-  }
-}
 
 int Server::acceptConnect(int server_fd) {
   struct sockaddr_in  client_addr;
@@ -248,33 +224,109 @@ void Server::receiveData(int fd) {
   }
   buf[recv_size] = 0;
   // TODO: 연속으로 받은 데이터 처리
-  this->requests[fd].addRecvData(buf);
+  this->recvs[fd] += buf;
+  log::debug << "========================" << log::endl;
+  log::debug << this->recvs[fd] << log::endl;
+  log::debug << "========================" << log::endl;
+//  this->requests[fd].addRecvData(buf);
   checkReceiveDone(fd);
 }
 
 void Server::checkReceiveDone(int fd) {
   HttpRequest& req = this->requests[fd];
-
+  
+  log::debug << "HttpRequest::recvStatus = ";
   if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE)
-    recvHeader(req);
+    log::debug << "HEADER" << log::endl;
+  if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE)
+    log::debug << "BODY" << log::endl;
+  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE)
+    log::debug << "DONE" << log::endl;
 
+  // @@@@ Header 받는 부분
+  if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE)
+    recvHeader(fd, req);
+
+
+  // @@@@ Body 받는 부분
   if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
-    this->connection.update(fd, Connection::BODY);
-    if (req.getReqType() == HttpRequest::CHUNKED) {
-      if (req.getRecvData().find("0\r\n") != std::string::npos)
+    log::debug << "body recieve!" << log::endl;
+    log::debug << "Transfer_encoding = " << req.getTransferEncoding() << log::endl;
+
+
+    // chunked로 온 요청 처리
+    if (req.getTransferEncoding() == HttpRequest::CHUNKED) {
+      // FIXME: localhost:8000/r/n 을 찾음,, 헤더 잘라놔서 괜찮을 듯 이제
+      // 종료 조건
+      if (this->recvs[fd].find("0\r\n") != std::string::npos) {
+        log::debug << "chunked find!" << log::endl;
+        req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+      }
+    }
+    // 일반 요청 처리
+    else if (req.getTransferEncoding() == HttpRequest::UNSET) {
+        log::debug << "unchunked find!" << log::endl;
+      // 종료 조건
+      if (req.getContentLength() == (int)recvs[fd].length())
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
     }
-    else {
-      if (req.getContentLength() == (int)req.getRecvData().length())
-        req.setRecvStatus(HttpRequest::RECEIVE_DONE);
-    }
+
   }
 
+  // @@@@ 데이터 전부 전송됨
   if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) {
-    req.setBody(req.getRecvData().substr(req.getRecvData().find("\r\n\r\n") + 4));
-    if (req.getReqType() == HttpRequest::CHUNKED)
+    log::debug << "recieve done!" << log::endl;
+
+    // 지금까지 받은 데이터를 body 에 담기
+    req.setBody(this->recvs[fd]);
+    this->recvs[fd] = "";
+    // FIXME: 단일 요청으로 chunked 수신 가능해야 함
+    if (req.getTransferEncoding() == HttpRequest::CHUNKED)
       req.unChunked();
+
+    // Response 만들러 ㄱ
     receiveDone(fd);
+  }
+}
+
+void Server::recvHeader(int fd, HttpRequest& req) {
+  log::debug << "recvHeader!" << log::endl;
+  log::debug << this->recvs[fd] << log::endl;
+  size_t pos = this->recvs[fd].find("\r\n\r\n");
+
+  if (pos != std::string::npos) {
+    log::debug << "header find!" << log::endl;
+    // recvs 에 헤더를 제외한 부분 넣었음
+    std::string header = this->recvs[fd].substr(0, pos);
+    this->recvs[fd] = this->recvs[fd].substr(pos + 4);
+
+    try {
+      req.parseHeader(header);
+      // FIXME: uhmm....... 고민해보기
+      this->connection.update(fd, Connection::BODY);
+    } catch (HttpStatus s) {
+      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+      req.setErrorStatus(s);
+      return;
+    }
+
+    // chunked 요청일 경우
+    if (req.getTransferEncoding() == HttpRequest::CHUNKED) {
+      log::warning << "It is chunked" << log::endl;
+      req.setRecvStatus(HttpRequest::BODY_RECEIVE);
+    }
+    // 일반 요청일 경우
+    else {
+      std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
+      // content 가 없을 경우
+      if (contentLength.empty())
+        req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+      // content 가 있을 경우
+      else {
+        req.setContentLength(std::atoi(contentLength.c_str()));
+        req.setRecvStatus(HttpRequest::BODY_RECEIVE);
+      }
+    }
   }
 }
 
@@ -282,13 +334,14 @@ void Server::receiveDone(int fd) {
   HttpRequest&  req = this->requests[fd];
   HttpResponse  res;
 
-  log::debug << "this->data[" << fd << "]\n" << this->requests[fd].getRecvData() << log::endl;
+  log::debug << "this->reuests[" << fd << "]\n" << req.getBody() << log::endl;
   clearRequest(fd);
 
   try {
     if (req.isError())
       throw req.getErrorStatus();
     req.setConfig(this->config);
+    // FIXME: DUPLICATED?
     req.checkCGI(req.getPath(), req.getServerConfig());
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     res = Http::processing(req, this->sessionManager);
@@ -300,6 +353,7 @@ void Server::receiveDone(int fd) {
   res.addHeader("Keep-Alive", "timeout=" + util::itoa(req.getServerConfig().getKeepAliveTimeout()) + ", max=" + util::itoa(reqs));
 
   log::info << "<= Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
+  log::debug << res.toString() << log::endl;
   sendData(fd, res.toString());
 }
 
@@ -308,6 +362,7 @@ void Server::sendData(int fd, const std::string& data) {
   FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     log::warning << "send failed" << log::endl;
+  this->requests[fd] = HttpRequest();
 }
 
 void Server::closeSocket(int fd) {
@@ -329,37 +384,6 @@ void Server::clearReceived(int fd) {
   req.setContentLength(0);
 }
 
-void Server::recvHeader(HttpRequest& req) {
-  std::string recvData = req.getRecvData();
-  size_t pos = recvData.find("\r\n\r\n");
-
-  if (pos != std::string::npos) {
-    std::string header = recvData.substr(0, pos);
-    try {
-      req.parseHeader(header);
-      req.setReqType();
-    } catch (HttpStatus s) {
-      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
-      req.setErrorStatus(s);
-      return;
-    }
-    if (req.getReqType() == HttpRequest::CHUNKED)
-      req.setRecvStatus(HttpRequest::BODY_RECEIVE);
-    else {
-      std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
-      if (contentLength.empty()) {
-        req.setRecvStatus(HttpRequest::RECEIVE_DONE);
-        return;
-      }
-      else {
-        req.setContentLength(std::atoi(contentLength.c_str()));
-        req.setRecvData(recvData.substr(pos + 4));
-        req.setRecvStatus(HttpRequest::BODY_RECEIVE);
-      }
-    }
-  }
-}
-
 void Server::clearRequest(int fd) {
   HttpRequest& req = this->requests[fd];
   req.clearRecvData();
@@ -369,39 +393,31 @@ void Server::clearRequest(int fd) {
   req.setErrorStatus(OK);
 }
 
-//const std::string Server::getData(int fd) const {
-//  return this->recvTable[fd].data;
-//}
-//
-//size_t Server::getContentLength(size_t fd) const {
-//  return this->recvTable[fd].contentLength;
-//}
-//
-//void Server::addData(int fd, const std::string& data) {
-//  this->recvTable[fd].data += data;
-//}
-//
-//void Server::setContentLength(int fd, int len) {
-//  this->recvTable[fd].contentLength = len;
-//}
-//
-//size_t Server::getHeaderPos(int fd) const {
-//  return this->recvTable[fd].headerPos;
-//}
-//
-//void Server::setHeaderPos(int fd, size_t pos) {
-//  this->recvTable[fd].headerPos = pos;
-//}
-//
-//
-//int Server::getStatus(int fd) const {
-//  return this->recvTable[fd].status;
-//}
-//
-//void Server::setStatus(int fd, recvStatus status) {
-//  this->recvTable[fd].status = status;
-//}
+void Server::cleanUp() {
+  std::set<int> fd_list;
 
+  fd_list = this->connection.getTimeoutList();
+  for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    log::warning << "Timeout client(" << *it << "), closed" << log::endl;
+    FD_CLR(*it, &this->getReads());
+    FD_CLR(*it, &this->getWrites());
+    close(*it);
+    clearRequest(*it);
+    this->connection.remove(*it);
+    this->connection.removeRequests(*it);
+  }
+
+  fd_list = this->connection.getMaxRequestList();
+  for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    log::warning << "max request client(" << *it << "), closed" << log::endl;
+    FD_CLR(*it, &this->getReads());
+    FD_CLR(*it, &this->getWrites());
+    close(*it);
+    clearRequest(*it);
+    this->connection.remove(*it);
+    this->connection.removeRequests(*it);
+  }
+}
 
 const char* Server::InitException::what() const throw() {
   return "Server init failed";

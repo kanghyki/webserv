@@ -98,10 +98,11 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  if (access(req.getRelativePath().c_str(), F_OK) == 0) throw BAD_REQUEST;
+  if (access(req.getRelativePath().c_str(), R_OK | W_OK) == 0)
+    throw FORBIDDEN;
 
   std::ofstream out(req.getRelativePath(), std::ofstream::out);
-  if (!out.is_open()) throw NOT_FOUND;
+  if (!out.is_open()) throw INTERNAL_SERVER_ERROR;
 
   out.write(req.getBody().c_str(), req.getBody().length());
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;

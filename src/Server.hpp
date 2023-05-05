@@ -32,6 +32,7 @@ class Server {
     void run();
 
   private:
+
     static const int SOCK_CLOSED = -1;
     static const int SOCK_ERROR = -1;
     static const int FD_CLOSED = -1;
@@ -39,12 +40,13 @@ class Server {
     static const int MANAGE_FD_MAX = 1024;
 
     std::vector<HttpRequest> requests;
+    std::vector<std::string> recvs;
 
-    enum recvStatus {
-      HEADER_NOT_RECV,
-      HEADER_RECV,
-      BODY_RECV
-    };
+//    enum recvStatus {
+//      HEADER_NOT_RECV,
+//      HEADER_RECV,
+//      BODY_RECV
+//    };
 
 //    std::vector<std::string> data;
 //    std::vector<int> contentLengths;
@@ -87,7 +89,7 @@ class Server {
 //    void              setStatus(int fd, recvStatus status);
 
     void              clearReceived(int fd);
-    void              recvHeader(HttpRequest& req);
+    void              recvHeader(int fd, HttpRequest& req);
 
     const Config&     config;
     Connection        connection;
