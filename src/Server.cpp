@@ -251,19 +251,25 @@ void Server::checkReceiveDone(int fd) {
       req.setRecvStatus(HttpRequest::RECEIVE_DONE);
   }
 
-  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) 
+  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE)
     receiveDone(fd);
 }
 
 void Server::receiveDone(int fd) {
-  HttpRequest&   req = this->requests[fd];
+  HttpRequest&  req = this->requests[fd];
   HttpResponse  res;
 
   log::debug << "this->data[" << fd << "]\n" << this->requests[fd].getRecvData() << log::endl;
+  clearRequest(fd);
 
   try {
+    if (req.isError())
+      throw req.getErrorStatus();
     req.setConfig(this->config);
     req.checkCGI(req.getPath(), req.getServerConfig());
+    if (req.getReqType() == HttpRequest::CHUNKED) {
+
+    }
     log::debug << "request good!" << log::endl;
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     if (req.isCGI())
@@ -284,7 +290,6 @@ void Server::receiveDone(int fd) {
 
 void Server::sendData(int fd, const std::string& data) {
   this->connection.update(fd, Connection::SEND);
-  clearRequest(fd);
   FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     log::warning << "send failed" << log::endl;
@@ -292,6 +297,7 @@ void Server::sendData(int fd, const std::string& data) {
 
 void Server::closeSocket(int fd) {
   FD_CLR(fd, &this->getWrites());
+  FD_CLR(fd, &this->getReads());
   // FIXME:
   if (close(fd) == -1)
     throw (CloseException());
@@ -314,8 +320,14 @@ void Server::recvHeader(HttpRequest& req) {
 
   if (pos != std::string::npos) {
     std::string header = recvData.substr(0, pos);
-    req.parseHeader(header);
-    req.setReqType(req.getField(header_field::CONNECTION));
+    try {
+      req.parseHeader(header);
+      req.setReqType();
+    } catch (HttpStatus s) {
+      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+      req.setErrorStatus(s);
+      return;
+    }
     std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
     if (contentLength.empty()) {
       req.setRecvStatus(HttpRequest::RECEIVE_DONE);
@@ -334,6 +346,8 @@ void Server::clearRequest(int fd) {
   req.clearRecvData();
   req.setContentLength(0);
   req.setRecvStatus(HttpRequest::HEADER_RECEIVE);
+  req.setCgi(false);
+  req.setErrorStatus(OK);
 }
 
 //const std::string Server::getData(int fd) const {

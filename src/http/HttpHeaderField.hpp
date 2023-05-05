@@ -64,6 +64,8 @@ namespace header_field {
   const std::string SET_COOKIE            =   "set-cookie";
   const std::string COOKIE                =   "cookie";
   const std::string CONNECTION            =   "connection";
+
+  const std::string TRANSFER_ENCODING     =   "transfer-encoding";
 }
 
 #endif

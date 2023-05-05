@@ -1,8 +1,13 @@
 #include "./HttpRequest.hpp"
+#include "HttpHeaderField.hpp"
 
 const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 
-HttpRequest::HttpRequest(): cgi(false), recvStatus(HEADER_RECEIVE), reqType(KEEP_ALIVE) {}
+HttpRequest::HttpRequest(): 
+  cgi(false), 
+  recvStatus(HEADER_RECEIVE), 
+  reqType(KEEP_ALIVE),
+  errorStatus(OK) {}
 
 //HttpRequest::HttpRequest(const HttpRequest& obj):
 //  method(obj.method),
@@ -156,6 +161,10 @@ void HttpRequest::checkCGI(const std::string& path, const ServerConfig& sc) {
   }
 }
 
+void HttpRequest::unChunked(void) {
+
+}
+
 /*
  * -------------------------- Getter -------------------------------
  */
@@ -252,6 +261,14 @@ int HttpRequest::getReqType() const {
   return this->reqType;
 }
 
+HttpStatus HttpRequest::getErrorStatus() const {
+  return this->errorStatus;
+}
+bool HttpRequest::isError() const {
+  if (this->errorStatus >= 400)
+    return true;
+  return false;
+}
 
 /*
  * -------------------------- Setter -------------------------------
@@ -318,6 +335,26 @@ void HttpRequest::setReqType(const std::string& type) {
     this->setReqType(CLOSE);
 }
 
+void HttpRequest::setErrorStatus(HttpStatus status) {
+  this->errorStatus = status;
+}
+
+void HttpRequest::setCgi(bool cgi) {
+  this->cgi = cgi;
+}
+
+void HttpRequest::setReqType() {
+  std::string s = util::toLowerStr(this->getField(header_field::TRANSFER_ENCODING));
+  if (s == "chunked")
+    this->setReqType(CHUNKED);
+  else {
+    s = util::toLowerStr(this->getField(header_field::CONNECTION));
+    if (s == "keep-alive")
+      this->setReqType(KEEP_ALIVE);
+    else if (s == "close")
+      this->setReqType(CLOSE);
+  }
+}
 
 //void HttpRequest::parseCacheControl(const std::string &s) {
 //}
