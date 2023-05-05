@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "http/HttpRequest.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
@@ -247,12 +248,20 @@ void Server::checkReceiveDone(int fd) {
 
   if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
     this->connection.update(fd, Connection::BODY);
-    if (req.getContentLength() == (int)req.getRecvData().length())
-      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+    if (req.getReqType() == HttpRequest::CHUNKED) {
+      if (req.getRecvData().find("0\r\n") != std::string::npos)
+        req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+    }
+    else {
+      if (req.getContentLength() == (int)req.getRecvData().length())
+        req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+    }
   }
 
-  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE)
+  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) {
+    req.setBody(req.getRecvData());
     receiveDone(fd);
+  }
 }
 
 void Server::receiveDone(int fd) {
@@ -328,15 +337,19 @@ void Server::recvHeader(HttpRequest& req) {
       req.setErrorStatus(s);
       return;
     }
-    std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
-    if (contentLength.empty()) {
-      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
-      return;
-    }
-    else {
-      req.setContentLength(std::atoi(contentLength.c_str()));
-      req.setRecvData(recvData.substr(pos + 4));
+    if (req.getReqType() == HttpRequest::CHUNKED)
       req.setRecvStatus(HttpRequest::BODY_RECEIVE);
+    else {
+      std::string contentLength = req.getField(header_field::CONTENT_LENGTH);
+      if (contentLength.empty()) {
+        req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+        return;
+      }
+      else {
+        req.setContentLength(std::atoi(contentLength.c_str()));
+        req.setRecvData(recvData.substr(pos + 4));
+        req.setRecvStatus(HttpRequest::BODY_RECEIVE);
+      }
     }
   }
 }
