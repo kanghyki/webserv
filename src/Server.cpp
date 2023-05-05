@@ -151,12 +151,20 @@ void Server::run(void) {
 
       if (FD_ISSET(i, &this->writes)) {
         if (FD_ISSET(i, &writesCpy)) {
-          if (this->requests[i].getReqType() == HttpRequest::CLOSE)
-            closeSocket(i);
+          if (this->requests[i].getReqType() == HttpRequest::CLOSE) {
+            FD_CLR(i, &this->getWrites());
+            FD_CLR(i, &this->getReads());
+            // FIXME:
+            if (close(i) == -1)
+              throw (CloseException());
+            else
+              log::info << "Closed client(" << i << ")" << log::endl;
+          }
           else {
             FD_CLR(i, &this->writes);
             this->connection.update(i, this->requests[i].getServerConfig());
           }
+          this->requests[i] = HttpRequest();
         }
       }
       else if (FD_ISSET(i, &readsCpy)) {
@@ -283,10 +291,7 @@ void Server::receiveDone(int fd) {
     req.checkCGI(req.getPath(), req.getServerConfig());
     log::debug << "request good!" << log::endl;
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
-    if (req.isCGI())
-      res = Http::executeCGI(req, this->sessionManager);
-    else
-      res = Http::processing(req);
+    res = Http::processing(req, this->sessionManager);
   } catch (HttpStatus status) {
     log::debug << "oh error!" << log::endl;
     res = Http::getErrorPage(status, req.getServerConfig());

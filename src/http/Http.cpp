@@ -6,7 +6,7 @@ Http::Http() {}
 
 Http::~Http() {}
 
-HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
+HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) throw(HttpStatus) {
   HttpResponse ret;
 
   if (req.getLocationConfig().getReturnRes().first != -1) {
@@ -32,7 +32,8 @@ Method: " << req.getMethod() << log::endl;
 
 
   try {
-    if (req.getMethod() == request_method::GET) ret = getMethod(req);
+    if (req.isCGI()) ret = executeCGI(req, manager);
+    else if (req.getMethod() == request_method::GET) ret = getMethod(req);
     else if (req.getMethod() == request_method::POST) ret = postMethod(req);
     else if (req.getMethod() == request_method::DELETE) ret = deleteMethod(req);
     else if (req.getMethod() == request_method::PUT) ret = putMethod(req);

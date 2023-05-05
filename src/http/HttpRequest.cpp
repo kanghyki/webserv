@@ -162,7 +162,6 @@ void HttpRequest::checkCGI(const std::string& path, const ServerConfig& sc) {
 }
 
 void HttpRequest::unChunked(void) {
-
 }
 
 /*
