@@ -185,6 +185,7 @@ unsigned int strToHex(std::string s) {
 
   log::debug << "strToHex:" << s << log::endl;
   ss >> std::hex >> ret;
+  log::debug << "strToHex result:" << ret << log::endl;
   return ret;
 }
 

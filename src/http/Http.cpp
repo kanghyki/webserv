@@ -109,6 +109,7 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
 
   res.setStatusCode(CREATED);
   res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
+  // TODO: LOCATION FIELD
   res.setBody(req.getBody());
 
   return res;
@@ -116,34 +117,37 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
 
 HttpResponse Http::deleteMethod(const HttpRequest& req) {
   HttpResponse res;
+  struct stat _stat;
 
-  DIR* dir = opendir(req.getRelativePath().c_str());
-  if (dir) {
-    closedir(dir);
-    throw BAD_REQUEST;
+  if (stat(req.getRelativePath().c_str(), &_stat) == 0) {
+    if (S_ISDIR(_stat.st_mode))
+      throw (FORBIDDEN);
   }
-  if (std::remove(req.getRelativePath().c_str()) == -1) throw NOT_FOUND;
 
-  res.setStatusCode(CREATED);
+  if (std::remove(req.getRelativePath().c_str()) == -1)
+    throw NOT_FOUND;
+
+  res.setStatusCode(OK);
 
   return res;
 }
 
 HttpResponse Http::putMethod(const HttpRequest& req) {
   HttpResponse res;
+  struct stat _stat;
 
-  DIR* dir = opendir(req.getRelativePath().c_str());
-  if (dir) {
-    closedir(dir);
-    throw BAD_REQUEST;
+  if (stat(req.getRelativePath().c_str(), &_stat) == 0) {
+    if (S_ISDIR(_stat.st_mode))
+      throw (FORBIDDEN);
   }
+
   std::ofstream out(req.getRelativePath(), std::ofstream::out);
   if (!out.is_open()) throw NOT_FOUND;
 
   out.write(req.getBody().c_str(), req.getBody().length());
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
 
-  res.setStatusCode(CREATED);
+  res.setStatusCode(OK);
   res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(req.getBody());
 
@@ -153,7 +157,6 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
 HttpResponse Http::headMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  std::cout << "HEAD" << std::endl;
   HttpDataFecther fetcher(req);
   std::string data = fetcher.fetch();
 
