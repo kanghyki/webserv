@@ -38,20 +38,13 @@ class Server {
     static const int BUF_SIZE = 1024;
     static const int MANAGE_FD_MAX = 1024;
 
-    struct received {
-      std::string data;
-      size_t      contentLength;
-      size_t      headerPos;
-      int         status;
-    };
-
-//    enum recvStatus {
-//      HEADER_NOT_RECV,
-//      HEADER_RECV,
-//      BODY_RECV
-//    };
-
     std::vector<HttpRequest> requests;
+
+    enum recvStatus {
+      HEADER_NOT_RECV,
+      HEADER_RECV,
+      BODY_RECV
+    };
 
 //    std::vector<std::string> data;
 //    std::vector<int> contentLengths;
@@ -97,8 +90,10 @@ class Server {
     void              recvHeader(HttpRequest& req);
 
     const Config&     config;
-//    Connection        connection;
+    Connection        connection;
     SessionManager    sessionManager;
+
+    void              cleanUpTimeout();
 
   public:
     class InitException : public std::exception {

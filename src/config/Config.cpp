@@ -1,36 +1,26 @@
 #include "./Config.hpp"
-#include "../http/HttpStatus.hpp"
 
-Config::Config() {}
+Config::Config(): is_already_set(false) {}
 
 Config::~Config() {}
 
-Config::Config(const Config& obj) : servers(obj.getServerConfig()) {}
+Config::Config(const Config& obj) : http(obj.getHttpConfig()) {}
 
-const std::vector<ServerConfig>& Config::getServerConfig() const {
-  return this->servers;
+Config& Config::operator=(const Config& obj) {
+  if (this != &obj)
+    this->http = obj.getHttpConfig();
+  return *this;
 }
 
-void Config::addServerConfig(ServerConfig server) {
-  servers.push_back(server);
+HttpConfig Config::getHttpConfig() const {
+  return this->http;
 }
 
-#include "../Logger.hpp"
-
-const ServerConfig& Config::findServerConfig(std::string reqHost) const {
-  size_t pos;
-
-  if ((pos = reqHost.find(":")) != std::string::npos)
-    reqHost = reqHost.substr(0, pos);
-  log::debug << "reqHost: " << reqHost << log::endl;
-
-  const std::vector<ServerConfig>& servers = getServerConfig();
-  for (std::vector<ServerConfig>::const_iterator sit = servers.begin(); sit != servers.end(); ++sit) {
-    log::debug << "serverConfig's server_name: " << sit->getServerName() << log::endl;
-    if (sit->getServerName() == reqHost) {
-      log::debug << "Matched!" << log::endl;
-      return *sit;
-    }
+void Config::setHttpConfig(HttpConfig http) throw (std::runtime_error) {
+  if (this->is_already_set == false) {
+    this->is_already_set = true;
+    this->http = http;
   }
-  return this->servers[0];
+  else
+    throw (std::runtime_error("Multiple http blocks are not allowed"));
 }

@@ -5,7 +5,7 @@
 
 # include <string>
 # include <vector>
-# include <map>
+# include <utility>
 
 class ServerConfig;
 
@@ -20,13 +20,13 @@ class LocationConfig: public CommonConfig {
     std::string                         getPath() const;
     const std::vector<std::string>&     getLimitExcept() const;
     bool                                isMethodAllowed(std::string method) const;
-    std::map<int, std::string>          getReturnRes() const;
+    std::pair<int, std::string>         getReturnRes() const;
     bool                                isAutoindex() const;
     const std::vector<LocationConfig>&  getLocationConfig() const;
 
     void                                setPath(std::string path);
     void                                addLimitExcept(std::string method);
-    void                                addReturnRes(std::pair<int, std::string> returnRes);
+    void                                setReturnRes(int status, std::string path);
     void                                setAutoindex(bool autoindex);
     void                                addLocationConfig(LocationConfig location);
 
@@ -36,7 +36,7 @@ class LocationConfig: public CommonConfig {
 
     std::string                         path;
     std::vector<std::string>            limitExcept;
-    std::map<int, std::string>          returnRes;
+    std::pair<int, std::string>         returnRes;
     bool                                autoindex;
     std::vector<LocationConfig>         locations;
 };

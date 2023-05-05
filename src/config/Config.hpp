@@ -1,23 +1,21 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include "ServerConfig.hpp"
-
-# include <vector>
+# include "HttpConfig.hpp"
 
 class Config {
   public:
     Config();
     ~Config();
     Config(const Config& obj);
+    Config&     operator=(const Config& obj);
 
-    const std::vector<ServerConfig>&  getServerConfig() const;
-    void                              addServerConfig(ServerConfig server);
-
-    const ServerConfig&               findServerConfig(std::string reqHost) const;
+    HttpConfig  getHttpConfig() const;
+    void        setHttpConfig(HttpConfig http) throw (std::runtime_error);
 
   private:
-    std::vector<ServerConfig> servers;
+    HttpConfig  http;
+    bool        is_already_set;
 };
 
 #endif

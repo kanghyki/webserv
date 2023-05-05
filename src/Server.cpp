@@ -11,12 +11,13 @@ Server::Server(Config& config) :
   requests(MANAGE_FD_MAX),
   fdMax(FD_CLOSED),
   config(config),
+  connection(),
   sessionManager() {
     FD_ZERO(&this->reads);
     FD_ZERO(&this->writes);
     FD_ZERO(&this->listens);
 
-    std::vector<ServerConfig> servers = this->config.getServerConfig();
+    std::vector<ServerConfig> servers = this->config.getHttpConfig().getServerConfig();
     for (std::vector<ServerConfig>::iterator sit = servers.begin(); sit != servers.end(); ++sit) {
       sockaddr_in sock;
       int fd = socketInit();
@@ -125,7 +126,7 @@ inline void Server::socketOpen(int servFd, sock& in) {
   if (listen_success == false)
     throw Server::ListenException();
 
-  log::info << "Listening... \"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"" << log::endl;
+  log::info << "Listening... (" << servFd << ") \n\n\"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n" << log::endl;
 }
 
 inline void Server::fdSetInit(fd_set& fs, int fd) {
@@ -146,16 +147,7 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-//    std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
-//    for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
-//      log::cout << INFO << "Client(" << timeout_fd_list[i] << ") timeout, closed\n";
-//
-//      FD_CLR(timeout_fd_list[i], &this->getReads());
-//      FD_CLR(timeout_fd_list[i], &this->getWrites());
-//      close(timeout_fd_list[i]);
-//      clearReceived(timeout_fd_list[i]);
-//      this->connection.remove(timeout_fd_list[i]);
-//    }
+    cleanUpTimeout();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
@@ -179,6 +171,18 @@ void Server::run(void) {
     if (close(this->listens_fd[i]) == -1) throw (CloseException());
 }
 
+void Server::cleanUpTimeout() {
+  std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
+  for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
+    log::warning << "Timeout client(" << timeout_fd_list[i] << "), closed" << log::endl;
+    FD_CLR(timeout_fd_list[i], &this->getReads());
+    FD_CLR(timeout_fd_list[i], &this->getWrites());
+    close(timeout_fd_list[i]);
+    clearReceived(timeout_fd_list[i]);
+    this->connection.remove(timeout_fd_list[i]);
+  }
+}
+
 int Server::acceptConnect(int server_fd) {
   struct sockaddr_in  client_addr;
   socklen_t           size;
@@ -195,9 +199,8 @@ int Server::acceptConnect(int server_fd) {
     this->setFdMax(client_fd);
 
 
-//  if (this->connection.isRegistered(fd) == false)
-//    this->connection.add(fd);
-  log::info << "Accept " << inet_ntoa(client_addr.sin_addr) << ", create client(" << client_fd << ")" << log::endl;
+  log::info << "Accept client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << log::endl;
+  this->connection.add(client_fd);
 
   return client_fd;
 }
@@ -246,7 +249,8 @@ void Server::receiveDone(int fd) {
 
 //  FD_CLR(fd, &this->getReads());
   log::debug << "this->data[" << fd << "]\n" << this->requests[fd].getRecvData() << log::endl;
-  
+  this->connection.remove(fd);
+
   try {
     req.setConfig(this->config);
     req.checkCGI(req.getPath(), req.getServerConfig());

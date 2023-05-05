@@ -38,7 +38,6 @@ HttpRequest::HttpRequest(): cgi(false), recvStatus(HEADER_RECEIVE), reqType(KEEP
 
 HttpRequest::~HttpRequest() {}
 
-#include "../Logger.hpp"
 void HttpRequest::parse(std::string request, const Config& conf) {
   size_t pos;
 
@@ -47,7 +46,7 @@ void HttpRequest::parse(std::string request, const Config& conf) {
     setBody(request.substr(pos + (CRLF + CRLF).length()));
   }
 
-  this->sc = conf.findServerConfig(getField("Host"));
+  this->sc = conf.getHttpConfig().findServerConfig(getField("Host"));
   log::debug << "this server server_name:" << this->sc.getServerName() << log::endl;
   this->lc = this->sc.findLocationConfig(this->getPath());
 
@@ -173,7 +172,8 @@ std::string HttpRequest::getRelativePath() const {
 
   if (req_path.find(loc_path) != std::string::npos) {
 
-    if (req_path.length() == loc_path_len || req_path[loc_path_len] == '/') {
+    if (req_path != "/"
+        && (req_path.length() == loc_path_len || req_path[loc_path_len] == '/')) {
       req_path.replace(req_path.find(loc_path), loc_path_len, root_path);
     }
 
@@ -257,8 +257,6 @@ int HttpRequest::getReqType() const {
  * -------------------------- Setter -------------------------------
  */
 
-#include "../Logger.hpp"
-
 void HttpRequest::setBody(const std::string& body) { this->body = body; }
 
 void HttpRequest::setURI(const std::string& URI) {
@@ -299,7 +297,7 @@ void HttpRequest::setContentLength(int len) {
 }
 
 void HttpRequest::setConfig(const Config& conf) {
-  this->sc = conf.findServerConfig(getField("Host"));
+  this->sc = conf.getHttpConfig().findServerConfig(getField("Host"));
   log::debug << "this server server_name:" << this->sc.getServerName() << log::endl;
   this->lc = this->sc.findLocationConfig(this->getPath());
 }

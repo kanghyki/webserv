@@ -23,14 +23,22 @@ class ConfigParser {
     std::vector<Token>        tokens;
     std::string               fileName;
 
-    ServerConfig              parseServer();
+    HttpConfig                parseHttp();
+    ServerConfig              parseServer(HttpConfig& httpConf);
     LocationConfig            parseLocation(ServerConfig& conf);
     LocationConfig            parseLocation(LocationConfig& conf);
     void                      parseCommon(CommonConfig& conf);
 
+
+    // http
+    void                      parseClientHeaderTimeout(HttpConfig& conf);
+    void                      parseClientBodyTimeout(HttpConfig& conf);
+    void                      parseSendTimeout(HttpConfig& conf);
+
     // server
     void                      parseSessionTimeout(ServerConfig& conf);
-    void                      parseTimeout(ServerConfig& conf);
+    void                      parseKeepAliveTimeout(ServerConfig& conf);
+    void                      parseKeepAliveRequests(ServerConfig& conf);
     void                      parseListen(ServerConfig& conf);
     void                      parseServerName(ServerConfig& conf);
     void                      parseCGI(ServerConfig& conf);
@@ -51,6 +59,8 @@ class ConfigParser {
     Token                     peekToken() const;
     void                      expectNextToken(const std::string& expected);
     void                      expectCurToken(const std::string& expected) const;
+    std::string               errorPrefix() const;
+    void                      throwError(const std::string& desc) const throw (std::runtime_error);
     void                      throwExpectError(const std::string& expected) const throw (std::runtime_error);
     void                      throwBadSyntax() const throw (std::runtime_error);
     int                       atoi(const std::string& s) const;

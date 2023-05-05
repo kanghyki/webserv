@@ -9,6 +9,11 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req) throw(HttpStatus) {
   HttpResponse ret;
 
+  if (req.getLocationConfig().getReturnRes().first != -1) {
+    ret.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
+    ret.addHeader("Location", req.getLocationConfig().getReturnRes().second);
+    return ret;
+  }
   log::debug << log::endl << "Relative path: " + req.getRelativePath() << log::endl;
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientBodySize()))
     throw (PAYLOAD_TOO_LARGE);

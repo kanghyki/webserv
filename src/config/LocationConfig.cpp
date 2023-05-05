@@ -7,11 +7,13 @@ const std::string LocationConfig::DEFAULT_PATH = "/";
 LocationConfig::LocationConfig():
   CommonConfig(),
   path(DEFAULT_PATH),
+  returnRes(std::make_pair(-1, "")),
   autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const ServerConfig& config):
   CommonConfig(config),
   path(DEFAULT_PATH),
+  returnRes(std::make_pair(-1, "")),
   autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const LocationConfig& obj):
@@ -61,7 +63,7 @@ bool LocationConfig::isMethodAllowed(std::string method) const {
   return false;
 }
 
-std::map<int, std::string> LocationConfig::getReturnRes() const { return this->returnRes; }
+std::pair<int, std::string> LocationConfig::getReturnRes() const { return this->returnRes; }
 
 bool LocationConfig::isAutoindex() const { return this->autoindex; }
 
@@ -75,7 +77,9 @@ void LocationConfig::setPath(std::string path) { this->path = path; }
 
 void LocationConfig::addLimitExcept(std::string method) { this->limitExcept.push_back(method); }
 
-void LocationConfig::addReturnRes(std::pair<int, std::string> returnRes) { this->returnRes.insert(returnRes); }
+void LocationConfig::setReturnRes(int status, std::string path) {
+  this->returnRes = std::make_pair(status, path);
+}
 
 void LocationConfig::setAutoindex(bool autoIndex) { this->autoindex = autoIndex; }
 

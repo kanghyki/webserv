@@ -8,6 +8,7 @@ const std::string Token::SEMICOLON                = ";";
 const std::string Token::LBRACE                   = "{";
 const std::string Token::RBRACE                   = "}";
 // Keyword
+const std::string Token::HTTP                     = "http";
 const std::string Token::SERVER                   = "server";
 const std::string Token::LOCATION                 = "location";
 const std::string Token::LISTEN                   = "listen";
@@ -20,13 +21,18 @@ const std::string Token::LIMIT_EXCEPT             = "limit_except";
 const std::string Token::AUTOINDEX                = "autoindex";
 const std::string Token::RETURN                   = "return";
 const std::string Token::SESSION_TIMEOUT          = "session_timeout";
-const std::string Token::TIMEOUT                  = "timeout";
 const std::string Token::CGI                      = "cgi";
+const std::string Token::CLIENT_BODY_TIMEOUT      = "client_body_timeout";
+const std::string Token::CLIENT_HEADER_TIMEOUT    = "client_header_timeout";
+const std::string Token::SEND_TIMEOUT             = "send_timeout";
+const std::string Token::KEEPALIVE_TIMEOUT        = "keepalive_timeout";
+const std::string Token::KEEPALIVE_REQUESTS       = "keepalive_requests";
 
 const int         Token::IDENT_IDX                = 0;
 const int         Token::TYPE_IDX                 = 1;
 
 const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
+  {"http",                                       Token::HTTP},
   {"server",                                     Token::SERVER},
   {"location",                                   Token::LOCATION},
   {"listen",                                     Token::LISTEN},
@@ -39,8 +45,12 @@ const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"autoindex",                                  Token::AUTOINDEX},
   {"return",                                     Token::RETURN},
   {"session_timeout",                            Token::SESSION_TIMEOUT},
-  {"timeout",                                    Token::TIMEOUT},
   {"cgi",                                        Token::CGI},
+  {"client_body_timeout",                        Token::CLIENT_BODY_TIMEOUT},
+  {"client_header_timeout",                      Token::CLIENT_HEADER_TIMEOUT},
+  {"send_timeout",                               Token::SEND_TIMEOUT},
+  {"keepalive_timeout",                          Token::KEEPALIVE_TIMEOUT},
+  {"keepalive_requests",                         Token::KEEPALIVE_REQUESTS},
 };
 
 Token::Token():

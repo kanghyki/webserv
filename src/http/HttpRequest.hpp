@@ -7,6 +7,7 @@
 # include "../Util.hpp"
 # include "../MimeType.hpp"
 # include "../config/Config.hpp"
+# include "../Logger.hpp"
 
 # include <stdexcept>
 # include <string>
