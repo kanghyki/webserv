@@ -18,7 +18,6 @@ class HttpDataFecther {
     ~HttpDataFecther();
     std::string         fetch() const                     throw(HttpStatus);
     static std::string  readFile(const std::string& path) throw(HttpStatus);
-    const std::string   getData(void) const               throw(HttpStatus);
 
   private:
     const HttpRequest&  req;

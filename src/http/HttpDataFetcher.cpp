@@ -15,12 +15,12 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
     if (this->req.getLocationConfig().isAutoindex())
       _data = autoindex();
     else if (this->req.getLocationConfig().getIndex() != "")
-      _data = readFile("." + this->req.getLocationConfig().getRoot() + "/" + this->req.getLocationConfig().getIndex());
+      _data = readFile(this->req.getRelativePath() + this->req.getLocationConfig().getIndex());
     else
-      throw (FORBIDDEN);
+      throw (NOT_FOUND);
   }
   else if (S_ISREG(_stat.st_mode))
-    _data = getData();
+    _data = readFile(this->req.getRelativePath());
   else
     throw (FORBIDDEN);
 
@@ -37,10 +37,6 @@ std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus)
   }
 
   return ret;
-}
-
-const std::string HttpDataFecther::getData(void) const throw(HttpStatus) {
-  return readFile(this->req.getRelativePath());
 }
 
 std::string HttpDataFecther::autoindex() const throw(HttpStatus) {
