@@ -260,7 +260,7 @@ HttpStatus HttpRequest::getErrorStatus() const {
   return this->errorStatus;
 }
 bool HttpRequest::isError() const {
-  if (this->errorStatus > 0)
+  if (this->errorStatus >= 400)
     return true;
   return false;
 }
@@ -332,6 +332,10 @@ void HttpRequest::setReqType(const std::string& type) {
 
 void HttpRequest::setErrorStatus(HttpStatus status) {
   this->errorStatus = status;
+}
+
+void HttpRequest::setCgi(bool cgi) {
+  this->cgi = cgi;
 }
 
 

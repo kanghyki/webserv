@@ -1,7 +1,4 @@
 #include "Server.hpp"
-#include "SessionManager.hpp"
-#include "Util.hpp"
-#include "http/HttpHeaderField.hpp"
 
 /*
  * -------------------------- Constructor --------------------------
@@ -11,7 +8,7 @@ Server::Server(Config& config) :
   requests(MANAGE_FD_MAX),
   fdMax(FD_CLOSED),
   config(config),
-  connection(),
+  connection(config),
   sessionManager() {
     FD_ZERO(&this->reads);
     FD_ZERO(&this->writes);
@@ -147,7 +144,7 @@ void Server::run(void) {
     if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
       break;
 
-    cleanUpTimeout();
+    cleanUp();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
       if (FD_ISSET(i, &readsCpy)) {
@@ -159,14 +156,11 @@ void Server::run(void) {
       if (FD_ISSET(i, &writesCpy)) {
         if (this->requests[i].getReqType() == HttpRequest::CLOSE)
           closeSocket(i);
-        if (this->requests[i].getReqType() == HttpRequest::CHUNKED) {
-
+        else {
+          FD_CLR(i, &this->writes);
+          this->connection.update(i, this->requests[i].getServerConfig());
         }
-        // 강현이 타임아웃 적용해서 keep alive 끊으면 되고, chunked 구현하면 될 듯?
-
-
       }
-
     }
   }
 
@@ -174,15 +168,29 @@ void Server::run(void) {
     if (close(this->listens_fd[i]) == -1) throw (CloseException());
 }
 
-void Server::cleanUpTimeout() {
-  std::vector<int> timeout_fd_list = this->connection.getTimeoutList();
-  for (size_t i = 0; i < timeout_fd_list.size(); ++i) {
-    log::warning << "Timeout client(" << timeout_fd_list[i] << "), closed" << log::endl;
-    FD_CLR(timeout_fd_list[i], &this->getReads());
-    FD_CLR(timeout_fd_list[i], &this->getWrites());
-    close(timeout_fd_list[i]);
-    clearReceived(timeout_fd_list[i]);
-    this->connection.remove(timeout_fd_list[i]);
+void Server::cleanUp() {
+  std::set<int> fd_list;
+
+  fd_list = this->connection.getTimeoutList();
+  for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    log::warning << "Timeout client(" << *it << "), closed" << log::endl;
+    FD_CLR(*it, &this->getReads());
+    FD_CLR(*it, &this->getWrites());
+    close(*it);
+    clearRequest(*it);
+    this->connection.remove(*it);
+    this->connection.removeRequests(*it);
+  }
+
+  fd_list = this->connection.getMaxRequestList();
+  for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    log::warning << "max request client(" << *it << "), closed" << log::endl;
+    FD_CLR(*it, &this->getReads());
+    FD_CLR(*it, &this->getWrites());
+    close(*it);
+    clearRequest(*it);
+    this->connection.remove(*it);
+    this->connection.removeRequests(*it);
   }
 }
 
@@ -203,7 +211,7 @@ int Server::acceptConnect(int server_fd) {
 
 
   log::info << "Accept client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << log::endl;
-  this->connection.add(client_fd);
+  this->connection.update(client_fd, Connection::HEADER);
 
   return client_fd;
 }
@@ -238,11 +246,12 @@ void Server::checkReceiveDone(int fd) {
     recvHeader(req);
 
   if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
+    this->connection.update(fd, Connection::BODY);
     if (req.getContentLength() == (int)req.getRecvData().length())
       req.setRecvStatus(HttpRequest::RECEIVE_DONE);
   }
 
-  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) 
+  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE)
     receiveDone(fd);
 }
 
@@ -250,9 +259,8 @@ void Server::receiveDone(int fd) {
   HttpRequest&   req = this->requests[fd];
   HttpResponse  res;
 
-//  FD_CLR(fd, &this->getReads());
   log::debug << "this->data[" << fd << "]\n" << this->requests[fd].getRecvData() << log::endl;
-  this->connection.remove(fd);
+  clearRequest(fd);
 
   try {
     if (req.isError())
@@ -270,12 +278,15 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(status, req.getServerConfig());
   }
 
+  int reqs = this->connection.updateRequests(fd, req.getServerConfig());
+  res.addHeader("Keep-Alive", "timeout=" + util::itoa(req.getServerConfig().getKeepAliveTimeout()) + ", max=" + util::itoa(reqs));
+
   log::info << "<= Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
   sendData(fd, res.toString());
 }
 
 void Server::sendData(int fd, const std::string& data) {
-  clearRequest(fd);
+  this->connection.update(fd, Connection::SEND);
   FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     log::warning << "send failed" << log::endl;
@@ -283,17 +294,19 @@ void Server::sendData(int fd, const std::string& data) {
 
 void Server::closeSocket(int fd) {
   FD_CLR(fd, &this->getWrites());
+  FD_CLR(fd, &this->getReads());
   // FIXME:
   if (close(fd) == -1)
     throw (CloseException());
   else
     log::info << "Closed client(" << fd << ")" << log::endl;
+
   this->requests[fd] = HttpRequest();
 }
 
 void Server::clearReceived(int fd) {
   HttpRequest& req = this->requests[fd];
-  
+
   req.clearRecvData();
   req.setContentLength(0);
 }
@@ -326,9 +339,11 @@ void Server::recvHeader(HttpRequest& req) {
 }
 
 void Server::clearRequest(int fd) {
-  int tmp = this->requests[fd].getReqType();
-  this->requests[fd] = HttpRequest();
-  this->requests[fd].setReqType(tmp);
+  HttpRequest& req = this->requests[fd];
+  req.clearRecvData();
+  req.setContentLength(0);
+  req.setRecvStatus(HttpRequest::HEADER_RECEIVE);
+  req.setCgi(false);
 }
 
 //const std::string Server::getData(int fd) const {

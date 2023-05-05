@@ -77,6 +77,7 @@ class HttpRequest {
     void                                  setReqType(int type);
     void                                  setReqType(const std::string& type);
     void                                  setErrorStatus(HttpStatus status);
+    void                                  setCgi(bool cgi);
 
 //    HttpRequest& operator=(const HttpRequest& obj);
 
