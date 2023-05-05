@@ -104,7 +104,7 @@ char** CGI::getArgv() const {
 char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const {
   char** ret;
   
-  ret = (char**)malloc(sizeof(char*) * envMap.size() + 1);
+  ret = (char**)malloc(sizeof(char*) * (envMap.size() + 1));
   if (ret == NULL) throw INTERNAL_SERVER_ERROR;
 
   int i = 0;

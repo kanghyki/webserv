@@ -119,12 +119,10 @@ namespace util {
     if (!data)
       return ;
     while (data[i]) {
-      if (data[i])
-        free(data[i]);
+      free(data[i]);
       i++;
     }
-    if (data[i])
-      free(data);
+    free(data);
   }
 
   std::pair<std::string, std::string> splitHeaderBody(const std::string& str, const std::string& delim) {
