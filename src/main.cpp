@@ -1,32 +1,34 @@
-#include <iostream>
-#include "./Server.hpp"
-#include "./config/parser/ConfigParser.hpp"
-#include "./config/Config.hpp"
-#include "./Logger.hpp"
+#include "./main.hpp"
 
-const std::string TEAM_MARK = "\n\
-  ███    ██  ██████  ██ ███    ██ ██   ██     ███    ███ ██ ███    ██ ██    ██ ███████\n\
-  ████   ██ ██       ██ ████   ██  ██ ██      ████  ████ ██ ████   ██ ██    ██ ██     \n\
-  ██ ██  ██ ██   ███ ██ ██ ██  ██   ███       ██ ████ ██ ██ ██ ██  ██ ██    ██ ███████\n\
-  ██  ██ ██ ██    ██ ██ ██  ██ ██  ██ ██      ██  ██  ██ ██ ██  ██ ██ ██    ██      ██\n\
-  ██   ████  ██████  ██ ██   ████ ██   ██     ██      ██ ██ ██   ████  ██████  ███████\n\n";
 
 int main(int argc, char **argv) {
+  std::string config_file;
+
   std::cout << TEAM_MARK;
-  if (argc != 2) {
-    log::error << "argument";
-    return EXIT_FAILURE;
+
+  if (argc < 2) {
+    config_file = "default.conf";
+    log::warning << "The argument is not entered" << log::endl;
   }
+  else {
+    config_file = argv[1];
+    if (argc > 2)
+      log::warning << "Arguments are ignored after one argument" << log::endl;
+  }
+  log::info << "The config file is set to [" << config_file << "]" << log::endl;
 
   try {
-    ConfigParser p;
-    Config a = p.parse(argv[1]);
+    ConfigParser parser;
+    Config conf = parser.parse(config_file);
     log::info << "Config parsing ok" << log::endl;
-    Server server(a);
+
+    Server server(conf);
     log::info << "Server setup done" << log::endl;
+
     server.run();
   } catch (std::exception &e) {
     log::error << e.what() << log::endl;
+    return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;
