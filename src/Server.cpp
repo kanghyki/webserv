@@ -147,19 +147,22 @@ void Server::run(void) {
     cleanUp();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
-      if (FD_ISSET(i, &readsCpy)) {
+
+      if (FD_ISSET(i, &this->writes)) {
+        if (FD_ISSET(i, &writesCpy)) {
+          if (this->requests[i].getReqType() == HttpRequest::CLOSE)
+            closeSocket(i);
+          else {
+            FD_CLR(i, &this->writes);
+            this->connection.update(i, this->requests[i].getServerConfig());
+          }
+        }
+      }
+      else if (FD_ISSET(i, &readsCpy)) {
         if (FD_ISSET(i, &this->listens))
           acceptConnect(i);
         else
           receiveData(i);
-      }
-      if (FD_ISSET(i, &writesCpy)) {
-        if (this->requests[i].getReqType() == HttpRequest::CLOSE)
-          closeSocket(i);
-        else {
-          FD_CLR(i, &this->writes);
-          this->connection.update(i, this->requests[i].getServerConfig());
-        }
       }
     }
   }
