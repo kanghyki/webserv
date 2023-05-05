@@ -93,7 +93,7 @@ class Server {
     Connection        connection;
     SessionManager    sessionManager;
 
-    void              cleanUpTimeout();
+    void              cleanUp();
 
   public:
     class InitException : public std::exception {
