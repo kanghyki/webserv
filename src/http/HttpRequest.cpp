@@ -99,6 +99,8 @@ void HttpRequest::parseStatusLine(const std::string& line) {
 //}
 
 void HttpRequest::validateMethod(const std::string &method) {
+  if (method.empty())
+    throw BAD_REQUEST;
   if (method != request_method::GET &&
       method != request_method::POST &&
       method != request_method::DELETE &&
@@ -161,7 +163,42 @@ void HttpRequest::checkCGI(const std::string& path, const ServerConfig& sc) {
   }
 }
 
+#include <sstream>
+
+unsigned int strToHex(std::string s) {
+  unsigned int      ret;
+  std::stringstream ss(s);
+
+  log::debug << "strToHex:" << s << log::endl;
+  ss >> std::hex >> ret;
+  return ret;
+}
+
 void HttpRequest::unChunked(void) {
+  std::string       ret;
+  std::string       s;
+  size_t            s_pos = 0;
+  size_t            e_pos;
+  bool              is_hex = true;
+  size_t            read_size;
+
+  while ((e_pos = this->body.find("\r\n", s_pos)) != std::string::npos) {
+    s = this->body.substr(s_pos, e_pos - s_pos);
+
+    if (is_hex == true) {
+      read_size = strToHex(s);
+    }
+    else if (read_size == 0)
+      break;
+    else if (read_size == s.size())
+      ret += s;
+    else
+      throw (BAD_REQUEST);
+    s_pos = e_pos + 2;
+    is_hex = !is_hex;
+  }
+
+  this->body = ret;
 }
 
 /*
@@ -297,6 +334,7 @@ void HttpRequest::setVersion(const std::string& version) {
 
 void HttpRequest::setRecvData(const std::string& data) {
   this->recvData.clear();
+  log::debug << "setRecvData:" << data << log::endl;
   this->recvData = data;
 }
 

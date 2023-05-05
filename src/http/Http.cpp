@@ -73,10 +73,9 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
   }
 
 
-  std::string sc = header[header_field::SET_COOKIE]
-;
+  std::string sc = header[header_field::SET_COOKIE];
   ret.setStatusCode(OK);
-  
+
   ret.setBody(body);
 
   return ret;
@@ -189,14 +188,15 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
 
 std::string Http::defaultErrorPage(HttpStatus s) {
   std::string ret = "<html><head><title>"\
-                     + util::itoa(s) + " " + getStatusText(s)\
-                     + "</title></head>\
-                     <body>\
-                     <center><h1>"\
-                     + util::itoa(s) + " " + getStatusText(s)\
-                     + "</h1></center>\
-                     <hr><center>webserv/1.0.0</center>\
-                     </body>\
-                     </html>";
++ util::itoa(s) + " " + getStatusText(s)\
++ "</title></head>\
+<body>\
+<center><h1>"\
++ util::itoa(s) + " " + getStatusText(s)\
++ "</h1></center>\
+<hr><center>webserv/1.0.0</center>\
+</body>\
+</html>";
+
   return ret;
 }

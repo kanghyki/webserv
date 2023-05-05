@@ -247,6 +247,7 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
+  // TODO: 연속으로 받은 데이터 처리
   this->requests[fd].addRecvData(buf);
   checkReceiveDone(fd);
 }
@@ -270,9 +271,9 @@ void Server::checkReceiveDone(int fd) {
   }
 
   if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) {
+    req.setBody(req.getRecvData().substr(req.getRecvData().find("\r\n\r\n") + 4));
     if (req.getReqType() == HttpRequest::CHUNKED)
       req.unChunked();
-    req.setBody(req.getRecvData());
     receiveDone(fd);
   }
 }
@@ -289,11 +290,9 @@ void Server::receiveDone(int fd) {
       throw req.getErrorStatus();
     req.setConfig(this->config);
     req.checkCGI(req.getPath(), req.getServerConfig());
-    log::debug << "request good!" << log::endl;
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
     res = Http::processing(req, this->sessionManager);
   } catch (HttpStatus status) {
-    log::debug << "oh error!" << log::endl;
     res = Http::getErrorPage(status, req.getServerConfig());
   }
 
