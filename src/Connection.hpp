@@ -32,7 +32,6 @@ class Connection {
     void                      removeRequests(int fd);
 
   private:
-    static const unsigned int DEFAULT_TIMEOUT;
     const unsigned int        client_header_timeout;
     const unsigned int        client_body_timeout;
     const unsigned int        send_timeout;

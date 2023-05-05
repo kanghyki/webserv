@@ -1,7 +1,5 @@
 #include "./Connection.hpp"
 
-const unsigned int Connection::DEFAULT_TIMEOUT = 60;
-
 Connection::Connection(const Config& config):
   client_header_timeout(config.getHttpConfig().getClientHeaderTimeout()),
   client_body_timeout(config.getHttpConfig().getClientBodyTimeout()),
