@@ -262,7 +262,7 @@ void Server::checkReceiveDone(int fd) {
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       // FIXME: localhost:8000/r/n 을 찾음,, 헤더 잘라놔서 괜찮을 듯 이제
       // 종료 조건
-      if (this->recvs[fd].find("0\r\n") != std::string::npos) {
+      if (this->recvs[fd].find("0\r\n\r\n") != std::string::npos) {
         log::debug << "chunked find!" << log::endl;
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
       }
