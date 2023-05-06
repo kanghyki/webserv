@@ -26,11 +26,6 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) t
       req.getMethod() != request_method::HEAD)
     throw (METHOD_NOT_ALLOWED);
 
-  log::debug << log::endl << "Http -------------\n\
-Request Path: " << req.getPath() << "\n\
-Method: " << req.getMethod() << log::endl;
-
-
   try {
     if (req.isCGI()) ret = executeCGI(req, manager);
     else if (req.getMethod() == request_method::GET) ret = getMethod(req);
@@ -147,9 +142,7 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
   out.write(req.getBody().c_str(), req.getBody().length());
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
 
-  res.setStatusCode(OK);
-  res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
-  res.setBody(req.getBody());
+  res.setStatusCode(NO_CONTENT);
 
   return res;
 }
