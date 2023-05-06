@@ -143,8 +143,10 @@ void Server::run(void) {
     fd_set readsCpy = this->getReads();
     fd_set writesCpy = this->getWrites();
 
-    if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1)
+    if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1) {
+      log::error << "select -1" << log::endl;
       break;
+    }
 
     cleanUpConnection();
 
@@ -155,6 +157,8 @@ void Server::run(void) {
           if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE) {
             FD_CLR(i, &this->getWrites());
             FD_CLR(i, &this->getReads());
+            this->connection.remove(i);
+            this->connection.removeRequests(i);
             // FIXME:
             if (close(i) == -1)
               log::warning << "close -1" << log::endl;
@@ -221,6 +225,8 @@ void Server::receiveData(int fd) {
     FD_CLR(fd, &this->reads);
     this->recvs[fd].clear();
     this->requests[fd] = HttpRequest();
+    this->connection.remove(fd);
+    this->connection.removeRequests(fd);
     if (close(fd) == -1)
       log::warning << "close -1" << log::endl;
     return ;
@@ -287,8 +293,14 @@ void Server::checkReceiveDone(int fd) {
     // 지금까지 받은 데이터를 body 에 담기
     req.setBody(this->recvs[fd]);
     this->recvs[fd].clear();
-    if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED)
-      req.unchunk();
+    if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
+      try {
+        req.unchunk();
+      } catch (HttpStatus s) {
+        log::warning << "Chunked message is wrong" << log::endl;
+        req.setErrorStatus(BAD_REQUEST);
+      }
+    }
 
     // Response 만들러 ㄱ
     receiveDone(fd);
@@ -367,17 +379,6 @@ void Server::sendData(int fd, const std::string& data) {
   FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     log::warning << "send failed" << log::endl;
-  this->requests[fd] = HttpRequest();
-}
-
-void Server::closeSocket(int fd) {
-  FD_CLR(fd, &this->getWrites());
-  FD_CLR(fd, &this->getReads());
-  if (close(fd) == -1)
-    log::warning << "close -1" << log::endl;
-  else
-    log::info << "Closed client(" << fd << ")" << log::endl;
-
   this->requests[fd] = HttpRequest();
 }
 

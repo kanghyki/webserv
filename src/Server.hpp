@@ -61,7 +61,6 @@ class Server {
     void receiveData(int fd);
     void checkReceiveDone(int fd);
     void sendData(int fd, const std::string& data);
-    void closeSocket(int fd);
     void receiveDone(int fd);
 
     void              recvHeader(int fd, HttpRequest& req);
