@@ -77,7 +77,7 @@ default value) NONE
 example) limit_except GET POST DELETE;
 
 2.
-cgi [extension(indent)] [CGI path(ident)]
+cgi [extension(indent)] [CGI path(ident, MUST BE ABSOLUTE PATH)]
 default value) NONE
 example) cgi .py /cgi/hello.py;
 
