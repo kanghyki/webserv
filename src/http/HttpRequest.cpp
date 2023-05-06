@@ -39,7 +39,6 @@ void HttpRequest::parse(const std::string& req, const Config& conf) throw (HttpR
   size_t pos;
 
   // Request line
-  log::debug << "req:\n" << req << log::endl;
   if ((pos = req.find("\r\n")) != std::string::npos)
     parseStatusLine(req.substr(0, pos));
   else
@@ -172,8 +171,9 @@ std::string HttpRequest::getRelativePath() const {
 
   if (req_path.find(loc_path) != std::string::npos) {
 
-    if (req_path != "/"
-        && (req_path.length() == loc_path_len || req_path[loc_path_len] == '/')) {
+    if (req_path != "/" && (req_path.length() == loc_path_len || req_path[loc_path_len] == '/')) {
+      if (loc_path != req_path && root_path == "/")
+        root_path = "";
       req_path.replace(req_path.find(loc_path), loc_path_len, root_path);
     }
 
