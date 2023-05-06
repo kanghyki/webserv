@@ -110,7 +110,15 @@ void HttpRequest::checkCGI() {
   for (it = cgi.begin(); it != cgi.end(); ++it) {
     if ((pos = path.find(it->first)) != std::string::npos) {
       this->cgi = true;
-      this->scriptPath = getRelativePath().substr(0, pos + it->first.length() + 1);
+      // FIXME: temp
+      std::string relativePath = getRelativePath();
+      size_t rpos = relativePath.find(it->first);
+      if (rpos != std::string::npos)
+        this->scriptPath = relativePath.substr(0, rpos + it->first.length());
+      else
+        throw BAD_REQUEST;
+//      this->scriptPath = getRelativePath().substr(0, pos + it->first.length() + 1);
+      log::debug << "scriptPath:" << this->scriptPath << log::endl;
       this->pathInfo = getPath().substr(pos + it->first.length());
       this->cgiPath = it->second;
       break;

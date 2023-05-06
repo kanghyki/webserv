@@ -229,7 +229,10 @@ void Server::receiveData(int fd) {
   this->recvs[fd] += buf;
 //  log::debug << "========================" << log::endl;
 //  log::debug << this->recvs[fd] << log::endl;
+//  log::debug << "recv:" << recv_size << log::endl;
+//  log::debug << buf << log::endl;
 //  log::debug << "========================" << log::endl;
+  log::debug << "recvs[fd]size:" << this->recvs[fd].length() << log::endl;
   checkReceiveDone(fd);
 }
 

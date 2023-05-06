@@ -14,7 +14,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) t
     ret.addHeader("Location", req.getLocationConfig().getReturnRes().second);
     return ret;
   }
-  log::debug << log::endl << "Relative path: " + req.getRelativePath() << log::endl;
+  log::debug << "Relative path: " + req.getRelativePath() << log::endl;
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientBodySize()))
     throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
@@ -57,6 +57,8 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
     std::pair<std::string, std::string> p = util::splitHeaderBody(str, CRLF + CRLF);
     header = util::parseCGIHeader(p.first);
     body = p.second;
+    // TODO: statuscode
+    ret.setStatusCode(OK);
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
@@ -69,7 +71,6 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
 
 
   std::string sc = header[header_field::SET_COOKIE];
-  ret.setStatusCode(OK);
 
   ret.setBody(body);
 

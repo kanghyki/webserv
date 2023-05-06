@@ -69,7 +69,11 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_ACCEPT_LANGUAGE, req.getHeader().get(cgi_env::HTTP_ACCEPT_LANGUAGE)));
   ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_HOST, req.getHeader().get(cgi_env::HTTP_HOST)));
   ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_USER_AGENT, req.getHeader().get(cgi_env::HTTP_USER_AGENT)));
-  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, getPathInfo()));
+
+  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, req.getPath()));
+  // FIXME : TEMP
+  ret.insert(std::pair<std::string, std::string>("REQUEST_URI" , req.getPath()));
+
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod())); 
@@ -125,7 +129,7 @@ std::string CGI::execute(void) {
   int status;
 
   if (access(this->cgiPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
-  if (access(this->scriptPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
+  if (access(this->scriptPath.c_str(), R_OK) == -1) throw INTERNAL_SERVER_ERROR;
   try {
     util::ftPipe(fd1);
     util::ftPipe(fd2);
@@ -137,7 +141,7 @@ std::string CGI::execute(void) {
   } catch (util::SystemFunctionException& e) {
     throw INTERNAL_SERVER_ERROR;
   }
-  
+
   if (pid == 0) {
     close(fd1[READ]);
     close(fd2[WRITE]);
@@ -146,8 +150,8 @@ std::string CGI::execute(void) {
     close(fd1[WRITE]);
     close(fd2[READ]);
     changeWorkingDirectory();
-    if (execve(this->cgiPath.c_str(), this->argv, this->env) < 0) throw INTERNAL_SERVER_ERROR;
-    exit(0);
+    if (execve(this->cgiPath.c_str(), this->argv, this->env) < 0)
+      exit(0);
   }
 
   close(fd1[WRITE]);
@@ -156,6 +160,8 @@ std::string CGI::execute(void) {
   close(fd2[WRITE]);
   waitpid(pid, &status, 0);
   ret = util::readFd(fd1[READ]);
+  // TODO: NEED?
+  close(fd1[READ]);
 
   return ret;
 }
