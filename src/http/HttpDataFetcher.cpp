@@ -4,7 +4,7 @@ HttpDataFecther::HttpDataFecther(const HttpRequest& req): req(req) {}
 
 HttpDataFecther::~HttpDataFecther() {}
 
-std::string HttpDataFecther::fetch() {
+std::string HttpDataFecther::fetch() const {
   std::string _data;
   struct stat _stat;
 
