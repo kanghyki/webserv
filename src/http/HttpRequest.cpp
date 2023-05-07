@@ -6,9 +6,9 @@ const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 HttpRequest::HttpRequest():
   header(),
   cgi(false),
-  rs(HEADER_RECEIVE),
+  recv_status(HEADER_RECEIVE),
   contentLength(0),
-  errorStatus(OK)
+  errorStatusCode(BAD_REQUEST)
 {}
 
 HttpRequest::~HttpRequest() {}
@@ -27,9 +27,9 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
     this->scriptPath = obj.scriptPath;
     this->cgiPath = obj.getCGIPath();
     this->pathInfo = obj.pathInfo;
-    this->rs = obj.rs;
+    this->recv_status = obj.recv_status;
     this->contentLength = obj.contentLength;
-    this->errorStatus = obj.errorStatus;
+    this->errorStatusCode = obj.errorStatusCode;
   }
 
   return *this;
@@ -239,15 +239,15 @@ const std::string HttpRequest::getPathInfo() const {
 }
 
 HttpRequest::recvStatus HttpRequest::getRecvStatus() const {
-  return this->rs;
+  return this->recv_status;
 }
 
 int HttpRequest::getContentLength() const {
   return this->contentLength;
 }
 
-HttpStatus HttpRequest::getErrorStatus() const {
-  return this->errorStatus;
+HttpStatus HttpRequest::getErrorStatusCode() const {
+  return this->errorStatusCode;
 }
 
 /*
@@ -277,7 +277,7 @@ void HttpRequest::setVersion(const std::string& version) {
 }
 
 void HttpRequest::setRecvStatus(recvStatus status) {
-  this->rs = status;
+  this->recv_status = status;
 }
 
 void HttpRequest::setContentLength(int len) {
@@ -285,8 +285,8 @@ void HttpRequest::setContentLength(int len) {
 }
 
 void HttpRequest::setError(HttpStatus status) {
-  this->errorStatus = status;
-  this->rs = ERROR;
+  this->errorStatusCode = status;
+  this->recv_status = ERROR;
 }
 
 void HttpRequest::setCgi(bool cgi) {

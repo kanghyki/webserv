@@ -59,7 +59,7 @@ class HttpRequest {
 
     recvStatus                            getRecvStatus() const;
     int                                   getContentLength() const;
-    HttpStatus                            getErrorStatus() const;
+    HttpStatus                            getErrorStatusCode() const;
 
     void                                  setBody(const std::string& body);
 
@@ -91,9 +91,9 @@ class HttpRequest {
     std::string                           cgiPath;
     std::string                           pathInfo;
 
-    recvStatus                            rs;
+    recvStatus                            recv_status;
     int                                   contentLength;
-    HttpStatus                            errorStatus;
+    HttpStatus                            errorStatusCode;
 
     void                                  parseStatusLine(const std::string &line);
 

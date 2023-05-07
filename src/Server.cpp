@@ -242,14 +242,14 @@ void Server::checkReceiveDone(int fd) {
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
     }
     else if (req.getHeader().getTransferEncoding() == HttpRequestHeader::UNSET) {
-      if (req.getContentLength() == (int)recvs[fd].length())
+      if (req.getContentLength() == static_cast<int>(recvs[fd].length()))
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
     }
   }
 
   if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) {
     req.setBody(this->recvs[fd]);
-    this->recvs[fd].clear();
+    this->recvs[fd] = "";
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       try {
         req.unchunk();
@@ -260,6 +260,9 @@ void Server::checkReceiveDone(int fd) {
     }
     receiveDone(fd);
   }
+
+  if (req.getRecvStatus() == HttpRequest::ERROR)
+    receiveDone(fd);
 }
 
 void Server::receiveHeader(int fd, HttpRequest& req) {
@@ -268,24 +271,20 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
   if (pos != std::string::npos) {
     std::string header = this->recvs[fd].substr(0, pos);
     std::string left = this->recvs[fd].substr(pos + HEADER_DELIMETER.length());
-    this->recvs[fd].clear();
     this->recvs[fd] = left;
 
     try {
       req.parse(header, this->config);
+      log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
       log::warning << "Request header message is wrong" << log::endl;
       req.setError(s);
       return;
-    } catch (std::exception& e) {
-      log::error << "unexpected error" << e.what() << log::endl;
-      throw BAD_GATEWAY;
     }
 
-    if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
+    if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED)
       req.setRecvStatus(HttpRequest::BODY_RECEIVE);
-    }
     else {
       std::string contentLength = req.getHeader().get(HttpRequestHeader::CONTENT_LENGTH);
       if (contentLength.empty())
@@ -303,11 +302,7 @@ void Server::receiveDone(int fd) {
   HttpResponse& res = this->responses[fd];
 
   try {
-    log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
-    if (req.getRecvStatus() == HttpRequest::ERROR)
-      throw req.getErrorStatus();
-    else
-      res = Http::processing(req, this->sessionManager);
+    res = Http::processing(req, this->sessionManager);
   } catch (HttpStatus s) {
     res = Http::getErrorPage(s, req.getServerConfig());
   }
@@ -345,6 +340,7 @@ void Server::closeConnection(int fd) {
   this->connection.removeRequests(fd);
   this->requests[fd] = HttpRequest();
   this->responses[fd] = HttpResponse();
+  this->recvs[fd] = "";
 }
 
 void Server::cleanUpConnection() {
