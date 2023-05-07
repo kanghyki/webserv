@@ -28,7 +28,7 @@ LocationConfig::~LocationConfig() {}
 
 LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
   if (this != &obj) {
-    this->clientBodySize = obj.getClientBodySize();
+    this->clientMaxBodySize = obj.getClientMaxBodySize();
     this->root = obj.getRoot();
     this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();

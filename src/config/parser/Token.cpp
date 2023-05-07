@@ -15,7 +15,7 @@ const std::string Token::LISTEN                   = "listen";
 const std::string Token::SERVER_NAME              = "server_name";
 const std::string Token::ROOT                     = "root";
 const std::string Token::ERROR_PAGE               = "error_page";
-const std::string Token::CLIENT_BODY_BUFFER_SIZE  = "client_body_buffer_size";
+const std::string Token::CLIENT_MAX_BODY_SIZE     = "client_max_body_size";
 const std::string Token::INDEX                    = "index";
 const std::string Token::LIMIT_EXCEPT             = "limit_except";
 const std::string Token::AUTOINDEX                = "autoindex";
@@ -39,7 +39,7 @@ const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"server_name",                                Token::SERVER_NAME},
   {"root",                                       Token::ROOT},
   {"error_page",                                 Token::ERROR_PAGE},
-  {"client_body_buffer_size",                    Token::CLIENT_BODY_BUFFER_SIZE},
+  {"client_max_body_size",                       Token::CLIENT_MAX_BODY_SIZE},
   {"index",                                      Token::INDEX},
   {"limit_except",                               Token::LIMIT_EXCEPT},
   {"autoindex",                                  Token::AUTOINDEX},
@@ -97,7 +97,7 @@ bool Token::isNot(const std::string& type) const {
 
 bool Token::isCommon() const {
   if (is(ROOT) ||
-      is(CLIENT_BODY_BUFFER_SIZE) ||
+      is(CLIENT_MAX_BODY_SIZE) ||
       is(ERROR_PAGE) ||
       is(INDEX))
     return true;

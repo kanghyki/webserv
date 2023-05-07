@@ -263,10 +263,6 @@ void Server::checkReceiveDone(int fd) {
     log::debug << "body recieve!" << log::endl;
     log::debug << "Transfer_encoding = " << req.getHeader().getTransferEncoding() << log::endl;
 
-//    if (this->recvs[fd].length() > static_cast<size_t>(req.getLocationConfig().getClientBodySize())) {
-//      req.setErrorStatus(PAYLOAD_TOO_LARGE);
-//      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
-//    }
     // chunked로 온 요청 처리
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       // FIXME: localhost:8000/r/n 을 찾음,, 헤더 잘라놔서 괜찮을 듯 이제

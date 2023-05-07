@@ -12,18 +12,18 @@ class CommonConfig {
     virtual ~CommonConfig();
 //    CommonConfig&               operator=(const CommonConfig& obj);
 
-    int                         getClientBodySize() const;
+    int                         getClientMaxBodySize() const;
     std::string                 getRoot() const;
     std::map<int, std::string>  getErrorPage() const;
     std::string                 getIndex() const;
 
-    void                        setClientBodySize(int n);
+    void                        setClientMaxBodySize(int n);
     void                        setRoot(std::string root);
     void                        addErrorPage(int statusCode, std::string path);
     void                        setIndex(std::string index);
 
   protected:
-    int                         clientBodySize;
+    int                         clientMaxBodySize;
     std::string                 root;
     std::string                 index;
     std::map<int, std::string>  errorPage;

@@ -15,7 +15,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) t
     return ret;
   }
   log::debug << "Relative path: " + req.getRelativePath() << log::endl;
-  if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientBodySize()))
+  if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
     throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
     throw (METHOD_NOT_ALLOWED);

@@ -40,7 +40,7 @@ class Token {
     static const std::string  SERVER_NAME;
     static const std::string  ROOT;
     static const std::string  ERROR_PAGE;
-    static const std::string  CLIENT_BODY_BUFFER_SIZE;
+    static const std::string  CLIENT_MAX_BODY_SIZE;
     static const std::string  INDEX;
     static const std::string  LIMIT_EXCEPT;
     static const std::string  AUTOINDEX;

@@ -5,13 +5,13 @@ const std::string CommonConfig::DEFAULT_ROOT = "/html";
 const std::string CommonConfig::DEFAULT_INDEX = "index.html";
 
 CommonConfig::CommonConfig():
-  clientBodySize(DEFAULT_CLIENT_BODY_SIZE),
+  clientMaxBodySize(DEFAULT_CLIENT_BODY_SIZE),
   root(DEFAULT_ROOT),
   index(DEFAULT_INDEX),
   errorPage() {}
 
 CommonConfig::CommonConfig(const CommonConfig& obj):
-  clientBodySize(obj.getClientBodySize()),
+  clientMaxBodySize(obj.getClientMaxBodySize()),
   root(obj.getRoot()),
   index(obj.getIndex()),
   errorPage(obj.getErrorPage()) {}
@@ -30,7 +30,7 @@ CommonConfig::~CommonConfig() {}
 
 // getter
 
-int CommonConfig::getClientBodySize() const { return this->clientBodySize; }
+int CommonConfig::getClientMaxBodySize() const { return this->clientMaxBodySize; }
 
 std::string CommonConfig::getRoot() const { return this->root; }
 
@@ -44,7 +44,7 @@ std::string CommonConfig::getIndex() const {
 
 // setter
 
-void CommonConfig::setClientBodySize(int n) { this->clientBodySize = n; }
+void CommonConfig::setClientMaxBodySize(int n) { this->clientMaxBodySize = n; }
 
 void CommonConfig::setRoot(std::string root) { this->root = root; }
 

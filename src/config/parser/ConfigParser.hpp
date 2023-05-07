@@ -49,7 +49,7 @@ class ConfigParser {
     // common
     void                      parseRoot(CommonConfig& conf);
     void                      parseErrorPage(CommonConfig& conf);
-    void                      parseClientBodyBufferSize(CommonConfig& conf);
+    void                      parseClientMaxBodySize(CommonConfig& conf);
     void                      parseIndex(CommonConfig& conf);
 
     void                      generateToken(std::string fileName);

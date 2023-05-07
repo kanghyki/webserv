@@ -100,7 +100,7 @@ LocationConfig ConfigParser::parseLocation(LocationConfig& locationConf) {
 void ConfigParser::parseCommon(CommonConfig& conf) {
   if (curToken().is(Token::ROOT)) parseRoot(conf);
   else if (curToken().is(Token::ERROR_PAGE)) parseErrorPage(conf);
-  else if (curToken().is(Token::CLIENT_BODY_BUFFER_SIZE)) parseClientBodyBufferSize(conf);
+  else if (curToken().is(Token::CLIENT_MAX_BODY_SIZE)) parseClientMaxBodySize(conf);
   else if (curToken().is(Token::INDEX)) parseIndex(conf);
 }
 
@@ -246,9 +246,9 @@ void ConfigParser::parseErrorPage(CommonConfig& conf) {
 }
 
 // client_body_buffer_size [size(int)]
-void ConfigParser::parseClientBodyBufferSize(CommonConfig& conf) {
+void ConfigParser::parseClientMaxBodySize(CommonConfig& conf) {
   expectNextToken(Token::INT);
-  conf.setClientBodySize(atoi(curToken().getLiteral()));
+  conf.setClientMaxBodySize(atoi(curToken().getLiteral()));
   expectNextToken(Token::SEMICOLON);
 }
 
