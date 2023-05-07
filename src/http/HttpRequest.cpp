@@ -35,24 +35,24 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
   return *this;
 }
 
-void HttpRequest::parse(const std::string& req, const Config& conf) throw (HttpRequest) {
+void HttpRequest::parse(const std::string& req, const Config& conf) {
   size_t pos;
 
-  // Request line
-  if ((pos = req.find("\r\n")) != std::string::npos)
-    parseStatusLine(req.substr(0, pos));
-  else
-    throw BAD_REQUEST;
+    // Request line
+    if ((pos = req.find("\r\n")) != std::string::npos)
+      parseStatusLine(req.substr(0, pos));
+    else
+      throw BAD_REQUEST;
 
-  // Request header
-  this->header.parse(req.substr(pos + 2));
+    // Request header
+    this->header.parse(req.substr(pos + 2));
 
-  // Set config
-  this->sc = conf.getHttpConfig().findServerConfig(this->header.get("Host"));
-  this->lc = this->sc.findLocationConfig(this->getPath());
+    // Set config
+    this->sc = conf.getHttpConfig().findServerConfig(this->header.get("Host"));
+    this->lc = this->sc.findLocationConfig(this->getPath());
 
-  // Check CGI
-  checkCGI();
+    // Check CGI
+    checkCGI();
 }
 
 void HttpRequest::parseStatusLine(const std::string& line) {
@@ -249,11 +249,6 @@ int HttpRequest::getContentLength() const {
 HttpStatus HttpRequest::getErrorStatus() const {
   return this->errorStatus;
 }
-bool HttpRequest::isError() const {
-  if (this->errorStatus >= 400)
-    return true;
-  return false;
-}
 
 /*
  * -------------------------- Setter -------------------------------
@@ -289,8 +284,9 @@ void HttpRequest::setContentLength(int len) {
   this->contentLength = len;
 }
 
-void HttpRequest::setErrorStatus(HttpStatus status) {
+void HttpRequest::setError(HttpStatus status) {
   this->errorStatus = status;
+  this->rs = ERROR;
 }
 
 void HttpRequest::setCgi(bool cgi) {

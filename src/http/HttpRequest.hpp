@@ -30,14 +30,15 @@ class HttpRequest {
     enum recvStatus {
       HEADER_RECEIVE,
       BODY_RECEIVE,
-      RECEIVE_DONE
+      RECEIVE_DONE,
+      ERROR
     };
 
     HttpRequest();
     ~HttpRequest();
     HttpRequest& operator=(const HttpRequest& obj);
 
-    void                                  parse(const std::string& req, const Config& conf) throw (HttpRequest);
+    void                                  parse(const std::string& req, const Config& conf);
     void                                  checkCGI();
 
     std::string                           getMethod() const;
@@ -59,13 +60,12 @@ class HttpRequest {
     recvStatus                            getRecvStatus() const;
     int                                   getContentLength() const;
     HttpStatus                            getErrorStatus() const;
-    bool                                  isError() const;
 
     void                                  setBody(const std::string& body);
 
     void                                  setRecvStatus(recvStatus status);
     void                                  setContentLength(int len);
-    void                                  setErrorStatus(HttpStatus status);
+    void                                  setError(HttpStatus status);
     void                                  setCgi(bool cgi);
 
     void                                  unchunk();

@@ -30,7 +30,7 @@ class HttpRequestHeader {
       CHUNKED
     };
 
-    void parse(const std::string& reqHeader) throw (HttpStatus);
+    void parse(const std::string& reqHeader);
 
     std::string                               get(std::string key) const;
     const std::map<std::string, std::string>& getOrigin() const;

@@ -11,7 +11,7 @@ class Config {
     Config&     operator=(const Config& obj);
 
     HttpConfig  getHttpConfig() const;
-    void        setHttpConfig(HttpConfig http) throw (std::runtime_error);
+    void        setHttpConfig(HttpConfig http);
 
   private:
     HttpConfig  http;

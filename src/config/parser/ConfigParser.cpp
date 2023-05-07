@@ -6,7 +6,7 @@ ConfigParser::ConfigParser() {
 
 ConfigParser::~ConfigParser() {};
 
-Config ConfigParser::parse(const std::string& fileName) throw (std::runtime_error) {
+Config ConfigParser::parse(const std::string& fileName) {
   Config conf;
 
   generateToken(fileName);
@@ -17,7 +17,8 @@ Config ConfigParser::parse(const std::string& fileName) throw (std::runtime_erro
   }
   expectCurToken(Token::END_OF_FILE);
 
-  if (conf.getHttpConfig().getServerConfig().size() == 0) throw (std::runtime_error("No server config found"));
+  if (conf.getHttpConfig().getServerConfig().size() == 0)
+    throw (std::runtime_error("No server config found"));
 
   return conf;
 }
@@ -311,17 +312,17 @@ std::string ConfigParser::errorPrefix() const {
   return this->fileName + " " + std::to_string(curToken().getLineNumber()) + ":" + util::itoa(curToken().getPos()) + " ";
 }
 
-void ConfigParser::throwError(const std::string& desc) const throw (std::runtime_error) {
+void ConfigParser::throwError(const std::string& desc) const {
   std::string errorMsg = errorPrefix() + desc;
 
   throw std::runtime_error(errorMsg);
 }
 
-void ConfigParser::throwExpectError(const std::string& expected) const throw (std::runtime_error) {
+void ConfigParser::throwExpectError(const std::string& expected) const {
   throwError("expected \'" + expected + "\' but \'" + curToken().getLiteral() + "\'");
 }
 
-void ConfigParser::throwBadSyntax() const throw (std::runtime_error){
+void ConfigParser::throwBadSyntax() const {
   throwError("bad syntax \'" + curToken().getLiteral() + "\'");
 }
 

@@ -16,12 +16,12 @@ class HttpDataFecther {
   public:
     HttpDataFecther(const HttpRequest& request);
     ~HttpDataFecther();
-    std::string         fetch() const                     throw(HttpStatus);
-    static std::string  readFile(const std::string& path) throw(HttpStatus);
+    std::string         fetch() const;
+    static std::string  readFile(const std::string& path);
 
   private:
     const HttpRequest&  req;
-    std::string         autoindex() const                 throw(HttpStatus);
+    std::string         autoindex() const;
 };
 
 #endif

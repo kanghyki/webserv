@@ -6,7 +6,7 @@ Http::Http() {}
 
 Http::~Http() {}
 
-HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) throw(HttpStatus) {
+HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
   HttpResponse ret;
 
   if (req.getLocationConfig().getReturnRes().first != -1) {
@@ -40,7 +40,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) t
   return ret;
 }
 
-HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw (HttpStatus) {
+HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
   std::string cgi_ret;
   HttpResponse ret;
   std::string body;

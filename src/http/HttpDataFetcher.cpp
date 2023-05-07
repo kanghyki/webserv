@@ -4,7 +4,7 @@ HttpDataFecther::HttpDataFecther(const HttpRequest& req): req(req) {}
 
 HttpDataFecther::~HttpDataFecther() {}
 
-std::string HttpDataFecther::fetch() const throw(HttpStatus) {
+std::string HttpDataFecther::fetch() {
   std::string _data;
   struct stat _stat;
 
@@ -27,7 +27,7 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
   return _data;
 }
 
-std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus) {
+std::string HttpDataFecther::readFile(const std::string& path) {
   std::string ret;
 
   try {
@@ -39,7 +39,7 @@ std::string HttpDataFecther::readFile(const std::string& path) throw(HttpStatus)
   return ret;
 }
 
-std::string HttpDataFecther::autoindex() const throw(HttpStatus) {
+std::string HttpDataFecther::autoindex() const {
   std::string     ret;
   DIR*            dir;
   struct dirent*  ent;

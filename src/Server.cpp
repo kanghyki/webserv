@@ -237,7 +237,6 @@ void Server::checkReceiveDone(int fd) {
     receiveHeader(fd, req);
 
   if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
-
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       if (this->recvs[fd].find(CHUNKED_DELIMETER) != std::string::npos)
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
@@ -246,11 +245,9 @@ void Server::checkReceiveDone(int fd) {
       if (req.getContentLength() == (int)recvs[fd].length())
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
     }
-
   }
 
   if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) {
-
     req.setBody(this->recvs[fd]);
     this->recvs[fd].clear();
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
@@ -258,10 +255,9 @@ void Server::checkReceiveDone(int fd) {
         req.unchunk();
       } catch (HttpStatus s) {
         log::warning << "Chunked message is wrong" << log::endl;
-        req.setErrorStatus(BAD_REQUEST);
+        req.setError(s);
       }
     }
-
     receiveDone(fd);
   }
 }
@@ -279,9 +275,12 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
       req.parse(header, this->config);
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
-      req.setErrorStatus(s);
-      req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+      log::warning << "Request header message is wrong" << log::endl;
+      req.setError(s);
       return;
+    } catch (std::exception& e) {
+      log::error << "unexpected error" << e.what() << log::endl;
+      throw BAD_GATEWAY;
     }
 
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
@@ -305,12 +304,12 @@ void Server::receiveDone(int fd) {
 
   try {
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
-    if (req.isError())
+    if (req.getRecvStatus() == HttpRequest::ERROR)
       throw req.getErrorStatus();
     else
       res = Http::processing(req, this->sessionManager);
-  } catch (HttpStatus status) {
-    res = Http::getErrorPage(status, req.getServerConfig());
+  } catch (HttpStatus s) {
+    res = Http::getErrorPage(s, req.getServerConfig());
   }
 
   int reqs = this->connection.updateRequests(fd, req.getServerConfig());

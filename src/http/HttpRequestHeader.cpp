@@ -25,7 +25,7 @@ HttpRequestHeader& HttpRequestHeader::operator=(const HttpRequestHeader& obj) {
   return *this;
 }
 
-void HttpRequestHeader::parse(const std::string& reqHeader) throw (HttpStatus) {
+void HttpRequestHeader::parse(const std::string& reqHeader) {
   std::vector<std::string>            vs;
   std::vector<std::string>::iterator  it;
 

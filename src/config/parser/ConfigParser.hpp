@@ -16,7 +16,7 @@ class ConfigParser {
     ConfigParser();
     ~ConfigParser();
 
-    Config                    parse(const std::string &fileName) throw(std::runtime_error);
+    Config                    parse(const std::string &fileName);
 
   private:
     unsigned long             pos;
@@ -60,9 +60,9 @@ class ConfigParser {
     void                      expectNextToken(const std::string& expected);
     void                      expectCurToken(const std::string& expected) const;
     std::string               errorPrefix() const;
-    void                      throwError(const std::string& desc) const throw (std::runtime_error);
-    void                      throwExpectError(const std::string& expected) const throw (std::runtime_error);
-    void                      throwBadSyntax() const throw (std::runtime_error);
+    void                      throwError(const std::string& desc) const;
+    void                      throwExpectError(const std::string& expected) const;
+    void                      throwBadSyntax() const;
     int                       atoi(const std::string& s) const;
 };
 

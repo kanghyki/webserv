@@ -19,11 +19,11 @@ class Http {
     Http();
     ~Http();
 
-    static HttpResponse processing(const HttpRequest& req, SessionManager& manager) throw (HttpStatus);
+    static HttpResponse processing(const HttpRequest& req, SessionManager& manager);
     static HttpResponse getErrorPage(HttpStatus s, const LocationConfig& config);
 
   private:
-    static HttpResponse executeCGI(const HttpRequest& req, SessionManager& sm) throw (HttpStatus);
+    static HttpResponse executeCGI(const HttpRequest& req, SessionManager& sm);
     static HttpResponse getMethod(const HttpRequest& req);
     static HttpResponse postMethod(const HttpRequest& req);
     static HttpResponse deleteMethod(const HttpRequest& req);

@@ -16,7 +16,7 @@ HttpConfig Config::getHttpConfig() const {
   return this->http;
 }
 
-void Config::setHttpConfig(HttpConfig http) throw (std::runtime_error) {
+void Config::setHttpConfig(HttpConfig http) {
   if (this->is_already_set == false) {
     this->is_already_set = true;
     this->http = http;
