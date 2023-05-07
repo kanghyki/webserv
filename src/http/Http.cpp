@@ -57,6 +57,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
     std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
     header = util::parseCGIHeader(p.first);
     body = p.second;
+    ret.setStatusCode(OK);
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
@@ -108,8 +109,7 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
 
   res.setStatusCode(CREATED);
   res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
-
-  // TODO: ADD LOCATION HEADER
+  res.addHeader("Location", req.getServerConfig().getServerName() + ":" + util::itoa(req.getServerConfig().getPort()) + req.getSubstitutedPath() );
 
   res.setBody(req.getBody());
 
@@ -159,7 +159,7 @@ HttpResponse Http::headMethod(const HttpRequest& req) {
   HttpDataFecther fetcher(req);
   std::string data = fetcher.fetch();
 
-  res.setStatusCode(OK);
+  res.setStatusCode(NO_CONTENT);
 
   return res;
 }
@@ -169,7 +169,6 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   std::string   data;
   std::string   path;
 
-  log::error << "Http error occured: " << status << log::endl;
   std::string errorPagePath = config.getErrorPage()[status];
   if (errorPagePath.empty())
     data = defaultErrorPage(status);
