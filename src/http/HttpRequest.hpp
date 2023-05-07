@@ -39,7 +39,7 @@ class HttpRequest {
     HttpRequest& operator=(const HttpRequest& obj);
 
     void                                  parse(const std::string& req, const Config& conf);
-    void                                  checkCGI();
+    void                                  unchunk();
 
     std::string                           getMethod() const;
     std::string                           getPath() const;
@@ -66,11 +66,6 @@ class HttpRequest {
     void                                  setRecvStatus(recvStatus status);
     void                                  setContentLength(int len);
     void                                  setError(HttpStatus status);
-    void                                  setCgi(bool cgi);
-
-    void                                  unchunk();
-
-
 
   private:
     HttpRequest(const HttpRequest& obj);
@@ -96,6 +91,7 @@ class HttpRequest {
     HttpStatus                            errorStatusCode;
 
     void                                  parseStatusLine(const std::string &line);
+    void                                  checkCGI();
 
     void                                  setURI(const std::string& URI);
     void                                  setMethod(const std::string& method);

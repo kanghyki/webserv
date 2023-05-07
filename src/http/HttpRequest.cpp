@@ -288,7 +288,3 @@ void HttpRequest::setError(HttpStatus status) {
   this->errorStatusCode = status;
   this->recv_status = ERROR;
 }
-
-void HttpRequest::setCgi(bool cgi) {
-  this->cgi = cgi;
-}
