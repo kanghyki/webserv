@@ -32,9 +32,10 @@ class HttpRequestHeader {
 
     void parse(const std::string& reqHeader) throw (HttpStatus);
 
-    std::string get(std::string key) const;
-    connection getConnection() const;
-    transfer_encoding getTransferEncoding() const;
+    std::string                               get(std::string key) const;
+    const std::map<std::string, std::string>& getOrigin() const;
+    connection                                getConnection() const;
+    transfer_encoding                         getTransferEncoding() const;
 
   private:
     std::map<std::string, std::string>  header;

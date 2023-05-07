@@ -58,7 +58,7 @@ std::pair<std::string, std::string> HttpRequestHeader::splitField(std::string li
 
   std::cout << line << std::endl;
   if ((pos = line.find(":")) == std::string::npos) throw BAD_REQUEST;
-  field = util::toLowerStr(util::trimSpace(line.substr(0, pos)));
+  field = util::trimSpace(line.substr(0, pos));
   value = util::trimSpace(line.substr(pos + 1));
 
   return std::make_pair(field, value);
@@ -70,11 +70,17 @@ std::string HttpRequestHeader::get(std::string key) const {
   std::string lkey(util::toLowerStr(key));
   std::map<std::string, std::string>::const_iterator it;
 
-  if ((it = this->header.find(lkey)) != this->header.end()) {
-    return it->second;
+  for (it = this->header.begin(); it != this->header.end(); ++it) {
+    std::string lfirst = util::toLowerStr(it->first);
+    if (lfirst == lkey)
+      return it->second;
   }
 
   return "";
+}
+
+const std::map<std::string, std::string>& HttpRequestHeader::getOrigin() const {
+  return this->header;
 }
 
 HttpRequestHeader::transfer_encoding HttpRequestHeader::getTransferEncoding() const {
