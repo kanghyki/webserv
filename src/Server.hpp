@@ -2,93 +2,73 @@
 # define SERVER_HPP
 
 # include "./Connection.hpp"
-# include "./SessionManager.hpp"
+# include "./Logger.hpp"
 # include "./Util.hpp"
+# include "./SessionManager.hpp"
 # include "./config/Config.hpp"
+# include "./http/Http.hpp"
 # include "./http/HttpRequest.hpp"
 # include "./http/HttpResponse.hpp"
-# include "./http/Http.hpp"
 # include "./http/HttpStatus.hpp"
-# include "./http/HttpHeaderField.hpp"
-# include "./Logger.hpp"
 
 # include <arpa/inet.h>
 # include <fcntl.h>
-# include <sys/socket.h>
 # include <time.h>
 # include <unistd.h>
 # include <vector>
+# include <sys/socket.h>
 
 class Server {
-  typedef struct sockaddr_in sock;
-
   public:
     Server(Config& config);
     ~Server(void);
 
-    int getFdMax(void) const;
-    void setFdMax(int fdMax);
-
     void run();
 
   private:
+    static const size_t       BIND_MAX_TRIES;
+    static const size_t       LISTEN_MAX_TRIES;
+    static const size_t       TRY_SLEEP_TIME;
+    static const int          BUF_SIZE;
+    static const int          MANAGE_FD_MAX;
 
-    static const int SOCK_CLOSED = -1;
-    static const int SOCK_ERROR = -1;
-    static const int FD_CLOSED = -1;
-    static const int BUF_SIZE = 1024 * 12;
-    static const int MANAGE_FD_MAX = 1024;
+    static const std::string  HEADER_DELIMETER;
+    static const std::string  CHUNKED_DELIMETER;
 
+    std::vector<int>          listens_fd;
     std::vector<HttpRequest>  requests;
     std::vector<HttpResponse> responses;
     std::vector<std::string>  recvs;
 
-    int fdMax;
-    fd_set listens;
-    fd_set reads;
-    fd_set writes;
-    std::vector<int> listens_fd;
+    int                       fdMax;
+    fd_set                    listens;
+    fd_set                    reads;
+    fd_set                    writes;
 
-    fd_set& getReads(void);
-    fd_set& getWrites(void);
+    const Config&             config;
+    Connection                connection;
+    SessionManager            sessionManager;
 
-    inline int socketInit(void);
-    inline void socketaddrInit(const std::string& host, int port, sock& in);
-    inline void socketOpen(int servFd, sock& in);
+    fd_set&     getReads(void);
+    fd_set&     getWrites(void);
+    int         getFdMax(void) const;
+
+    void        setFdMax(int fdMax);
+
+    inline int  socketInit(void);
+    inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
+    inline void socketOpen(int servFd, sockaddr_in& in);
     inline void fdSetInit(fd_set& fs, int fd);
 
+    void        acceptConnect(int server_fd);
+    void        receiveData(int fd);
+    void        checkReceiveDone(int fd);
+    void        receiveHeader(int fd, HttpRequest& req);
+    void        receiveDone(int fd);
+    void        sendData(int fd);
+    void        closeConnection(int fd);
+    void        cleanUpConnection();
 
-    int acceptConnect(int server_fd);
-    void receiveData(int fd);
-    void checkReceiveDone(int fd);
-    void sendData(int fd);
-    void receiveDone(int fd);
-
-    void              closeConnection(int fd);
-
-    void              recvHeader(int fd, HttpRequest& req);
-
-    const Config&     config;
-    Connection        connection;
-    SessionManager    sessionManager;
-
-    void              cleanUpConnection();
-
-  public:
-    class InitException : public std::exception {
-      public:
-        const char* what(void) const throw();
-    };
-
-    class BindException : public std::exception {
-      public:
-        const char* what(void) const throw();
-    };
-
-    class ListenException : public std::exception {
-      public:
-        const char* what(void) const throw();
-    };
 };
 
 #endif
