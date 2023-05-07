@@ -41,7 +41,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) t
 }
 
 HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw (HttpStatus) {
-  std::string str;
+  std::string cgi_ret;
   HttpResponse ret;
   std::string body;
   std::map<std::string, std::string> header;
@@ -53,26 +53,32 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) throw 
     std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
     std::cout << sm.isSessionAvailable(c[SessionManager::SESSION_KEY]) << std::endl;
     CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
-    str = cgi.execute();
-    std::pair<std::string, std::string> p = util::splitHeaderBody(str, CRLF + CRLF);
+    cgi_ret = cgi.execute();
+    std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
     header = util::parseCGIHeader(p.first);
     body = p.second;
-    // TODO: statuscode
-    ret.setStatusCode(OK);
   } catch (HttpStatus status) {
     ret = getErrorPage(status, req.getLocationConfig());
   }
 
+  // FIXME:
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
     ret.addHeader(it->first, it->second);
-    if (it->first == "set-cookie")
+
+    std::string lower_first = util::toLowerStr(it->first);
+    if (lower_first == "status") {
+      std::vector<std::string> vs = util::split(it->second, ' ');
+      if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
+      ret.setStatusCode(static_cast<HttpStatus>(std::atoi(vs[0].c_str())));
+    }
+    else if (lower_first == "set-cookie")
       sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
+
   }
 
-
-  std::string sc = header[header_field::SET_COOKIE];
-
+  ret.removeHeader("status");
   ret.setBody(body);
+
 
   return ret;
 }
@@ -94,18 +100,17 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  if (access(req.getTargetPath().c_str(), R_OK | W_OK) == 0)
-    throw FORBIDDEN;
-
   std::ofstream out(req.getTargetPath(), std::ofstream::out);
-  if (!out.is_open()) throw INTERNAL_SERVER_ERROR;
+  if (!out.is_open()) throw FORBIDDEN;
 
   out.write(req.getBody().c_str(), req.getBody().length());
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
 
   res.setStatusCode(CREATED);
   res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
-  // TODO: LOCATION FIELD
+
+  // TODO: ADD LOCATION HEADER
+
   res.setBody(req.getBody());
 
   return res;
