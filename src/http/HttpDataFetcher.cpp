@@ -8,19 +8,19 @@ std::string HttpDataFecther::fetch() const throw(HttpStatus) {
   std::string _data;
   struct stat _stat;
 
-  if (stat(this->req.getRelativePath().c_str(), &_stat) == -1)
+  if (stat(this->req.getTargetPath().c_str(), &_stat) == -1)
     throw (NOT_FOUND);
 
   if (S_ISDIR(_stat.st_mode)) {
     if (this->req.getLocationConfig().isAutoindex())
       _data = autoindex();
     else if (this->req.getLocationConfig().getIndex() != "")
-      _data = readFile(this->req.getRelativePath() + this->req.getLocationConfig().getIndex());
+      _data = readFile(this->req.getTargetPath() + this->req.getLocationConfig().getIndex());
     else
       throw (NOT_FOUND);
   }
   else if (S_ISREG(_stat.st_mode))
-    _data = readFile(this->req.getRelativePath());
+    _data = readFile(this->req.getTargetPath());
   else
     throw (FORBIDDEN);
 
@@ -44,7 +44,7 @@ std::string HttpDataFecther::autoindex() const throw(HttpStatus) {
   DIR*            dir;
   struct dirent*  ent;
 
-  if ((dir = opendir(req.getRelativePath().c_str())) == NULL) {
+  if ((dir = opendir(req.getTargetPath().c_str())) == NULL) {
     if (errno == ENOTDIR)
       throw (FORBIDDEN);
     if (errno == ENOENT)

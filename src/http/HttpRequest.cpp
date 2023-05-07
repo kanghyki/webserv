@@ -111,7 +111,7 @@ void HttpRequest::checkCGI() {
     if ((pos = path.find(it->first)) != std::string::npos) {
       this->cgi = true;
       // FIXME: temp
-      std::string relativePath = getRelativePath();
+      std::string relativePath = getTargetPath();
       size_t rpos = relativePath.find(it->first);
       if (rpos != std::string::npos)
         this->scriptPath = relativePath.substr(0, rpos + it->first.length());
@@ -171,7 +171,7 @@ std::string HttpRequest::getMethod() const { return this->method; }
 
 std::string HttpRequest::getPath() const { return this->path; }
 
-std::string HttpRequest::getRelativePath() const {
+std::string HttpRequest::getSubstitutedPath() const {
   std::string root_path = getLocationConfig().getRoot();
   std::string req_path = getPath();
   std::string loc_path = getLocationConfig().getPath();
@@ -191,8 +191,10 @@ std::string HttpRequest::getRelativePath() const {
 
   }
 
-  return "." + req_path;
+  return req_path;
 }
+
+std::string HttpRequest::getTargetPath() const { return "." + getSubstitutedPath(); }
 
 std::string HttpRequest::getQueryString() const { return this->queryString; }
 

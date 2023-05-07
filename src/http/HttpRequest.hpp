@@ -42,7 +42,8 @@ class HttpRequest {
 
     std::string                           getMethod() const;
     std::string                           getPath() const;
-    std::string                           getRelativePath() const;
+    std::string                           getSubstitutedPath() const;
+    std::string                           getTargetPath() const;
     std::string                           getQueryString() const;
     std::string                           getVersion() const;
     const HttpRequestHeader&              getHeader() const;

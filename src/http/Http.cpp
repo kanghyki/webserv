@@ -14,7 +14,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) t
     ret.addHeader("Location", req.getLocationConfig().getReturnRes().second);
     return ret;
   }
-  log::debug << "Relative path: " + req.getRelativePath() << log::endl;
+  log::debug << "Relative path: " + req.getTargetPath() << log::endl;
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
     throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
@@ -94,10 +94,10 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  if (access(req.getRelativePath().c_str(), R_OK | W_OK) == 0)
+  if (access(req.getTargetPath().c_str(), R_OK | W_OK) == 0)
     throw FORBIDDEN;
 
-  std::ofstream out(req.getRelativePath(), std::ofstream::out);
+  std::ofstream out(req.getTargetPath(), std::ofstream::out);
   if (!out.is_open()) throw INTERNAL_SERVER_ERROR;
 
   out.write(req.getBody().c_str(), req.getBody().length());
@@ -115,12 +115,12 @@ HttpResponse Http::deleteMethod(const HttpRequest& req) {
   HttpResponse res;
   struct stat _stat;
 
-  if (stat(req.getRelativePath().c_str(), &_stat) == 0) {
+  if (stat(req.getTargetPath().c_str(), &_stat) == 0) {
     if (S_ISDIR(_stat.st_mode))
       throw (FORBIDDEN);
   }
 
-  if (std::remove(req.getRelativePath().c_str()) == -1)
+  if (std::remove(req.getTargetPath().c_str()) == -1)
     throw NOT_FOUND;
 
   res.setStatusCode(OK);
@@ -132,12 +132,12 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
   HttpResponse res;
   struct stat _stat;
 
-  if (stat(req.getRelativePath().c_str(), &_stat) == 0) {
+  if (stat(req.getTargetPath().c_str(), &_stat) == 0) {
     if (S_ISDIR(_stat.st_mode))
       throw (FORBIDDEN);
   }
 
-  std::ofstream out(req.getRelativePath(), std::ofstream::out);
+  std::ofstream out(req.getTargetPath(), std::ofstream::out);
   if (!out.is_open()) throw NOT_FOUND;
 
   out.write(req.getBody().c_str(), req.getBody().length());
