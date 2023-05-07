@@ -56,7 +56,7 @@ void HttpRequest::parse(const std::string& req, const Config& conf) throw (HttpR
 }
 
 void HttpRequest::parseStatusLine(const std::string& line) {
-  std::vector<std::string> vs = util::split(line, " ");
+  std::vector<std::string> vs = util::split(line, ' ');
   if (vs.size() != 3) throw BAD_REQUEST;
 
   setMethod(vs[0]);
@@ -92,7 +92,7 @@ void HttpRequest::validateURI(const std::string &path) {
 void HttpRequest::validateVersion(const std::string &version) {
   char*                                   left;
   double                                  v;
-  std::vector<std::string>                ss = util::split(version, "/");
+  std::vector<std::string>                ss = util::split(version, '/');
 
   if (ss.size() != 2 || ss[0] != "HTTP")  throw BAD_REQUEST;
   v = std::strtod(ss[1].c_str(), &left);

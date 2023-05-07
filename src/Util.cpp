@@ -23,7 +23,8 @@ namespace util {
       ret.push_back(token);
       s.erase(0, pos + delim.length());
     }
-    ret.push_back(s);
+    if (s.empty() == false)
+      ret.push_back(s);
     return ret;
   }
 
