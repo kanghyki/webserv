@@ -94,9 +94,11 @@ void HttpResponse::removeHeader(const std::string& field) {
   std::map<std::string, std::string>::const_iterator target;
 
   target = this->header.end();
+  // FIXME: case consistency
   for (std::map<std::string, std::string>::const_iterator it = this->header.begin(); it != this->header.end(); ++it) {
     if (util::toLowerStr(it->first) == util::toLowerStr(field)) {
       target = it;
+      break;
     }
   }
   if (target != this->header.end())
@@ -106,9 +108,8 @@ void HttpResponse::removeHeader(const std::string& field) {
 std::string HttpResponse::toString() throw() {
   std::string ret;
 
-  if (this->buffer.empty() == false) {
+  if (this->buffer.empty() == false)
     return this->buffer.substr(this->sendLength);
-  }
 
   this->statusText = getStatusText(this->statusCode);
   addHeader(header_field::CONTENT_LENGTH, util::itoa(body.length()));
