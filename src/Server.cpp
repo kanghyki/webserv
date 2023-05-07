@@ -275,7 +275,7 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
 
     try {
       req.parse(header, this->config);
-      log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
+      log::info << "Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
       log::warning << "Request header message is wrong" << log::endl;
@@ -310,7 +310,7 @@ void Server::receiveDone(int fd) {
   int reqs = this->connection.updateRequests(fd, req.getServerConfig());
   res.addHeader("Keep-Alive", "timeout=" + util::itoa(req.getServerConfig().getKeepAliveTimeout()) + ", max=" + util::itoa(reqs));
 
-  log::info << "<= Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
+  log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
   this->connection.update(fd, Connection::SEND);
   FD_SET(fd, &this->writes);
   sendData(fd);
