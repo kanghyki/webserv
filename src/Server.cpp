@@ -346,7 +346,6 @@ void Server::receiveDone(int fd) {
   res.addHeader("Keep-Alive", "timeout=" + util::itoa(req.getServerConfig().getKeepAliveTimeout()) + ", max=" + util::itoa(reqs));
 
   log::info << "<= Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
-  this->requests[fd] = HttpRequest();
   sendData(fd, res.toString());
 }
 
@@ -355,7 +354,6 @@ void Server::sendData(int fd, const std::string& data) {
   FD_SET(fd, &this->writes);
   if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
     log::warning << "send failed" << log::endl;
-  this->requests[fd] = HttpRequest();
 }
 
 void Server::closeConnection(int fd) {
