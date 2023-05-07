@@ -11,15 +11,25 @@
 class HttpResponse {
 
   public:
+    enum sendStatus {
+      SENDING,
+      DONE
+    };
+
     HttpResponse();
     ~HttpResponse();
+    HttpResponse(const HttpResponse& obj);
+    HttpResponse& operator=(const HttpResponse& obj);
 
     void                                setStatusCode(const HttpStatus statusCode);
     void                                setBody(const std::string& body);
     void                                removeBody();
     void                                addHeader(const std::string& field, const std::string& value);
     void                                removeHeader(const std::string& field);
+    void                                addSendLength(unsigned int length);
+
     HttpStatus                          getStatusCode() const;
+    sendStatus                          getSendStatus() const;
 
     std::string                         toString() throw();
 
@@ -30,6 +40,10 @@ class HttpResponse {
     std::string                         statusText;
     std::map<std::string, std::string>  header;
     std::string                         body;
+
+    std::string                         buffer;
+    unsigned int                        buffer_size;
+    unsigned int                        sendLength;
 
     std::string                         makeStatusLine() const;
     std::string                         makeHeaderField(const std::string& fieldName, const std::string& value) const;

@@ -36,11 +36,12 @@ class Server {
     static const int SOCK_CLOSED = -1;
     static const int SOCK_ERROR = -1;
     static const int FD_CLOSED = -1;
-    static const int BUF_SIZE = 1024;
+    static const int BUF_SIZE = 1024 * 12;
     static const int MANAGE_FD_MAX = 1024;
 
-    std::vector<HttpRequest> requests;
-    std::vector<std::string> recvs;
+    std::vector<HttpRequest>  requests;
+    std::vector<HttpResponse> responses;
+    std::vector<std::string>  recvs;
 
     int fdMax;
     fd_set listens;
@@ -60,7 +61,7 @@ class Server {
     int acceptConnect(int server_fd);
     void receiveData(int fd);
     void checkReceiveDone(int fd);
-    void sendData(int fd, const std::string& data);
+    void sendData(int fd);
     void receiveDone(int fd);
 
     void              closeConnection(int fd);

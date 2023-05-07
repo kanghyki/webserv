@@ -7,6 +7,7 @@
 
 Server::Server(Config& config) :
   requests(MANAGE_FD_MAX),
+  responses(MANAGE_FD_MAX),
   recvs(MANAGE_FD_MAX),
   fdMax(FD_CLOSED),
   config(config),
@@ -153,15 +154,27 @@ void Server::run(void) {
     for (int i = 0; i < this->getFdMax() + 1; i++) {
 
       if (FD_ISSET(i, &this->writes)) {
+
+        // 1 -----
         if (FD_ISSET(i, &writesCpy)) {
-          if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
-            closeConnection(i);
-          else {
-            FD_CLR(i, &this->writes);
-            this->connection.update(i, this->requests[i].getServerConfig());
-            this->requests[i] = HttpRequest();
+          HttpResponse::sendStatus send_status = this->responses[i].getSendStatus();
+          // 2 -----
+          if (send_status == HttpResponse::SENDING)
+            sendData(i);
+          // 3 -----
+          else if (send_status == HttpResponse::DONE) {
+            if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
+              closeConnection(i);
+            else {
+              FD_CLR(i, &this->writes);
+              this->connection.update(i, this->requests[i].getServerConfig());
+              this->requests[i] = HttpRequest();
+            }
+            // 3 end
           }
+          // 2 end
         }
+        // 1 end
       }
       else if (FD_ISSET(i, &readsCpy)) {
         if (FD_ISSET(i, &this->listens))
@@ -330,7 +343,7 @@ void Server::recvHeader(int fd, HttpRequest& req) {
 
 void Server::receiveDone(int fd) {
   HttpRequest&  req = this->requests[fd];
-  HttpResponse  res;
+  HttpResponse& res = this->responses[fd];
 
   try {
     log::info << "=> Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
@@ -346,14 +359,22 @@ void Server::receiveDone(int fd) {
   res.addHeader("Keep-Alive", "timeout=" + util::itoa(req.getServerConfig().getKeepAliveTimeout()) + ", max=" + util::itoa(reqs));
 
   log::info << "<= Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
-  sendData(fd, res.toString());
-}
-
-void Server::sendData(int fd, const std::string& data) {
   this->connection.update(fd, Connection::SEND);
   FD_SET(fd, &this->writes);
-  if (send(fd, data.c_str(), data.length(), 0) == SOCK_ERROR)
+  sendData(fd);
+}
+
+void Server::sendData(int fd) {
+  HttpResponse& res = this->responses[fd];
+  std::string   data = res.toString();
+  int           ret;
+
+  if ((ret = send(fd, data.c_str(), data.length(), 0)) == SOCK_ERROR) {
+    closeConnection(fd);
     log::warning << "send failed" << log::endl;
+  }
+  else
+    res.addSendLength(ret);
 }
 
 void Server::closeConnection(int fd) {
@@ -366,6 +387,7 @@ void Server::closeConnection(int fd) {
   this->connection.remove(fd);
   this->connection.removeRequests(fd);
   this->requests[fd] = HttpRequest();
+  this->responses[fd] = HttpResponse();
 }
 
 void Server::cleanUpConnection() {
