@@ -117,8 +117,6 @@ void HttpRequest::checkCGI() {
         this->scriptPath = relativePath.substr(0, rpos + it->first.length());
       else
         throw BAD_REQUEST;
-//      this->scriptPath = getRelativePath().substr(0, pos + it->first.length() + 1);
-      log::debug << "scriptPath:" << this->scriptPath << log::endl;
       this->pathInfo = getPath().substr(pos + it->first.length());
       this->cgiPath = it->second;
       break;
@@ -157,9 +155,8 @@ unsigned int HttpRequest::strToHex(std::string s) {
   unsigned int      ret;
   std::stringstream ss(s);
 
-  log::debug << "strToHex:" << s << log::endl;
   ss >> std::hex >> ret;
-  log::debug << "strToHex result:" << ret << log::endl;
+
   return ret;
 }
 

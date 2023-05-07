@@ -57,11 +57,8 @@ HttpStatus HttpResponse::getStatusCode() const {
 }
 
 HttpResponse::sendStatus HttpResponse::getSendStatus() const {
-  if (this->buffer_size == this->sendLength) {
-    log::debug << "buffer_size: " << this->buffer_size << log::endl;
-    log::debug << "sendLength: " << this->sendLength << log::endl;
+  if (this->buffer_size == this->sendLength)
     return DONE;
-  }
   return SENDING;
 }
 
@@ -71,7 +68,6 @@ HttpResponse::sendStatus HttpResponse::getSendStatus() const {
 
 void HttpResponse::addSendLength(unsigned int length) {
   this->sendLength += length;
-  log::debug << "sendLength: " << this->sendLength << log::endl;
 }
 
 void HttpResponse::setStatusCode(const HttpStatus statusCode) {
