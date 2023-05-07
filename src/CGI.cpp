@@ -58,6 +58,8 @@ const std::string CGI::getBody(void) const {
 const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) const {
   std::map<std::string, std::string> ret;
 
+  ret.insert(std::pair<std::string, std::string>("HTTP_X_SECRET_HEADER_FOR_TEST", "1"));
+
   if (!req.getBody().empty()) {
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_LENGTH, util::itoa(req.getBody().length())));
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_TYPE, req.getContentType()));
@@ -74,7 +76,7 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   // FIXME : TEMP
   ret.insert(std::pair<std::string, std::string>("REQUEST_URI" , req.getPath()));
 
-  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getPath()));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getSubstitutedPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod())); 
   ret.insert(std::pair<std::string, std::string>(cgi_env::SCRIPT_NAME, req.getPath()));
@@ -123,45 +125,46 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
 
 std::string CGI::execute(void) {
   std::string ret;
-  int pid;
-  int fd1[2];
-  int fd2[2];
-  int status;
+  int         pid;
+  int         status;
+  int         fd_in;
+  int         fd_out;
+  FILE*       file_in;
+  FILE*       file_out;
+
 
   if (access(this->cgiPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
-  if (access(this->scriptPath.c_str(), R_OK) == -1) throw INTERNAL_SERVER_ERROR;
+
+  file_in = tmpfile();
+  file_out = tmpfile();
+  fd_in = fileno(file_in);
+  fd_out = fileno(file_out);
+
+  write(fd_in, getBody().c_str(), getBody().length());
+  lseek(fd_in, 0, SEEK_SET);
+
   try {
-    util::ftPipe(fd1);
-    util::ftPipe(fd2);
-//    fcntl(fd[READ], F_SETFL, O_NONBLOCK);
-//    FD_SET(fd[READ], &this->reads);
-//    if (fd[READ] > fdMax)
-//      fdMax = fd[READ];
     pid = util::ftFork();
   } catch (util::SystemFunctionException& e) {
     throw INTERNAL_SERVER_ERROR;
   }
 
   if (pid == 0) {
-    close(fd1[READ]);
-    close(fd2[WRITE]);
-    dup2(fd1[WRITE], STDOUT_FILENO);
-    dup2(fd2[READ], STDIN_FILENO);
-    close(fd1[WRITE]);
-    close(fd2[READ]);
+    dup2(fd_in, STDIN_FILENO);
+    dup2(fd_out, STDOUT_FILENO);
     changeWorkingDirectory();
-    if (execve(this->cgiPath.c_str(), this->argv, this->env) < 0)
-      exit(0);
+    int ret = execve(this->cgiPath.c_str(), this->argv, this->env);
+    exit(ret);
   }
 
-  close(fd1[WRITE]);
-  close(fd2[READ]);
-  write(fd2[WRITE], getBody().c_str(), getBody().length());
-  close(fd2[WRITE]);
   waitpid(pid, &status, 0);
-  ret = util::readFd(fd1[READ]);
-  // TODO: NEED?
-  close(fd1[READ]);
+  if (status == -1)
+    throw INTERNAL_SERVER_ERROR;
+
+  lseek(fd_out, 0, SEEK_SET);
+  ret = util::readFd(fd_out);
+  fclose(file_in);
+  fclose(file_out);
 
   return ret;
 }
