@@ -63,6 +63,8 @@ class Server {
     void sendData(int fd, const std::string& data);
     void receiveDone(int fd);
 
+    void              closeConnection(int fd);
+
     void              recvHeader(int fd, HttpRequest& req);
 
     const Config&     config;

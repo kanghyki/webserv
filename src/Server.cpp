@@ -154,22 +154,13 @@ void Server::run(void) {
 
       if (FD_ISSET(i, &this->writes)) {
         if (FD_ISSET(i, &writesCpy)) {
-          if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE) {
-            FD_CLR(i, &this->getWrites());
-            FD_CLR(i, &this->getReads());
-            this->connection.remove(i);
-            this->connection.removeRequests(i);
-            // FIXME:
-            if (close(i) == -1)
-              log::warning << "close -1" << log::endl;
-            else
-              log::info << "Closed client(" << i << ")" << log::endl;
-          }
+          if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
+            closeConnection(i);
           else {
             FD_CLR(i, &this->writes);
             this->connection.update(i, this->requests[i].getServerConfig());
+            this->requests[i] = HttpRequest();
           }
-          this->requests[i] = HttpRequest();
         }
       }
       else if (FD_ISSET(i, &readsCpy)) {
@@ -215,21 +206,11 @@ void Server::receiveData(int fd) {
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   if (recv_size <= 0) {
-
-    // for debug
     if (recv_size < 0)
-      log::warning << "recv < 0" << log::endl;
+      log::warning << "recv < 0, client(" << fd  << ") was disconnetd" << log::endl;
     else
-      log::warning << "recv == 0 client(" << fd  << ") was disconnetd" << log::endl;
-
-    FD_CLR(fd, &this->reads);
-    this->recvs[fd].clear();
-    this->requests[fd] = HttpRequest();
-    this->connection.remove(fd);
-    this->connection.removeRequests(fd);
-    if (close(fd) == -1)
-      log::warning << "close -1" << log::endl;
-    return ;
+      log::warning << "recv == 0, client(" << fd  << ") was disconnetd" << log::endl;
+    return closeConnection(fd);
   }
   buf[recv_size] = 0;
   this->recvs[fd] += buf;
@@ -256,7 +237,6 @@ void Server::checkReceiveDone(int fd) {
   // @@@@ Header 받는 부분
   if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE)
     recvHeader(fd, req);
-
 
   // @@@@ Body 받는 부분
   if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
@@ -378,29 +358,31 @@ void Server::sendData(int fd, const std::string& data) {
   this->requests[fd] = HttpRequest();
 }
 
+void Server::closeConnection(int fd) {
+  if (FD_ISSET(fd, &this->getWrites())) FD_CLR(fd, &this->getWrites());
+  if (FD_ISSET(fd, &this->getReads())) FD_CLR(fd, &this->getReads());
+  if (close(fd) == -1)
+    log::warning << "Closed client(" << fd << ") with -1" << log::endl;
+  else
+    log::info << "Closed client(" << fd << ")" << log::endl;
+  this->connection.remove(fd);
+  this->connection.removeRequests(fd);
+  this->requests[fd] = HttpRequest();
+}
+
 void Server::cleanUpConnection() {
   std::set<int> fd_list;
 
   fd_list = this->connection.getTimeoutList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    closeConnection(*it);
     log::info << "Timeout client(" << *it << "), closed" << log::endl;
-    FD_CLR(*it, &this->getReads());
-    FD_CLR(*it, &this->getWrites());
-    close(*it);
-    this->requests[*it] = HttpRequest();
-    this->connection.remove(*it);
-    this->connection.removeRequests(*it);
   }
 
   fd_list = this->connection.getMaxRequestList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    closeConnection(*it);
     log::info << "max request client(" << *it << "), closed" << log::endl;
-    FD_CLR(*it, &this->getReads());
-    FD_CLR(*it, &this->getWrites());
-    close(*it);
-    this->requests[*it] = HttpRequest();
-    this->connection.remove(*it);
-    this->connection.removeRequests(*it);
   }
 }
 
