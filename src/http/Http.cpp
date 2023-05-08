@@ -1,4 +1,5 @@
 #include "./Http.hpp"
+#include "HttpStatus.hpp"
 
 Http::Http() {}
 
@@ -57,8 +58,8 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
     header = util::parseCGIHeader(p.first);
     body = p.second;
     ret.setStatusCode(OK);
-  } catch (HttpStatus status) {
-    ret = getErrorPage(status, req.getLocationConfig());
+  } catch (std::exception& e) {
+    throw INTERNAL_SERVER_ERROR;
   }
 
   // FIXME:
@@ -169,6 +170,7 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   std::string   path;
 
   std::string errorPagePath = config.getErrorPage()[status];
+  log::error << "error path path : " << errorPagePath << log::endl;
   if (errorPagePath.empty())
     data = defaultErrorPage(status);
   else {
