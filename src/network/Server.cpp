@@ -232,11 +232,6 @@ void Server::checkReceiveDone(int fd) {
 
   if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE)
     receiveHeader(fd, req);
-  else {
-    size_t client_max_body_size = static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize());
-    if (this->recvs[fd].length() > client_max_body_size)
-      req.setError(PAYLOAD_TOO_LARGE);
-  }
 
   if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
