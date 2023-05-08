@@ -94,6 +94,7 @@ std::string HttpResponse::toString() throw() {
   this->statusText = getStatusText(this->statusCode);
   this->header.set(HttpResponseHeader::CONTENT_LENGTH, util::itoa(body.length()));
   this->header.set(HttpResponseHeader::DATE, getCurrentTimeStr());
+  this->header.set(HttpResponseHeader::SERVER, "webserv/1.0");
   ret = makeStatusLine();
   ret += this->header.toStringForResponse();
   ret += "\r\n";

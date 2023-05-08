@@ -5,14 +5,14 @@ Http::Http() {}
 Http::~Http() {}
 
 HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
-  HttpResponse ret;
+  HttpResponse res;
 
   if (req.getRecvStatus() == HttpRequest::ERROR)
     throw req.getErrorStatusCode();
   if (req.getLocationConfig().getReturnRes().first != -1) {
-    ret.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
-    ret.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturnRes().second);
-    return ret;
+    res.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
+    res.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturnRes().second);
+    return res;
   }
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
     throw (PAYLOAD_TOO_LARGE);
@@ -26,17 +26,17 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
     throw (METHOD_NOT_ALLOWED);
 
   try {
-    if (req.isCGI()) ret = executeCGI(req, manager);
-    else if (req.getMethod() == request_method::GET) ret = getMethod(req);
-    else if (req.getMethod() == request_method::POST) ret = postMethod(req);
-    else if (req.getMethod() == request_method::DELETE) ret = deleteMethod(req);
-    else if (req.getMethod() == request_method::PUT) ret = putMethod(req);
-    else if (req.getMethod() == request_method::HEAD) ret = headMethod(req);
+    if (req.isCGI()) res = executeCGI(req, manager);
+    else if (req.getMethod() == request_method::GET) res = getMethod(req);
+    else if (req.getMethod() == request_method::POST) res = postMethod(req);
+    else if (req.getMethod() == request_method::DELETE) res = deleteMethod(req);
+    else if (req.getMethod() == request_method::PUT) res = putMethod(req);
+    else if (req.getMethod() == request_method::HEAD) res = headMethod(req);
   } catch (HttpStatus status) {
-    ret = getErrorPage(status, req.getLocationConfig());
+    res = getErrorPage(status, req.getLocationConfig());
   }
 
-  return ret;
+  return res;
 }
 
 HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {

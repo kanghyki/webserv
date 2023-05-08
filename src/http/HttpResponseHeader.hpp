@@ -14,6 +14,8 @@ class HttpResponseHeader {
     static const std::string KEEP_ALIVE;
     static const std::string LOCATION;
     static const std::string ALLOW;
+    static const std::string SERVER;
+    static const std::string CONNECTION;
 
     HttpResponseHeader();
     HttpResponseHeader(const HttpResponseHeader& obj);
