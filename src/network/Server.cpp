@@ -354,6 +354,8 @@ void Server::sendData(int fd) {
 void Server::closeConnection(int fd) {
   if (FD_ISSET(fd, &this->getWrites())) FD_CLR(fd, &this->getWrites());
   if (FD_ISSET(fd, &this->getReads())) FD_CLR(fd, &this->getReads());
+  if (fd == this->fdMax)
+    this->fdMax -= 1;
   if (close(fd) == -1)
     log::warning << "Closed, client(" << fd << ") with -1" << log::endl;
   else
