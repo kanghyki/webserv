@@ -11,7 +11,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
     throw req.getErrorStatusCode();
   if (req.getLocationConfig().getReturnRes().first != -1) {
     ret.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
-    ret.getHeader().set("Location", req.getLocationConfig().getReturnRes().second);
+    ret.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturnRes().second);
     return ret;
   }
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
@@ -90,7 +90,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   std::string data = fetcher.fetch();
 
   res.setStatusCode(OK);
-  res.getHeader().set(header_field::CONTENT_TYPE, req.getContentType());
+  res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
   res.setBody(data);
 
 
@@ -107,8 +107,8 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
 
   res.setStatusCode(CREATED);
-  res.getHeader().set(header_field::CONTENT_TYPE, req.getContentType());
-  res.getHeader().set("Location", req.getServerConfig().getServerName() + ":" + util::itoa(req.getServerConfig().getPort()) + req.getSubstitutedPath() );
+  res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
+  res.getHeader().set(HttpResponseHeader::LOCATION, req.getServerConfig().getServerName() + ":" + util::itoa(req.getServerConfig().getPort()) + req.getSubstitutedPath() );
 
   res.setBody(req.getBody());
 
@@ -181,7 +181,7 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   }
 
   res.setStatusCode(status);
-  res.getHeader().set(header_field::CONTENT_TYPE, "text/html");
+  res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, "text/html");
   res.setBody(data);
 
   return res;

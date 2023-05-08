@@ -8,6 +8,13 @@
 
 class HttpResponseHeader {
   public:
+    static const std::string CONTENT_TYPE;
+    static const std::string CONTENT_LENGTH;
+    static const std::string DATE;
+    static const std::string KEEP_ALIVE;
+    static const std::string LOCATION;
+    static const std::string ALLOW;
+
     HttpResponseHeader();
     HttpResponseHeader(const HttpResponseHeader& obj);
     ~HttpResponseHeader();

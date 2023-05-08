@@ -305,7 +305,7 @@ void Server::receiveDone(int fd) {
 
   int timeout = req.getServerConfig().getKeepAliveTimeout();
   int req_max = this->connection.updateRequests(fd, req.getServerConfig());
-  res.getHeader().set("Keep-Alive", "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
+  res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
 
   log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
   this->connection.update(fd, Connection::SEND);
