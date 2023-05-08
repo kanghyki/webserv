@@ -2,7 +2,6 @@
 # define HTTP_REQUEST_HPP
 
 # include "./HttpRequestHeader.hpp"
-# include "./HttpHeaderField.hpp"
 # include "./HttpStatus.hpp"
 # include "./MimeType.hpp"
 # include "../etc/Util.hpp"

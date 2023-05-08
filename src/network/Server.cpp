@@ -226,9 +226,7 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
-  this->recvs[fd] += buf;
-  
-  log::debug << this->recvs[fd].length() << log::endl;
+  this->recvs[fd] += std::string(buf, recv_size);
   checkReceiveDone(fd);
 }
 
@@ -310,7 +308,15 @@ void Server::receiveDone(int fd) {
 
   int timeout = req.getServerConfig().getKeepAliveTimeout();
   int req_max = this->connection.updateRequests(fd, req.getServerConfig());
-  res.getHeader().set("Keep-Alive", "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
+
+  // connection
+  HttpRequestHeader::connection connection = req.getHeader().getConnection();
+  if (connection == HttpRequestHeader::KEEP_ALIVE)
+    res.getHeader().set(HttpResponseHeader::CONNECTION, "keep-alive");
+  else if (connection == HttpRequestHeader::CLOSE)
+    res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
+  // keep-alive
+  res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
 
   log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
   this->connection.update(fd, Connection::SEND);

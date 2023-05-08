@@ -1,5 +1,14 @@
 #include "./HttpResponseHeader.hpp"
 
+const std::string HttpResponseHeader::CONTENT_TYPE = "content-type";
+const std::string HttpResponseHeader::CONTENT_LENGTH = "content-length";
+const std::string HttpResponseHeader::DATE = "date";
+const std::string HttpResponseHeader::KEEP_ALIVE = "keep-alive";
+const std::string HttpResponseHeader::LOCATION = "location";
+const std::string HttpResponseHeader::ALLOW = "allow";
+const std::string HttpResponseHeader::SERVER = "server";
+const std::string HttpResponseHeader::CONNECTION = "connection";
+
 HttpResponseHeader::HttpResponseHeader() {}
 
 HttpResponseHeader::HttpResponseHeader(const HttpResponseHeader& obj):
