@@ -223,7 +223,7 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
-  this->recvs[fd] += buf;
+  this->recvs[fd] += std::string(buf, recv_size);
   checkReceiveDone(fd);
 }
 
