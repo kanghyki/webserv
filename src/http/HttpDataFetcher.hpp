@@ -2,7 +2,7 @@
 # define HTTP_DATA_FETCHER_HPP
 
 # include "./HttpRequest.hpp"
-# include "../Util.hpp"
+# include "../etc/Util.hpp"
 # include "../config/ServerConfig.hpp"
 
 # include <string>

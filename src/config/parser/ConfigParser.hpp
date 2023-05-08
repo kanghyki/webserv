@@ -3,7 +3,7 @@
 
 # include "./Token.hpp"
 # include "./Lexer.hpp"
-# include "../../Util.hpp"
+# include "../../etc/Util.hpp"
 # include "../Config.hpp"
 
 # include <fstream>

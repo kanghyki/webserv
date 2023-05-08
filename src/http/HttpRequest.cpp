@@ -1,5 +1,4 @@
 #include "./HttpRequest.hpp"
-#include "HttpHeaderField.hpp"
 
 const size_t HttpRequest::URL_MAX_LENGTH = 2000;
 

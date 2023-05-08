@@ -1,8 +1,8 @@
 #ifndef MAIN_HPP
 # define MAIN_HPP
 
-#include "./Logger.hpp"
-#include "./Server.hpp"
+#include "./etc/Logger.hpp"
+#include "./network/Server.hpp"
 #include "./config/parser/ConfigParser.hpp"
 #include "./config/Config.hpp"
 

@@ -1,7 +1,4 @@
-#include "CGI.hpp"
-#include "Util.hpp"
-#include "http/HttpStatus.hpp"
-#include <utility>
+#include "./CGI.hpp"
 
 /*
  * -------------------------- Constructor --------------------------

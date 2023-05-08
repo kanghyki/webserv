@@ -11,10 +11,12 @@ NAME			=	webserv
 
 INCS			=	./src
 
-SRCS_DIR		=	./src
+SRCS_DIR			=	./src
 CONFIG_DIR		=	./src/config
 PARSER_DIR		=	./src/config/parser
 HTTP_DIR			= ./src/http
+NETWORK_DIR		= ./src/network
+ETC_DIR 			= ./src/etc
 
 SRCS			=	main.cpp\
 						Server.cpp\
@@ -47,7 +49,7 @@ CPPFLAGS	=	-I$(INCS)
 CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -g
 RM				=	rm -rf
 
-vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR)
+vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR) $(NETWORK_DIR) $(ETC_DIR)
 
 all: $(NAME)
 

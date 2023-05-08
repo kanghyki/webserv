@@ -2,14 +2,14 @@
 # define SERVER_HPP
 
 # include "./Connection.hpp"
-# include "./Logger.hpp"
-# include "./Util.hpp"
+# include "../etc/Logger.hpp"
+# include "../etc/Util.hpp"
 # include "./SessionManager.hpp"
-# include "./config/Config.hpp"
-# include "./http/Http.hpp"
-# include "./http/HttpRequest.hpp"
-# include "./http/HttpResponse.hpp"
-# include "./http/HttpStatus.hpp"
+# include "../config/Config.hpp"
+# include "../http/Http.hpp"
+# include "../http/HttpRequest.hpp"
+# include "../http/HttpResponse.hpp"
+# include "../http/HttpStatus.hpp"
 
 # include <arpa/inet.h>
 # include <fcntl.h>

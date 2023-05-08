@@ -4,11 +4,10 @@
 # include "./HttpRequestHeader.hpp"
 # include "./HttpHeaderField.hpp"
 # include "./HttpStatus.hpp"
-# include "./HttpHeaderField.hpp"
-# include "../Util.hpp"
-# include "../MimeType.hpp"
+# include "./MimeType.hpp"
+# include "../etc/Util.hpp"
 # include "../config/Config.hpp"
-# include "../Logger.hpp"
+# include "../etc/Logger.hpp"
 
 # include <sstream>
 # include <stdexcept>

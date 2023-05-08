@@ -1,7 +1,7 @@
 #ifndef SESSION_MANAGER_HPP
 # define SESSION_MANAGER_HPP
 
-# include "./Logger.hpp"
+# include "../etc/Logger.hpp"
 # include <iostream>
 
 # include <pthread.h>
