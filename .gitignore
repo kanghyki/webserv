@@ -13,3 +13,8 @@ tags
 upload/
 
 database/
+
+# 42 tester
+file_should_exist_after
+multiple_same
+post_body

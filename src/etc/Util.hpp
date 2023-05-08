@@ -16,7 +16,8 @@ namespace util {
   size_t find(const std::string& str, const std::string& target);
   std::string trimSpace(std::string s);
   std::string readFile(const std::string& fileName);
-  std::string toLowerStr(std::string s);
+  std::string toLowerStr(const std::string& s);
+  std::string toUpperStr(const std::string& s);
   std::string itoa(int n);
   const std::string getMimeType(const std::string& filename);
   void writeFile(const std::string& filename, const std::string& data);
@@ -24,6 +25,9 @@ namespace util {
   void ftPipe(int* fd);
   std::string readFd(int fd);
   void ftFree(char** data);
+  void ftDup2(int oldFd, int newFd);
+  void ftExecve(const std::string& file, char* const* argv, char* const* envp);
+
   std::pair<std::string, std::string> splitHeaderBody(const std::string& str, const std::string& delim);
   std::map<std::string, std::string> parseCGIHeader(const std::string& str);
   std::pair<std::string, std::string> splitField(const std::string& str);

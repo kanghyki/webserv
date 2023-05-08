@@ -36,6 +36,7 @@ class HttpRequestHeader {
     const std::map<std::string, std::string>& getOrigin() const;
     connection                                getConnection() const;
     transfer_encoding                         getTransferEncoding() const;
+    const std::map<std::string, std::string>  getCustomeHeader() const;
 
   private:
     std::map<std::string, std::string>  header;
