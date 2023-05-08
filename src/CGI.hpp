@@ -19,6 +19,9 @@ class CGI {
     std::string execute(void);
 
   private:
+    static const int READ = 0;
+    static const int WRITE = 1;
+
     char** argv;
     char** env;
     std::string scriptPath;
@@ -39,9 +42,7 @@ class CGI {
     const std::string getPathInfo(void) const;
     const std::string getBody(void) const;
     const std::string getSessionAvailable(void) const;
-
-    static const int READ = 0;
-    static const int WRITE = 1;
+    const std::string convertHeaderKey(const std::string& key) const;
 };
 
 namespace cgi_env {
@@ -65,6 +66,7 @@ namespace cgi_env {
   static const std::string SERVER_SOFTWARE          = "SERVER_NAME";
   static const std::string HTTP_COOKIE              = "HTTP_COOKIE";
   static const std::string SESSION_AVAILABLE        = "SESSION_AVAILABLE";
+  static const std::string REQUEST_URI              = "REQUEST_URI";
 }
 
 #endif

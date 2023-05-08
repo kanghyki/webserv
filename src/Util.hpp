@@ -16,7 +16,8 @@ namespace util {
   size_t find(const std::string& str, const std::string& target);
   std::string trimSpace(std::string s);
   std::string readFile(const std::string& fileName);
-  std::string toLowerStr(std::string s);
+  std::string toLowerStr(const std::string& s);
+  std::string toUpperStr(const std::string& s);
   std::string itoa(int n);
   const std::string getMimeType(const std::string& filename);
   void writeFile(const std::string& filename, const std::string& data);

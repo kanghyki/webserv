@@ -91,6 +91,18 @@ HttpRequestHeader::connection HttpRequestHeader::getConnection() const {
   return this->conn;
 }
 
+const std::map<std::string, std::string>  HttpRequestHeader::getCustomeHeader() const {
+  std::map<std::string, std::string> ret;
+
+  std::map<std::string, std::string>::const_iterator it = this->header.begin();
+  for (; it != this->header.end(); ++it) {
+    if (it->first[0] == 'X')
+      ret.insert(std::pair<std::string, std::string>(it->first, it->second));
+  }
+
+  return ret;
+}
+
 // setter
 
 void  HttpRequestHeader::setConnection(HttpRequestHeader::connection conn) {

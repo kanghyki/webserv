@@ -58,7 +58,7 @@ const std::string CGI::getBody(void) const {
 const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) const {
   std::map<std::string, std::string> ret;
 
-  ret.insert(std::pair<std::string, std::string>("HTTP_X_SECRET_HEADER_FOR_TEST", "1"));
+//  ret.insert(std::pair<std::string, std::string>("HTTP_X_SECRET_HEADER_FOR_TEST", "1"));
 
   if (!req.getBody().empty()) {
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_LENGTH, util::itoa(req.getBody().length())));
@@ -74,7 +74,7 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
 
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, req.getPath()));
   // FIXME : TEMP
-  ret.insert(std::pair<std::string, std::string>("REQUEST_URI" , req.getPath()));
+  ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_URI, req.getPath()));
 
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getSubstitutedPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
@@ -86,6 +86,13 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_SOFTWARE, SOFTWARE_NAME));
   ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_COOKIE, req.getHeader().get(cgi_env::HTTP_COOKIE)));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SESSION_AVAILABLE, getSessionAvailable()));
+
+  std::map<std::string, std::string> custom = req.getHeader().getCustomeHeader();
+  for (std::map<std::string, std::string>::iterator it = custom.begin(); it != custom.end(); ++it) {
+    std::string key = convertHeaderKey(it->first);
+    ret.insert(std::pair<std::string, std::string>("HTTP_" + key, it->second));
+    log::error << "HTTP_" + key << log::endl;
+  }
 
   for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
     std::cout << it->first << " : " << it->second << std::endl;
@@ -125,7 +132,7 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
 
 std::string CGI::execute(void) {
   std::string ret;
-  int         pid;
+  int         pid = -1;
   int         status;
   int         fd_in;
   int         fd_out;
@@ -189,6 +196,17 @@ const std::string CGI::getSessionAvailable(void) const {
   if (this->sessionAvailable)
     return "true";
   return "false";
+}
+
+const std::string CGI::convertHeaderKey(const std::string& key) const {
+  std::string ret = util::toUpperStr(key);
+
+  for (size_t i = 0; i < ret.length(); ++i) {
+    if(ret[i] == '-')
+      ret[i] = '_';
+  }
+
+  return ret;
 }
 
 /*

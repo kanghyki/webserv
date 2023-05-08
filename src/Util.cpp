@@ -65,11 +65,22 @@ namespace util {
     return ret;
   }
 
-  std::string toLowerStr(std::string s) {
-    for (size_t i = 0; i < s.length(); ++i)
-      if (std::isupper(s[i]))
-        s[i] = std::tolower(s[i]);
-    return s;
+  std::string toLowerStr(const std::string& s) {
+    std::string ret = s;
+
+    for (size_t i = 0; i < ret.length(); ++i)
+      if (std::isupper(ret[i]))
+        ret[i] = std::tolower(ret[i]);
+    return ret;
+  }
+
+  std::string toUpperStr(const std::string& s) {
+    std::string ret = s;
+
+    for (size_t i = 0; i < ret.length(); ++i)
+      if (std::islower(s[i]))
+        ret[i] = std::toupper(ret[i]);
+    return ret;
   }
 
   std::string itoa(int n) {
