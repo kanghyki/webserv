@@ -178,10 +178,13 @@ void ConfigParser::parseServerName(ServerConfig& conf) {
 
 // limit_except [HTTP method(indent) ...] ;
 void ConfigParser::parseLimitExcept(LocationConfig& conf) {
+  std::vector<std::string> methods;
+
   while (peekToken().is(Token::IDENT)) {
     nextToken();
-    conf.addLimitExcept(curToken().getLiteral());
+    methods.push_back(curToken().getLiteral());
   }
+  conf.setLimitExcept(methods);
   expectNextToken(Token::SEMICOLON);
 }
 

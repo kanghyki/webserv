@@ -156,8 +156,6 @@ void Server::run(void) {
       break;
     }
 
-    log::debug << "selecting..." << log::endl;
-
     cleanUpConnection();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
@@ -317,6 +315,19 @@ void Server::receiveDone(int fd) {
     res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
   // keep-alive
   res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
+
+  // allow
+  if (res.getStatusCode() == METHOD_NOT_ALLOWED) {
+    std::vector<std::string> vs = req.getLocationConfig().getLimitExcept();
+    std::string value;
+
+    for (size_t i = 0; i < vs.size(); ++i) {
+      value += vs[i];
+      if (i + 1 < vs.size())
+        value += ", ";
+    }
+    res.getHeader().set(HttpResponseHeader::ALLOW, value);
+  }
 
   log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
   this->connection.update(fd, Connection::SEND);

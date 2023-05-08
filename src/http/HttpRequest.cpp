@@ -71,7 +71,7 @@ void HttpRequest::validateMethod(const std::string &method) {
       method != request_method::DELETE &&
       method != request_method::PUT &&
       method != request_method::HEAD)
-    throw METHOD_NOT_ALLOWED;
+    throw NOT_IMPLEMENTED;
   this->method = method;
 }
 

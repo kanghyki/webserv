@@ -25,7 +25,7 @@ class LocationConfig: public CommonConfig {
     const std::vector<LocationConfig>&  getLocationConfig() const;
 
     void                                setPath(std::string path);
-    void                                addLimitExcept(std::string method);
+    void                                setLimitExcept(std::vector<std::string> methods);
     void                                setReturnRes(int status, std::string path);
     void                                setAutoindex(bool autoindex);
     void                                addLocationConfig(LocationConfig location);

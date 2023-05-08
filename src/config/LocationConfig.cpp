@@ -8,7 +8,14 @@ LocationConfig::LocationConfig():
   CommonConfig(),
   path(DEFAULT_PATH),
   returnRes(std::make_pair(-1, "")),
-  autoindex(DEFAULT_AUTOINDEX) {}
+  autoindex(DEFAULT_AUTOINDEX) {
+    // support method
+    this->limitExcept.push_back("GET");
+    this->limitExcept.push_back("PUT");
+    this->limitExcept.push_back("POST");
+    this->limitExcept.push_back("DELETE");
+    this->limitExcept.push_back("HEAD");
+  }
 
 LocationConfig::LocationConfig(const ServerConfig& config):
   CommonConfig(config),
@@ -75,7 +82,7 @@ const std::vector<LocationConfig>& LocationConfig::getLocationConfig() const {
 
 void LocationConfig::setPath(std::string path) { this->path = path; }
 
-void LocationConfig::addLimitExcept(std::string method) { this->limitExcept.push_back(method); }
+void LocationConfig::setLimitExcept(std::vector<std::string> methods) { this->limitExcept = methods; }
 
 void LocationConfig::setReturnRes(int status, std::string path) {
   this->returnRes = std::make_pair(status, path);
