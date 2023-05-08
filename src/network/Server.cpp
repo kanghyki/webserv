@@ -248,7 +248,7 @@ void Server::checkReceiveDone(int fd) {
     req.setBody(this->recvs[fd]);
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       try {
-        req.unchunk();
+        req.unchunkBody();
       } catch (HttpStatus s) {
         log::warning << "Chunked message is wrong" << log::endl;
         req.setError(s);

@@ -38,7 +38,7 @@ class HttpRequest {
     HttpRequest& operator=(const HttpRequest& obj);
 
     void                                  parse(const std::string& req, const Config& conf);
-    void                                  unchunk();
+    void                                  unchunkBody();
 
     std::string                           getMethod() const;
     std::string                           getPath() const;

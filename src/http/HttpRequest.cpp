@@ -123,7 +123,7 @@ void HttpRequest::checkCGI() {
   }
 }
 
-void HttpRequest::unchunk(void) {
+void HttpRequest::unchunkBody(void) {
   std::string       ret;
   std::string       s;
   size_t            s_pos = 0;
