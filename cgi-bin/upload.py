@@ -28,7 +28,7 @@ fileitem = form['file']
 
 if fileitem.filename:
     rootPath = os.environ['PATH_TRANSLATED'].replace(os.environ['SCRIPT_NAME'], "")
-    uploadPath =  rootPath + "/upload" + os.environ['PATH_INFO']
+    uploadPath =  rootPath + "/upload"
     file = os.path.basename(fileitem.filename)
     filePath = uploadPath + "/" + file
     createDirectory(uploadPath)

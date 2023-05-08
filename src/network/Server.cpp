@@ -3,7 +3,8 @@
 const size_t        Server::BIND_MAX_TRIES = 10;
 const size_t        Server::LISTEN_MAX_TRIES = 10;
 const size_t        Server::TRY_SLEEP_TIME = 5;
-const int           Server::BUF_SIZE = 1024 * 12;
+//const int           Server::BUF_SIZE = 1024 * 12;
+const int           Server::BUF_SIZE = 1024;
 const int           Server::MANAGE_FD_MAX = 1024;
 const std::string   Server::HEADER_DELIMETER = "\r\n\r\n";
 const std::string   Server::CHUNKED_DELIMETER = "0\r\n\r\n";
@@ -155,6 +156,8 @@ void Server::run(void) {
       break;
     }
 
+    log::debug << "selecting..." << log::endl;
+
     cleanUpConnection();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {
@@ -224,6 +227,8 @@ void Server::receiveData(int fd) {
   }
   buf[recv_size] = 0;
   this->recvs[fd] += buf;
+  
+  log::debug << this->recvs[fd].length() << log::endl;
   checkReceiveDone(fd);
 }
 

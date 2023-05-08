@@ -9,7 +9,8 @@ def generate_session_id():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
 def return_ret(ret):
-    print("Set-Cookie: _webserv_session=" + generate_session_id() + "; Path=/\r")
+    if ret == True:
+        print("Set-Cookie: _webserv_session=" + generate_session_id() + "; Path=/\r")
     print("Content-Type: text/html\r\n\r")
 
     print("<html>")
@@ -27,7 +28,6 @@ def return_ret(ret):
     print("</body>")
     print("</html>")
     exit(0);
-
 
 form = cgi.FieldStorage()
 
