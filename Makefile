@@ -34,6 +34,7 @@ SRCS			=	main.cpp\
 						HttpRequest.cpp\
 						HttpRequestHeader.cpp\
 						HttpResponse.cpp\
+						HttpResponseHeader.cpp\
 						HttpDataFetcher.cpp\
 						HttpStatus.cpp\
 						Http.cpp\
