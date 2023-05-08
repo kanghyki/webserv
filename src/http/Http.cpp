@@ -14,8 +14,6 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
     ret.addHeader("Location", req.getLocationConfig().getReturnRes().second);
     return ret;
   }
-  if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
-    throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
     throw (METHOD_NOT_ALLOWED);
   if (req.getMethod() != request_method::GET &&
