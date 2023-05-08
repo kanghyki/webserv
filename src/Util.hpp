@@ -25,6 +25,9 @@ namespace util {
   void ftPipe(int* fd);
   std::string readFd(int fd);
   void ftFree(char** data);
+  void ftDup2(int oldFd, int newFd);
+  void ftExecve(const std::string& file, char* const* argv, char* const* envp);
+
   std::pair<std::string, std::string> splitHeaderBody(const std::string& str, const std::string& delim);
   std::map<std::string, std::string> parseCGIHeader(const std::string& str);
   std::pair<std::string, std::string> splitField(const std::string& str);

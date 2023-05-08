@@ -136,6 +136,14 @@ namespace util {
     }
     free(data);
   }
+  
+  void ftDup2(int oldFd, int newFd) {
+    if (dup2(oldFd, newFd) == -1) throw util::SystemFunctionException();
+  }
+
+  void ftExecve(const std::string& file, char* const* argv, char* const* envp) {
+    if (execve(file.c_str(), argv, envp) == -1) throw util::SystemFunctionException();
+  }
 
   std::pair<std::string, std::string> splitHeaderBody(const std::string& str, const std::string& delim) {
     size_t pos = str.find(delim);
@@ -152,8 +160,8 @@ namespace util {
     vs = util::split(str, CRLF);
     it = vs.begin();
     while (it != vs.end()) {
-      std::pair<std::string, std::string> p = util::splitField(*it);
-      util::splitField(*it);
+      std::pair<std::string, std::string> p = splitField(*it);
+      splitField(*it);
       ret.insert(p);
       ++it;
     }
@@ -185,6 +193,7 @@ namespace util {
 
     return ret;
   }
+
 
   const char* StringFoundException::what() const throw() {
     return "Target not found";

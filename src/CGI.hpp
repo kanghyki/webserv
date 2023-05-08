@@ -43,6 +43,7 @@ class CGI {
     const std::string getBody(void) const;
     const std::string getSessionAvailable(void) const;
     const std::string convertHeaderKey(const std::string& key) const;
+
 };
 
 namespace cgi_env {

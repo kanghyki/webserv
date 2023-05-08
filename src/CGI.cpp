@@ -157,11 +157,14 @@ std::string CGI::execute(void) {
   }
 
   if (pid == 0) {
-    dup2(fd_in, STDIN_FILENO);
-    dup2(fd_out, STDOUT_FILENO);
-    changeWorkingDirectory();
-    int ret = execve(this->cgiPath.c_str(), this->argv, this->env);
-    exit(ret);
+    try {
+      util::ftDup2(fd_in, STDIN_FILENO);
+      util::ftDup2(fd_out, STDOUT_FILENO);
+      changeWorkingDirectory();
+      util::ftExecve(this->cgiPath, this->argv, this->env);
+    } catch (util::SystemFunctionException& e) {
+      exit(-1);
+    }
   }
 
   waitpid(pid, &status, 0);
@@ -197,6 +200,7 @@ const std::string CGI::getSessionAvailable(void) const {
     return "true";
   return "false";
 }
+
 
 const std::string CGI::convertHeaderKey(const std::string& key) const {
   std::string ret = util::toUpperStr(key);
