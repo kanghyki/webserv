@@ -8,6 +8,7 @@ const std::string HttpResponseHeader::LOCATION = "location";
 const std::string HttpResponseHeader::ALLOW = "allow";
 const std::string HttpResponseHeader::SERVER = "server";
 const std::string HttpResponseHeader::CONNECTION = "connection";
+const std::string HttpResponseHeader::UPGRADE = "upgrade";
 
 HttpResponseHeader::HttpResponseHeader() {}
 

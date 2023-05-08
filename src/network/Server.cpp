@@ -329,6 +329,9 @@ void Server::receiveDone(int fd) {
     res.getHeader().set(HttpResponseHeader::ALLOW, value);
   }
 
+  if (res.getStatusCode() == UPGRADE_REQUIRED)
+    res.getHeader().set(HttpResponseHeader::UPGRADE, "HTTP/1.1");
+
   log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
   this->connection.update(fd, Connection::SEND);
   FD_SET(fd, &this->writes);

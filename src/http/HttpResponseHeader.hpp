@@ -16,6 +16,7 @@ class HttpResponseHeader {
     static const std::string ALLOW;
     static const std::string SERVER;
     static const std::string CONNECTION;
+    static const std::string UPGRADE;
 
     HttpResponseHeader();
     HttpResponseHeader(const HttpResponseHeader& obj);
