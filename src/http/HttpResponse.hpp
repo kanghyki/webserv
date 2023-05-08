@@ -1,9 +1,10 @@
 #ifndef HTTPRESPONSE_HPP
 # define HTTPRESPONSE_HPP
 
+# include "./HttpResponseHeader.hpp"
 # include "./HttpStatus.hpp"
 # include "./HttpRequest.hpp"
-# include "../Util.hpp"
+# include "../etc/Util.hpp"
 
 # include <map>
 # include <string>
@@ -24,12 +25,11 @@ class HttpResponse {
     void                                setStatusCode(const HttpStatus statusCode);
     void                                setBody(const std::string& body);
     void                                removeBody();
-    void                                addHeader(const std::string& field, const std::string& value);
-    void                                removeHeader(const std::string& field);
     void                                addSendLength(unsigned int length);
 
     HttpStatus                          getStatusCode() const;
     sendStatus                          getSendStatus() const;
+    HttpResponseHeader&                 getHeader();
 
     std::string                         toString() throw();
 
@@ -38,7 +38,7 @@ class HttpResponse {
 
     HttpStatus                          statusCode;
     std::string                         statusText;
-    std::map<std::string, std::string>  header;
+    HttpResponseHeader                  header;
     std::string                         body;
 
     std::string                         buffer;
@@ -46,7 +46,6 @@ class HttpResponse {
     unsigned int                        sendLength;
 
     std::string                         makeStatusLine() const;
-    std::string                         makeHeaderField(const std::string& fieldName, const std::string& value) const;
     std::string                         getCurrentTimeStr() const;
 };
 

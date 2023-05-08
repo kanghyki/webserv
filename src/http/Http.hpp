@@ -5,10 +5,10 @@
 # include "./HttpDataFetcher.hpp"
 # include "./HttpRequest.hpp"
 # include "./HttpResponse.hpp"
-# include "../CGI.hpp"
+# include "./CGI.hpp"
 # include "../config/ServerConfig.hpp"
-# include "../Logger.hpp"
-# include "../SessionManager.hpp"
+# include "../etc/Logger.hpp"
+# include "../network/SessionManager.hpp"
 
 # include <vector>
 # include <utility>

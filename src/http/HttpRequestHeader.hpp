@@ -1,7 +1,7 @@
 #ifndef HTTP_REQUEST_HEADER_HPP
 # define HTTP_REQUEST_HEADER_HPP
 
-# include "../Util.hpp"
+# include "../etc/Util.hpp"
 # include "./HttpStatus.hpp"
 
 # include <string>

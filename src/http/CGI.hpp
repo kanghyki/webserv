@@ -6,8 +6,8 @@
 # include <cstring>
 # include <fcntl.h>
 
-# include "./http/HttpRequest.hpp"
-# include "./Util.hpp"
+# include "./HttpRequest.hpp"
+# include "../etc/Util.hpp"
 
 static const std::string CGI_VERSION = "CGI/1.1";
 static const std::string SOFTWARE_NAME = "NGINX MINUS";

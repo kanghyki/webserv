@@ -1,5 +1,4 @@
 #include "HttpResponse.hpp"
-#include "HttpHeaderField.hpp"
 
 const std::string HttpResponse::version = "HTTP/1.1";
 
@@ -52,6 +51,10 @@ HttpResponse::~HttpResponse() {}
  * -------------------------- Getter -------------------------------
  */
 
+HttpResponseHeader& HttpResponse::getHeader() {
+  return this->header;
+}
+
 HttpStatus HttpResponse::getStatusCode() const {
   return this->statusCode;
 }
@@ -82,25 +85,6 @@ void HttpResponse::removeBody() {
   this->body = "";
 }
 
-void HttpResponse::addHeader(const std::string& field, const std::string& value) {
-  this->header.insert(std::make_pair(field, value));
-}
-
-void HttpResponse::removeHeader(const std::string& field) {
-  std::map<std::string, std::string>::const_iterator target;
-
-  target = this->header.end();
-  // FIXME: case consistency
-  for (std::map<std::string, std::string>::const_iterator it = this->header.begin(); it != this->header.end(); ++it) {
-    if (util::toLowerStr(it->first) == util::toLowerStr(field)) {
-      target = it;
-      break;
-    }
-  }
-  if (target != this->header.end())
-    this->header.erase(target);
-}
-
 std::string HttpResponse::toString() throw() {
   std::string ret;
 
@@ -108,11 +92,10 @@ std::string HttpResponse::toString() throw() {
     return this->buffer.substr(this->sendLength);
 
   this->statusText = getStatusText(this->statusCode);
-  addHeader(header_field::CONTENT_LENGTH, util::itoa(body.length()));
-  addHeader("Date", getCurrentTimeStr());
+  this->header.set(header_field::CONTENT_LENGTH, util::itoa(body.length()));
+  this->header.set("Date", getCurrentTimeStr());
   ret = makeStatusLine();
-  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
-    ret += makeHeaderField(it->first, it->second);
+  ret += this->header.toStringForResponse();
   ret += "\r\n";
   ret += this->body;
 
@@ -124,10 +107,6 @@ std::string HttpResponse::toString() throw() {
 
 std::string HttpResponse::makeStatusLine() const {
   return this->version + " " + util::itoa(this->statusCode) + " " + this->statusText + "\r\n";
-}
-
-std::string HttpResponse::makeHeaderField(const std::string& fieldName, const std::string& value) const {
-  return fieldName + ": " + value + "\r\n";
 }
 
 // TODO: move

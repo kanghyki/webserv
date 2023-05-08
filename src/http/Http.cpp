@@ -1,6 +1,4 @@
 #include "./Http.hpp"
-#include "HttpHeaderField.hpp"
-#include <exception>
 
 Http::Http() {}
 
@@ -13,7 +11,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
     throw req.getErrorStatusCode();
   if (req.getLocationConfig().getReturnRes().first != -1) {
     ret.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
-    ret.addHeader("Location", req.getLocationConfig().getReturnRes().second);
+    ret.getHeader().set("Location", req.getLocationConfig().getReturnRes().second);
     return ret;
   }
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
@@ -65,7 +63,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
 
   // FIXME:
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
-    ret.addHeader(it->first, it->second);
+    ret.getHeader().set(it->first, it->second);
 
     std::string lower_first = util::toLowerStr(it->first);
     if (lower_first == "status") {
@@ -78,7 +76,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
 
   }
 
-  ret.removeHeader("status");
+  ret.getHeader().remove("status");
   ret.setBody(body);
 
 
@@ -92,7 +90,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   std::string data = fetcher.fetch();
 
   res.setStatusCode(OK);
-  res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
+  res.getHeader().set(header_field::CONTENT_TYPE, req.getContentType());
   res.setBody(data);
 
 
@@ -109,8 +107,8 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
 
   res.setStatusCode(CREATED);
-  res.addHeader(header_field::CONTENT_TYPE, req.getContentType());
-  res.addHeader("Location", req.getServerConfig().getServerName() + ":" + util::itoa(req.getServerConfig().getPort()) + req.getSubstitutedPath() );
+  res.getHeader().set(header_field::CONTENT_TYPE, req.getContentType());
+  res.getHeader().set("Location", req.getServerConfig().getServerName() + ":" + util::itoa(req.getServerConfig().getPort()) + req.getSubstitutedPath() );
 
   res.setBody(req.getBody());
 
@@ -183,7 +181,7 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   }
 
   res.setStatusCode(status);
-  res.addHeader(header_field::CONTENT_TYPE, "text/html");
+  res.getHeader().set(header_field::CONTENT_TYPE, "text/html");
   res.setBody(data);
 
   return res;

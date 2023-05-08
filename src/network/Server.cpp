@@ -248,7 +248,7 @@ void Server::checkReceiveDone(int fd) {
     req.setBody(this->recvs[fd]);
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       try {
-        req.unchunk();
+        req.unchunkBody();
       } catch (HttpStatus s) {
         log::warning << "Chunked message is wrong" << log::endl;
         req.setError(s);
@@ -303,8 +303,9 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(s, req.getServerConfig());
   }
 
-  int reqs = this->connection.updateRequests(fd, req.getServerConfig());
-  res.addHeader("Keep-Alive", "timeout=" + util::itoa(req.getServerConfig().getKeepAliveTimeout()) + ", max=" + util::itoa(reqs));
+  int timeout = req.getServerConfig().getKeepAliveTimeout();
+  int req_max = this->connection.updateRequests(fd, req.getServerConfig());
+  res.getHeader().set("Keep-Alive", "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
 
   log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
   this->connection.update(fd, Connection::SEND);
