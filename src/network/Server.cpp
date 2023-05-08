@@ -156,8 +156,6 @@ void Server::run(void) {
       break;
     }
 
-    log::debug << "selecting..." << log::endl;
-
     cleanUpConnection();
 
     for (int i = 0; i < this->getFdMax() + 1; i++) {

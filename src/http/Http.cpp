@@ -170,7 +170,6 @@ HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config)
   std::string   path;
 
   std::string errorPagePath = config.getErrorPage()[status];
-  log::error << "error path path : " << errorPagePath << log::endl;
   if (errorPagePath.empty())
     data = defaultErrorPage(status);
   else {

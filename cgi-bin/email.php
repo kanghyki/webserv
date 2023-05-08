@@ -1,26 +1,36 @@
-#!/usr/bin/php-cgi
-
 <?php
-  // Get the form data from the HTTP POST request
-  $name = $_POST['name'];
-  $email = $_POST['email'];
-  $message = $_POST['message'];
+// Import PHPMailer library
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
-  // Validate the input data
-  if (empty($name) || empty($email) || empty($message)) {
-    die("Error: All fields are required.");
-  }
+// Include PHPMailer autoloader
+require 'vendor/autoload.php';
 
-  // Send an email with the form data
-  $to = 'recipient@example.com';
-  $subject = 'New message from website';
-  $body = "Name: $name\nEmail: $email\nMessage: $message";
-  $headers = "From: $email\r\nReply-To: $email\r\n";
+// Create a new PHPMailer object
+$mail = new PHPMailer(true);
 
-  if (!mail($to, $subject, $body, $headers)) {
-    die("Error: Failed to send email.");
-  }
+try {
+  // SMTP server settings
+  $mail->isSMTP();
+  $mail->Host       = 'smtp.naver.com';
+  $mail->SMTPAuth   = true;
+  $mail->Username   = $_GET['from']
+  $mail->Password   = $_GET['password']
+  $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+  $mail->Port       = 465;
 
-  // Redirect the user to a thank-you page
-  header('Location: /thank-you.html');
+  // Sender and recipient email addresses
+  $mail->setFrom($_GET['from'], $_GET['from']);
+  $mail->addAddress($_GET['to'], $_GET['to']);
+
+  // Email subject and message
+  $mail->Subject = $_GET['subject'];
+  $mail->Body    = $_GET['content'];
+
+  // Send the email
+  $mail->send();
+  echo 'Email sent successfully';
+} catch (Exception $e) {
+  echo "Email could not be sent. Error message: {$mail->ErrorInfo}";
+}
 ?>
