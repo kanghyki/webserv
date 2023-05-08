@@ -168,11 +168,8 @@ void Server::run(void) {
           else if (send_status == HttpResponse::DONE) {
             if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
               closeConnection(i);
-            else {
-              FD_CLR(i, &this->writes);
-              this->connection.update(i, this->requests[i].getServerConfig());
-              this->requests[i] = HttpRequest();
-            }
+            else
+              keepAliveConnection(i);
           }
         }
 
@@ -221,7 +218,7 @@ void Server::receiveData(int fd) {
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   if (recv_size <= 0) {
     if (recv_size < 0)
-      log::warning << "recv_size < 0, client(" << fd  << ") was disconneted" << log::endl;
+      log::warning << "recv_size < 0 with client(" << fd  << ")" << log::endl;
     closeConnection(fd);
     return ;
   }
@@ -249,7 +246,6 @@ void Server::checkReceiveDone(int fd) {
 
   if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) {
     req.setBody(this->recvs[fd]);
-    this->recvs[fd] = "";
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
       try {
         req.unchunk();
@@ -338,6 +334,14 @@ void Server::closeConnection(int fd) {
     log::info << "Closed, client(" << fd << ")" << log::endl;
   this->connection.remove(fd);
   this->connection.removeRequests(fd);
+  this->requests[fd] = HttpRequest();
+  this->responses[fd] = HttpResponse();
+  this->recvs[fd] = "";
+}
+
+void Server::keepAliveConnection(int fd) {
+  FD_CLR(fd, &this->writes);
+  this->connection.update(fd, this->requests[fd].getServerConfig());
   this->requests[fd] = HttpRequest();
   this->responses[fd] = HttpResponse();
   this->recvs[fd] = "";

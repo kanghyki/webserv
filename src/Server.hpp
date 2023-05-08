@@ -67,6 +67,7 @@ class Server {
     void        receiveDone(int fd);
     void        sendData(int fd);
     void        closeConnection(int fd);
+    void        keepAliveConnection(int fd);
     void        cleanUpConnection();
 
 };
