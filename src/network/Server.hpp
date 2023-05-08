@@ -49,12 +49,6 @@ class Server {
     Connection                connection;
     SessionManager            sessionManager;
 
-    fd_set&     getReads(void);
-    fd_set&     getWrites(void);
-    int         getFdMax(void) const;
-
-    void        setFdMax(int fdMax);
-
     inline int  socketInit(void);
     inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
     inline void socketOpen(int servFd, sockaddr_in& in);

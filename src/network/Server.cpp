@@ -3,8 +3,7 @@
 const size_t        Server::BIND_MAX_TRIES = 10;
 const size_t        Server::LISTEN_MAX_TRIES = 10;
 const size_t        Server::TRY_SLEEP_TIME = 5;
-//const int           Server::BUF_SIZE = 1024 * 12;
-const int           Server::BUF_SIZE = 1024;
+const int           Server::BUF_SIZE = 1024 * 12;
 const int           Server::MANAGE_FD_MAX = 1024;
 const std::string   Server::HEADER_DELIMETER = "\r\n\r\n";
 const std::string   Server::CHUNKED_DELIMETER = "0\r\n\r\n";
@@ -50,34 +49,6 @@ Server::~Server(void) {}
 /*
  * -------------------------- Operator -----------------------------
  */
-
-/*
- * -------------------------- Getter -------------------------------
- */
-
-//int Server::getServFd(void) const {
-//  return this->servFd;
-//}
-
-int Server::getFdMax(void) const {
-  return this->fdMax;
-}
-
-fd_set& Server::getReads(void) {
-  return this->reads;
-}
-
-fd_set& Server::getWrites(void) {
-  return this->writes;
-}
-
-/*
- * -------------------------- Setter -------------------------------
- */
-
-void Server::setFdMax(int fdMax) {
-  this->fdMax = fdMax;
-}
 
 /*
  * ----------------------- Member Function -------------------------
@@ -148,17 +119,17 @@ void Server::run(void) {
   log::info << "Server is running..." << log::endl;
   while (1) {
 
-    fd_set readsCpy = this->getReads();
-    fd_set writesCpy = this->getWrites();
+    fd_set readsCpy = this->reads;
+    fd_set writesCpy = this->writes;
 
-    if (select(this->getFdMax() + 1, &readsCpy, &writesCpy, 0, &t) == -1) {
+    if (select(this->fdMax + 1, &readsCpy, &writesCpy, 0, &t) == -1) {
       log::error << "Select returns -1, break" << log::endl;
       break;
     }
 
     cleanUpConnection();
 
-    for (int i = 0; i < this->getFdMax() + 1; i++) {
+    for (int i = 0; i < this->fdMax + 1; i++) {
 
       if (FD_ISSET(i, &this->writes)) {
 
@@ -201,9 +172,9 @@ void Server::acceptConnect(int server_fd) {
     return ;
   }
 
-  FD_SET(client_fd, &this->getReads());
-  if (this->getFdMax() < client_fd)
-    this->setFdMax(client_fd);
+  FD_SET(client_fd, &this->reads);
+  if (this->fdMax < client_fd)
+    this->fdMax = client_fd;
 
 
   log::info << "Accept, client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << log::endl;
@@ -224,6 +195,8 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
+  log::debug << "recv_size: " << recv_size << log::endl;
+  log::debug << "total: " << this->recvs[fd].length() << log::endl;
   this->recvs[fd] += std::string(buf, recv_size);
   checkReceiveDone(fd);
 }
@@ -352,8 +325,8 @@ void Server::sendData(int fd) {
 }
 
 void Server::closeConnection(int fd) {
-  if (FD_ISSET(fd, &this->getWrites())) FD_CLR(fd, &this->getWrites());
-  if (FD_ISSET(fd, &this->getReads())) FD_CLR(fd, &this->getReads());
+  if (FD_ISSET(fd, &this->writes)) FD_CLR(fd, &this->writes);
+  if (FD_ISSET(fd, &this->reads)) FD_CLR(fd, &this->reads);
   if (fd == this->fdMax)
     this->fdMax -= 1;
   if (close(fd) == -1)
