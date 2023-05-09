@@ -55,8 +55,6 @@ const std::string CGI::getBody(void) const {
 const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) const {
   std::map<std::string, std::string> ret;
 
-//  ret.insert(std::pair<std::string, std::string>("HTTP_X_SECRET_HEADER_FOR_TEST", "1"));
-
   if (!req.getBody().empty()) {
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_LENGTH, util::itoa(req.getBody().length())));
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_TYPE, req.getContentType()));
@@ -70,7 +68,6 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   ret.insert(std::pair<std::string, std::string>(cgi_env::HTTP_USER_AGENT, req.getHeader().get(cgi_env::HTTP_USER_AGENT)));
 
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, req.getPath()));
-  // FIXME : TEMP
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_URI, req.getPath()));
 
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getSubstitutedPath()));
@@ -170,6 +167,8 @@ std::string CGI::execute(void) {
 
   lseek(fd_out, 0, SEEK_SET);
   ret = util::readFd(fd_out);
+  log::error << "status : " << status << log::endl;
+  log::error << "ret : " << ret << log::endl;
   fclose(file_in);
   fclose(file_out);
 

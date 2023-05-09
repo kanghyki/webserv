@@ -12,6 +12,7 @@ def createDirectory(directory):
 
 form = cgi.FieldStorage()
 if os.environ['SESSION_AVAILABLE'] == 'false':
+    print("status: 403 Forbidden\r")
     print("Content-Type: text/html\r\n\r")
     print("<html>")
     print("<body>")
@@ -40,6 +41,7 @@ if fileitem.filename:
 else:
     message = "No file was uploaded"
 
+print("status: 200 OK\r")
 print("Content-Type: text/html\r\n\r")
 
 print("<html>")

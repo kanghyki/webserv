@@ -5,6 +5,7 @@ form = cgi.FieldStorage()
 
 ret = os.environ['SESSION_AVAILABLE']
 
+print("status: 200 OK\r")
 print("Content-Type: text/html\r\n\r")
 
 print("<html>")
