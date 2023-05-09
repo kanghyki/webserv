@@ -47,7 +47,8 @@ void HttpRequest::parse(const std::string& req, const Config& conf) {
     this->header.parse(req.substr(pos + 2));
 
     // Set config
-    this->sc = conf.getHttpConfig().findServerConfig(this->header.get("Host"));
+    std::string host = this->header.get(HttpRequestHeader::HOST);
+    this->sc = conf.getHttpConfig().findServerConfig(host);
     this->lc = this->sc.findLocationConfig(this->getPath());
 
     // Check CGI

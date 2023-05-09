@@ -9,7 +9,7 @@ std::string HttpDataFecther::fetch() const {
   struct stat _stat;
 
   if (stat(this->req.getTargetPath().c_str(), &_stat) == -1)
-    throw (NOT_FOUND);
+    throw NOT_FOUND;
 
   if (S_ISDIR(_stat.st_mode)) {
     if (this->req.getLocationConfig().isAutoindex())
@@ -17,12 +17,12 @@ std::string HttpDataFecther::fetch() const {
     else if (this->req.getLocationConfig().getIndex() != "")
       _data = readFile(this->req.getTargetPath() + this->req.getLocationConfig().getIndex());
     else
-      throw (NOT_FOUND);
+      throw NOT_FOUND;
   }
   else if (S_ISREG(_stat.st_mode))
     _data = readFile(this->req.getTargetPath());
   else
-    throw (FORBIDDEN);
+    throw FORBIDDEN;
 
   return _data;
 }

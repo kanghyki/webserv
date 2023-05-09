@@ -19,12 +19,6 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
     throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
     throw (METHOD_NOT_ALLOWED);
-  if (req.getMethod() != request_method::GET &&
-      req.getMethod() != request_method::POST &&
-      req.getMethod() != request_method::DELETE &&
-      req.getMethod() != request_method::PUT &&
-      req.getMethod() != request_method::HEAD)
-    throw (METHOD_NOT_ALLOWED);
 
   try {
     if (req.isCGI()) res = executeCGI(req, manager);
@@ -93,7 +87,6 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   res.setStatusCode(OK);
   res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
   res.setBody(data);
-
 
   return res;
 }
