@@ -17,7 +17,7 @@
 # define BOLD_YELLOW "\e[1;33m"  // WARNING
 # define BOLD_WHITE "\e[1;37m"      // DEBUG
 
-namespace log {
+namespace logger {
 
   extern std::string endl;
   std::string timestamp();

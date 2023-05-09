@@ -12,6 +12,24 @@ HttpRequest::HttpRequest():
 
 HttpRequest::~HttpRequest() {}
 
+HttpRequest::HttpRequest(const HttpRequest& obj):
+  method(obj.method),
+  path(obj.path),
+  queryString(obj.queryString),
+  version(obj.version),
+  body(obj.body),
+  header(obj.header),
+  sc(obj.sc),
+  lc(obj.lc),
+  cgi(obj.cgi),
+  scriptPath(obj.scriptPath),
+  cgiPath(obj.getCGIPath()),
+  pathInfo(obj.pathInfo),
+  recv_status(obj.recv_status),
+  contentLength(obj.contentLength),
+  errorStatusCode(obj.errorStatusCode) {
+}
+
 HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
   if (this != &obj) {
     this->method = obj.method;
@@ -83,7 +101,7 @@ void HttpRequest::validateURI(const std::string &path) {
   if (path.length() > URL_MAX_LENGTH)     throw URI_TOO_LONG;
   if (path[i++] != '/')                   throw BAD_REQUEST;
   while (i < path.length()) {
-    if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=-", path[i]))
+    if (!std::isalnum(path[i]) && !strchr(":%._\\+~#?&/=-", path[i]))
       throw BAD_REQUEST;
     ++i;
   }
@@ -130,14 +148,13 @@ void HttpRequest::unchunkBody(void) {
   size_t            s_pos = 0;
   size_t            e_pos;
   bool              is_hex = true;
-  size_t            read_size;
+  size_t            read_size = 0;
 
   while ((e_pos = this->body.find("\r\n", s_pos)) != std::string::npos) {
     s = this->body.substr(s_pos, e_pos - s_pos);
 
-    if (is_hex == true) {
+    if (is_hex == true)
       read_size = strToHex(s);
-    }
     else if (read_size == 0)
       break;
     else if (read_size == s.size())

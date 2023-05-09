@@ -3,6 +3,8 @@
 
 # include "HttpConfig.hpp"
 
+# include <stdexcept>
+
 class Config {
   public:
     Config();

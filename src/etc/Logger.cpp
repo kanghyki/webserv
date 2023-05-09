@@ -1,8 +1,8 @@
 #include "./Logger.hpp"
 
-std::string log::endl = "\n";
+std::string logger::endl = "\n";
 
-std::string log::timestamp() {
+std::string logger::timestamp() {
   std::string ret;
   time_t      cur_time;
   char        buf[100];
@@ -17,8 +17,8 @@ std::string log::timestamp() {
   return ret;
 }
 
-log::Error& log::Error::operator<<(std::string s) {
-  if (s == log::endl) {
+logger::Error& logger::Error::operator<<(std::string s) {
+  if (s == logger::endl) {
     std::cout << timestamp()
       << std::string(RED) + "[ERROR] " + std::string(RESET)
       << std::string(BOLD_RED) << this->buf << std::string(RESET) << std::endl;
@@ -30,38 +30,38 @@ log::Error& log::Error::operator<<(std::string s) {
   return *this;
 }
 
-log::Error& log::Error::operator<<(int s) {
+logger::Error& logger::Error::operator<<(int s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Error& log::Error::operator<<(size_t s) {
+logger::Error& logger::Error::operator<<(size_t s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Error& log::Error::operator<<(unsigned int s) {
+logger::Error& logger::Error::operator<<(unsigned int s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Error& log::Error::operator<<(short s) {
+logger::Error& logger::Error::operator<<(short s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Error& log::Error::operator<<(unsigned short s) {
+logger::Error& logger::Error::operator<<(unsigned short s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Warning& log::Warning::operator<<(std::string s) {
-  if (s == log::endl) {
+logger::Warning& logger::Warning::operator<<(std::string s) {
+  if (s == logger::endl) {
     std::cout << timestamp()
       << std::string(YELLOW) + "[WARNING] " + std::string(RESET)
       << std::string(BOLD_YELLOW) << this->buf << std::string(RESET) << std::endl;
@@ -73,32 +73,32 @@ log::Warning& log::Warning::operator<<(std::string s) {
   return *this;
 }
 
-log::Warning& log::Warning::operator<<(int s) {
+logger::Warning& logger::Warning::operator<<(int s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Warning& log::Warning::operator<<(size_t s) {
+logger::Warning& logger::Warning::operator<<(size_t s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Warning& log::Warning::operator<<(unsigned int s) {
+logger::Warning& logger::Warning::operator<<(unsigned int s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Warning& log::Warning::operator<<(short s) {
+logger::Warning& logger::Warning::operator<<(short s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Info& log::Info::operator<<(std::string s) {
-  if (s == log::endl) {
+logger::Info& logger::Info::operator<<(std::string s) {
+  if (s == logger::endl) {
     std::cout << timestamp()
       << std::string(GREEN) + "[INFO] " + std::string(RESET)
       << std::string(BOLD_GREEN) << this->buf << std::string(RESET) << std::endl;
@@ -110,38 +110,38 @@ log::Info& log::Info::operator<<(std::string s) {
   return *this;
 }
 
-log::Info& log::Info::operator<<(int s) {
+logger::Info& logger::Info::operator<<(int s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Info& log::Info::operator<<(size_t s) {
+logger::Info& logger::Info::operator<<(size_t s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Info& log::Info::operator<<(unsigned int s) {
+logger::Info& logger::Info::operator<<(unsigned int s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Info& log::Info::operator<<(short s) {
+logger::Info& logger::Info::operator<<(short s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Info& log::Info::operator<<(unsigned short s) {
+logger::Info& logger::Info::operator<<(unsigned short s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Debug& log::Debug::operator<<(std::string s) {
-  if (s == log::endl) {
+logger::Debug& logger::Debug::operator<<(std::string s) {
+  if (s == logger::endl) {
     std::cout << timestamp()
       << std::string(WHITE) + "[DEBUG] " + std::string(RESET)
       << std::string(BOLD_WHITE) << this->buf << std::string(RESET) << std::endl;
@@ -153,37 +153,37 @@ log::Debug& log::Debug::operator<<(std::string s) {
   return *this;
 }
 
-log::Debug& log::Debug::operator<<(int s) {
+logger::Debug& logger::Debug::operator<<(int s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Debug& log::Debug::operator<<(size_t s) {
+logger::Debug& logger::Debug::operator<<(size_t s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Debug& log::Debug::operator<<(unsigned int s) {
+logger::Debug& logger::Debug::operator<<(unsigned int s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Debug& log::Debug::operator<<(short s) {
+logger::Debug& logger::Debug::operator<<(short s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Debug& log::Debug::operator<<(unsigned short s) {
+logger::Debug& logger::Debug::operator<<(unsigned short s) {
   this->buf += util::itoa(s);
 
   return *this;
 }
 
-log::Info     log::info;
-log::Warning  log::warning;
-log::Error    log::error;
-log::Debug    log::debug;
+logger::Info     logger::info;
+logger::Warning  logger::warning;
+logger::Error    logger::error;
+logger::Debug    logger::debug;

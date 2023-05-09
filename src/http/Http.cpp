@@ -63,7 +63,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
     if (lower_first == "status") {
       std::vector<std::string> vs = util::split(it->second, ' ');
       if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
-      res.setStatusCode(static_cast<HttpStatus>(std::atoi(vs[0].c_str())));
+      res.setStatusCode(static_cast<HttpStatus>(util::atoi(vs[0])));
     }
     else if (lower_first == HttpResponseHeader::SET_COOKIE)
       sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
@@ -92,7 +92,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  std::ofstream out(req.getTargetPath(), std::ofstream::out);
+  std::ofstream out(req.getTargetPath().c_str(), std::ofstream::out);
   if (!out.is_open()) throw FORBIDDEN;
 
   out.write(req.getBody().c_str(), req.getBody().length());
@@ -133,7 +133,7 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
       throw (FORBIDDEN);
   }
 
-  std::ofstream out(req.getTargetPath(), std::ofstream::out);
+  std::ofstream out(req.getTargetPath().c_str(), std::ofstream::out);
   if (!out.is_open()) throw NOT_FOUND;
 
   out.write(req.getBody().c_str(), req.getBody().length());
@@ -147,16 +147,14 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
 HttpResponse Http::getErrorPage(HttpStatus status, const HttpRequest& req) {
   HttpResponse          res;
   std::string           data;
-  std::string           path;
   const LocationConfig& config = req.getLocationConfig();
 
-  std::string errorPagePath = config.getErrorPage()[status];
+  std::string errorPagePath = config.getErrorPageTargetPath(status);
   if (errorPagePath.empty())
     data = defaultErrorPage(status);
   else {
-    path = req.getTargetPath() + errorPagePath;
     try {
-      data = HttpDataFecther::readFile(path);
+      data = HttpDataFecther::readFile(errorPagePath);
     } catch (HttpStatus status) {
       data = defaultErrorPage(status);
     }

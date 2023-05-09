@@ -42,6 +42,32 @@ std::string CommonConfig::getIndex() const {
   return this->index;
 }
 
+std::string CommonConfig::combinePath(const std::string& s1, const std::string& s2) const {
+  std::string ret;
+  std::string ts1 = trimChar(s1, '/');
+  std::string ts2 = trimChar(s2, '/');
+
+  if (ts1.size() > 0)
+    ret += "/" + ts1;
+  if (ts2.size() > 0)
+    ret += "/" + ts2;
+
+  return ret;
+}
+
+std::string CommonConfig::getErrorPageTargetPath(int status) const {
+  std::string errorPagePath = getErrorPage()[status];
+  std::string ret;
+
+  if (errorPagePath == "")
+    return "";
+
+  ret = combinePath(this->root, errorPagePath);
+
+  return "." + ret;
+}
+
+
 // setter
 
 void CommonConfig::setClientMaxBodySize(int n) { this->clientMaxBodySize = n; }
@@ -53,3 +79,19 @@ void CommonConfig::addErrorPage(int statusCode, std::string path) {
 }
 
 void CommonConfig::setIndex(std::string index) { this->index = index; }
+
+std::string CommonConfig::trimChar(std::string s, char c) const {
+  size_t f, r;
+
+  f = 0;
+  while (f < s.length() && s[f] == c)
+    ++f;
+  s.erase(0, f);
+  r = s.length() - 1;
+  while (r > 0 && s[f] == c)
+    --r;
+  s.erase(r + 1, s.length() - 1 - r);
+
+  return s;
+}
+

@@ -8,7 +8,7 @@
 
 # include <fstream>
 # include <string>
-# include <exception>
+# include <stdexcept>
 # include <vector>
 
 class ConfigParser {

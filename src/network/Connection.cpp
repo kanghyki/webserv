@@ -43,8 +43,6 @@ void Connection::update(int fd, enum WHAT timeout) {
   else if (timeout == SEND)
     to = this->send_timeout;
 
-  log::debug << "update(" << fd <<  "), time: " << to << log::endl;
-
   this->table.insert(std::make_pair(fd, time(NULL) + to));
 }
 
@@ -52,8 +50,6 @@ void Connection::update(int fd, const ServerConfig& conf) {
   if (this->table.find(fd) != this->table.end()) {
     this->table.erase(fd);
   }
-
-  log::debug << "update(" << fd <<  "), time: " << conf.getKeepAliveTimeout() << log::endl;
 
   this->table.insert(std::make_pair(fd, time(NULL) + conf.getKeepAliveTimeout()));
 }

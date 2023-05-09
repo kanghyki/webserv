@@ -2,7 +2,6 @@
 # define CONNECTION_HPP
 
 # include "../config/Config.hpp"
-# include "../etc/Logger.hpp"
 
 # include <string>
 # include <set>
