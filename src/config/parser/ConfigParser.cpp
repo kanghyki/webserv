@@ -337,11 +337,7 @@ int ConfigParser::atoi(const std::string& s) const {
       throwBadSyntax();
   }
 
-  try {
-    ret = util::atoi(s.c_str());
-  } catch (std::exception& e) {
-    throwBadSyntax();
-  }
+  ret = util::atoi(s.c_str());
 
   return ret;
 }
