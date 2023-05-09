@@ -18,6 +18,7 @@ dbFile = dbPath + "/user"
 
 open(dbFile, 'a').write(form.getvalue('id') + "|" + form.getvalue("password") + "|" + form.getvalue("email") + "\n")
 
+print("status: 200 OK\r")
 print("Content-Type: text/html\r\n\r")
 
 print("<html>")

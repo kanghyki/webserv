@@ -57,7 +57,6 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
     std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
     header = util::parseCGIHeader(p.first);
     body = p.second;
-    ret.setStatusCode(OK);
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
   }
@@ -79,7 +78,6 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
 
   ret.getHeader().remove("status");
   ret.setBody(body);
-
 
   return ret;
 }

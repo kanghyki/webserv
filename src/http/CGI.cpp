@@ -55,8 +55,6 @@ const std::string CGI::getBody(void) const {
 const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) const {
   std::map<std::string, std::string> ret;
 
-//  ret.insert(std::pair<std::string, std::string>("HTTP_X_SECRET_HEADER_FOR_TEST", "1"));
-
   if (!req.getBody().empty()) {
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_LENGTH, util::itoa(req.getBody().length())));
     ret.insert(std::pair<std::string, std::string>(cgi_env::CONTENT_TYPE, req.getContentType()));
@@ -155,7 +153,7 @@ std::string CGI::execute(void) {
   if (pid == 0) {
     try {
       util::ftDup2(fd_in, STDIN_FILENO);
-//      util::ftDup2(fd_out, STDOUT_FILENO);
+      util::ftDup2(fd_out, STDOUT_FILENO);
       changeWorkingDirectory();
       util::ftExecve(this->cgiPath, this->argv, this->env);
     } catch (util::SystemFunctionException& e) {

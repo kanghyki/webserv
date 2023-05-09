@@ -127,6 +127,9 @@ std::string getStatusText(const HttpStatus statusCode) {
     case 505:
       ret = "HTTP Version Not Supported";
       break;
+    default:
+      ret = "Unsupported Status Code";
+      break;
   }
   return ret;
 }
