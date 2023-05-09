@@ -22,11 +22,10 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
 
   try {
     if (req.isCGI()) res = executeCGI(req, manager);
-    else if (req.getMethod() == request_method::GET) res = getMethod(req);
+    else if (req.getMethod() == request_method::GET || req.getMethod() == request_method::HEAD) res = getMethod(req);
     else if (req.getMethod() == request_method::POST) res = postMethod(req);
     else if (req.getMethod() == request_method::DELETE) res = deleteMethod(req);
     else if (req.getMethod() == request_method::PUT) res = putMethod(req);
-    else if (req.getMethod() == request_method::HEAD) res = headMethod(req);
   } catch (HttpStatus status) {
     res = getErrorPage(status, req.getLocationConfig());
   }
@@ -140,17 +139,6 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
 
   out.write(req.getBody().c_str(), req.getBody().length());
   if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
-
-  res.setStatusCode(NO_CONTENT);
-
-  return res;
-}
-
-HttpResponse Http::headMethod(const HttpRequest& req) {
-  HttpResponse res;
-
-  HttpDataFecther fetcher(req);
-  std::string data = fetcher.fetch();
 
   res.setStatusCode(NO_CONTENT);
 

@@ -277,6 +277,11 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(s, req.getServerConfig());
   }
 
+  if (req.getMethod() == request_method::HEAD) {
+    res.getHeader().remove(HttpRequestHeader::CONTENT_TYPE);
+    res.removeBody();
+  }
+
   int timeout = req.getServerConfig().getKeepAliveTimeout();
   int req_max = this->connection.updateRequests(fd, req.getServerConfig());
 

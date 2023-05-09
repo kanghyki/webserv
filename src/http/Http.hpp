@@ -28,7 +28,6 @@ class Http {
     static HttpResponse postMethod(const HttpRequest& req);
     static HttpResponse deleteMethod(const HttpRequest& req);
     static HttpResponse putMethod(const HttpRequest& req);
-    static HttpResponse headMethod(const HttpRequest& req);
 
     static std::string  defaultErrorPage(HttpStatus s);
 };
