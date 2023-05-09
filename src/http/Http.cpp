@@ -147,16 +147,14 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
 HttpResponse Http::getErrorPage(HttpStatus status, const HttpRequest& req) {
   HttpResponse          res;
   std::string           data;
-  std::string           path;
   const LocationConfig& config = req.getLocationConfig();
 
-  std::string errorPagePath = config.getErrorPage()[status];
+  std::string errorPagePath = config.getErrorPageTargetPath(status);
   if (errorPagePath.empty())
     data = defaultErrorPage(status);
   else {
-    path = req.getTargetPath() + errorPagePath;
     try {
-      data = HttpDataFecther::readFile(path);
+      data = HttpDataFecther::readFile(errorPagePath);
     } catch (HttpStatus status) {
       data = defaultErrorPage(status);
     }
