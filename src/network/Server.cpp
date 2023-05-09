@@ -248,7 +248,7 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
       logger::info << "Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << logger::endl;
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
-      logger::warning << "Request header message is wrong" << logger::endl;
+      logger::debug << "Request header message is wrong" << logger::endl;
       req.setError(s);
       return;
     }
