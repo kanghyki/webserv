@@ -274,25 +274,44 @@ void Server::receiveDone(int fd) {
   try {
     res = Http::processing(req, this->sessionManager);
   } catch (HttpStatus s) {
-    res = Http::getErrorPage(s, req.getServerConfig());
+    res = Http::getErrorPage(s, req);
   }
 
   if (req.getMethod() == request_method::HEAD) {
     res.getHeader().remove(HttpRequestHeader::CONTENT_TYPE);
     res.removeBody();
   }
+  addExtraHeader(fd, req, res);
+  this->connection.update(fd, Connection::SEND);
+  FD_SET(fd, &this->writes);
+  log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
+  sendData(fd);
+}
 
-  int timeout = req.getServerConfig().getKeepAliveTimeout();
-  int req_max = this->connection.updateRequests(fd, req.getServerConfig());
+void Server::sendData(int fd) {
+  HttpResponse& res = this->responses[fd];
+  std::string   data = res.toString();
+  int           ret;
 
+  if ((ret = send(fd, data.c_str(), data.length(), 0)) == -1) {
+    closeConnection(fd);
+    log::warning << "send failed" << log::endl;
+  }
+  else
+    res.addSendLength(ret);
+}
+
+void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
   // connection
   HttpRequestHeader::connection connection = req.getHeader().getConnection();
-  if (connection == HttpRequestHeader::KEEP_ALIVE)
+  if (connection == HttpRequestHeader::KEEP_ALIVE) {
+    int timeout = req.getServerConfig().getKeepAliveTimeout();
+    int req_max = this->connection.updateRequests(fd, req.getServerConfig());
     res.getHeader().set(HttpResponseHeader::CONNECTION, "keep-alive");
+    res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
+  }
   else if (connection == HttpRequestHeader::CLOSE)
     res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
-  // keep-alive
-  res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
 
   // allow
   if (res.getStatusCode() == METHOD_NOT_ALLOWED) {
@@ -309,24 +328,6 @@ void Server::receiveDone(int fd) {
 
   if (res.getStatusCode() == UPGRADE_REQUIRED)
     res.getHeader().set(HttpResponseHeader::UPGRADE, "HTTP/1.1");
-
-  log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
-  this->connection.update(fd, Connection::SEND);
-  FD_SET(fd, &this->writes);
-  sendData(fd);
-}
-
-void Server::sendData(int fd) {
-  HttpResponse& res = this->responses[fd];
-  std::string   data = res.toString();
-  int           ret;
-
-  if ((ret = send(fd, data.c_str(), data.length(), 0)) == -1) {
-    closeConnection(fd);
-    log::warning << "send failed" << log::endl;
-  }
-  else
-    res.addSendLength(ret);
 }
 
 void Server::closeConnection(int fd) {

@@ -8,17 +8,13 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
   HttpResponse res;
 
-  if (req.getRecvStatus() == HttpRequest::ERROR)
-    throw req.getErrorStatusCode();
-  if (req.getLocationConfig().getReturnRes().first != -1) {
+  checkAndThrowError(req);
+
+  if (req.getLocationConfig().isSetReturn()) {
     res.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
     res.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturnRes().second);
     return res;
   }
-  if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
-    throw (PAYLOAD_TOO_LARGE);
-  if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
-    throw (METHOD_NOT_ALLOWED);
 
   try {
     if (req.isCGI()) res = executeCGI(req, manager);
@@ -27,24 +23,29 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
     else if (req.getMethod() == request_method::DELETE) res = deleteMethod(req);
     else if (req.getMethod() == request_method::PUT) res = putMethod(req);
   } catch (HttpStatus status) {
-    res = getErrorPage(status, req.getLocationConfig());
+    res = getErrorPage(status, req);
   }
 
   return res;
 }
 
+void Http::checkAndThrowError(const HttpRequest& req) {
+  if (req.getRecvStatus() == HttpRequest::ERROR)
+    throw req.getErrorStatusCode();
+  if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
+    throw (PAYLOAD_TOO_LARGE);
+  if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
+    throw (METHOD_NOT_ALLOWED);
+}
+
 HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
-  std::string cgi_ret;
-  HttpResponse ret;
-  std::string body;
-  std::map<std::string, std::string> header;
+  std::string                         cgi_ret;
+  HttpResponse                        res;
+  std::string                         body;
+  std::map<std::string, std::string>  header;
 
   try {
     std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
-    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-    std::cout << c[SessionManager::SESSION_KEY] << std::endl;
-    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-    std::cout << sm.isSessionAvailable(c[SessionManager::SESSION_KEY]) << std::endl;
     CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
     cgi_ret = cgi.execute();
     std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
@@ -56,23 +57,23 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
 
   // FIXME:
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
-    ret.getHeader().set(it->first, it->second);
+    res.getHeader().set(it->first, it->second);
 
     std::string lower_first = util::toLowerStr(it->first);
     if (lower_first == "status") {
       std::vector<std::string> vs = util::split(it->second, ' ');
       if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
-      ret.setStatusCode(static_cast<HttpStatus>(std::atoi(vs[0].c_str())));
+      res.setStatusCode(static_cast<HttpStatus>(std::atoi(vs[0].c_str())));
     }
-    else if (lower_first == "set-cookie")
+    else if (lower_first == HttpResponseHeader::SET_COOKIE)
       sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
 
   }
 
-  ret.getHeader().remove("status");
-  ret.setBody(body);
+  res.getHeader().remove("status");
+  res.setBody(body);
 
-  return ret;
+  return res;
 }
 
 HttpResponse Http::getMethod(const HttpRequest& req) {
@@ -143,16 +144,17 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
   return res;
 }
 
-HttpResponse Http::getErrorPage(HttpStatus status, const LocationConfig& config) {
-  HttpResponse  res;
-  std::string   data;
-  std::string   path;
+HttpResponse Http::getErrorPage(HttpStatus status, const HttpRequest& req) {
+  HttpResponse          res;
+  std::string           data;
+  std::string           path;
+  const LocationConfig& config = req.getLocationConfig();
 
   std::string errorPagePath = config.getErrorPage()[status];
   if (errorPagePath.empty())
     data = defaultErrorPage(status);
   else {
-    path = "." + errorPagePath;
+    path = req.getTargetPath() + errorPagePath;
     try {
       data = HttpDataFecther::readFile(path);
     } catch (HttpStatus status) {

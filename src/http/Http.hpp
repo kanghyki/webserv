@@ -20,9 +20,10 @@ class Http {
     ~Http();
 
     static HttpResponse processing(const HttpRequest& req, SessionManager& manager);
-    static HttpResponse getErrorPage(HttpStatus s, const LocationConfig& config);
+    static HttpResponse getErrorPage(HttpStatus s, const HttpRequest& req);
 
   private:
+    static void         checkAndThrowError(const HttpRequest& req);
     static HttpResponse executeCGI(const HttpRequest& req, SessionManager& sm);
     static HttpResponse getMethod(const HttpRequest& req);
     static HttpResponse postMethod(const HttpRequest& req);

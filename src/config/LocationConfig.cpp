@@ -70,6 +70,12 @@ bool LocationConfig::isMethodAllowed(std::string method) const {
   return false;
 }
 
+bool LocationConfig::isSetReturn() const {
+  if (this->returnRes.first == -1)
+    return false;
+  return true;
+}
+
 std::pair<int, std::string> LocationConfig::getReturnRes() const { return this->returnRes; }
 
 bool LocationConfig::isAutoindex() const { return this->autoindex; }

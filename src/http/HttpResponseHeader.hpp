@@ -17,6 +17,7 @@ class HttpResponseHeader {
     static const std::string SERVER;
     static const std::string CONNECTION;
     static const std::string UPGRADE;
+    static const std::string SET_COOKIE;
 
     HttpResponseHeader();
     HttpResponseHeader(const HttpResponseHeader& obj);

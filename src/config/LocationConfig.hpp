@@ -20,6 +20,7 @@ class LocationConfig: public CommonConfig {
     std::string                         getPath() const;
     const std::vector<std::string>&     getLimitExcept() const;
     bool                                isMethodAllowed(std::string method) const;
+    bool                                isSetReturn() const;
     std::pair<int, std::string>         getReturnRes() const;
     bool                                isAutoindex() const;
     const std::vector<LocationConfig>&  getLocationConfig() const;

@@ -59,6 +59,7 @@ class Server {
     void        checkReceiveDone(int fd);
     void        receiveHeader(int fd, HttpRequest& req);
     void        receiveDone(int fd);
+    void        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
     void        sendData(int fd);
     void        closeConnection(int fd);
     void        keepAliveConnection(int fd);

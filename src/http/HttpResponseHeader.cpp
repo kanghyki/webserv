@@ -9,6 +9,7 @@ const std::string HttpResponseHeader::ALLOW = "allow";
 const std::string HttpResponseHeader::SERVER = "server";
 const std::string HttpResponseHeader::CONNECTION = "connection";
 const std::string HttpResponseHeader::UPGRADE = "upgrade";
+const std::string HttpResponseHeader::SET_COOKIE = "set-cookie";
 
 HttpResponseHeader::HttpResponseHeader() {}
 
