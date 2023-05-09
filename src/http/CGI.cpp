@@ -85,7 +85,6 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   for (std::map<std::string, std::string>::iterator it = custom.begin(); it != custom.end(); ++it) {
     std::string key = convertHeaderKey(it->first);
     ret.insert(std::pair<std::string, std::string>("HTTP_" + key, it->second));
-    log::error << "HTTP_" + key << log::endl;
   }
 
   for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {

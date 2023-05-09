@@ -70,7 +70,7 @@ inline void Server::socketaddrInit(const std::string& host, int port, sockaddr_i
   inet_pton(AF_INET, host.c_str(), &(in.sin_addr));
   in.sin_port = htons(port);
 
-  log::info << "Preparing... Host=[" << inet_ntoa(in.sin_addr) << "] Port=[" << ntohs(in.sin_port) << "]" << log::endl;
+  logger::info << "Preparing... Host=[" << inet_ntoa(in.sin_addr) << "] Port=[" << ntohs(in.sin_port) << "]" << logger::endl;
 }
 
 inline void Server::socketOpen(int servFd, sockaddr_in& in) {
@@ -79,7 +79,7 @@ inline void Server::socketOpen(int servFd, sockaddr_in& in) {
 
   for (size_t i = 0; i < BIND_MAX_TRIES; ++i) {
     if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
-      log::warning << "Bind failed... retry... " << i + 1 << log::endl;
+      logger::warning << "Bind failed... retry... " << i + 1 << logger::endl;
     else {
       bind_success = true;
       break;
@@ -92,7 +92,7 @@ inline void Server::socketOpen(int servFd, sockaddr_in& in) {
 
   for (size_t i = 0; i < LISTEN_MAX_TRIES; ++i) {
     if (listen(servFd, MANAGE_FD_MAX) == -1)
-      log::warning << "Listen failed... retry... " << i + 1 << log::endl;
+      logger::warning << "Listen failed... retry... " << i + 1 << logger::endl;
     else {
       listen_success = true;
       break;
@@ -103,7 +103,7 @@ inline void Server::socketOpen(int servFd, sockaddr_in& in) {
   if (listen_success == false)
     throw std::runtime_error("Server listen failed");
 
-  log::info << "Listening... (" << servFd << ") \n\n\"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n" << log::endl;
+  logger::info << "Listening... (" << servFd << ") \n\n\"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n" << logger::endl;
 }
 
 inline void Server::fdSetInit(fd_set& fs, int fd) {
@@ -116,14 +116,14 @@ void Server::run(void) {
 
   t.tv_sec = 1;
   t.tv_usec = 0;
-  log::info << "Server is running..." << log::endl;
+  logger::info << "Server is running..." << logger::endl;
   while (1) {
 
     fd_set readsCpy = this->reads;
     fd_set writesCpy = this->writes;
 
     if (select(this->fdMax + 1, &readsCpy, &writesCpy, 0, &t) == -1) {
-      log::error << "Select returns -1, break" << log::endl;
+      logger::error << "Select returns -1, break" << logger::endl;
       break;
     }
 
@@ -157,7 +157,7 @@ void Server::run(void) {
 
   for (size_t i = 0; i < this->listens_fd.size(); ++i)
     if (close(this->listens_fd[i]) == -1)
-      log::warning << "Closed, listen fd(" << i << ") with -1" << log::endl;
+      logger::warning << "Closed, listen fd(" << i << ") with -1" << logger::endl;
 }
 
 
@@ -168,7 +168,7 @@ void Server::acceptConnect(int server_fd) {
   size = sizeof(client_addr);
   int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &size);
   if (client_fd == -1 || fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1) {
-    log::warning << "Someone failed to accept request" << log::endl;
+    logger::warning << "Someone failed to accept request" << logger::endl;
     return ;
   }
 
@@ -177,7 +177,7 @@ void Server::acceptConnect(int server_fd) {
     this->fdMax = client_fd;
 
 
-  log::info << "Accept, client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << log::endl;
+  logger::info << "Accept, client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << logger::endl;
   this->connection.update(client_fd, Connection::HEADER);
 
   return ;
@@ -190,13 +190,13 @@ void Server::receiveData(int fd) {
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   if (recv_size <= 0) {
     if (recv_size < 0)
-      log::warning << "recv_size < 0 with client(" << fd  << ")" << log::endl;
+      logger::warning << "recv_size < 0 with client(" << fd  << ")" << logger::endl;
     closeConnection(fd);
     return ;
   }
   buf[recv_size] = 0;
-  log::debug << "recv_size: " << recv_size << log::endl;
-  log::debug << "total: " << this->recvs[fd].length() << log::endl;
+  logger::debug << "recv_size: " << recv_size << logger::endl;
+  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
   this->recvs[fd] += std::string(buf, recv_size);
   checkReceiveDone(fd);
 }
@@ -224,7 +224,7 @@ void Server::checkReceiveDone(int fd) {
       try {
         req.unchunkBody();
       } catch (HttpStatus s) {
-        log::warning << "Chunked message is wrong" << log::endl;
+        logger::warning << "Chunked message is wrong" << logger::endl;
         req.setError(s);
       }
     }
@@ -245,10 +245,10 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
 
     try {
       req.parse(header, this->config);
-      log::info << "Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << log::endl;
+      logger::info << "Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << logger::endl;
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
-      log::warning << "Request header message is wrong" << log::endl;
+      logger::warning << "Request header message is wrong" << logger::endl;
       req.setError(s);
       return;
     }
@@ -260,7 +260,7 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
       if (contentLength.empty())
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
       else {
-        req.setContentLength(std::atoi(contentLength.c_str()));
+        req.setContentLength(atoi(contentLength.c_str()));
         req.setRecvStatus(HttpRequest::BODY_RECEIVE);
       }
     }
@@ -284,7 +284,7 @@ void Server::receiveDone(int fd) {
   addExtraHeader(fd, req, res);
   this->connection.update(fd, Connection::SEND);
   FD_SET(fd, &this->writes);
-  log::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << log::endl;
+  logger::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << logger::endl;
   sendData(fd);
 }
 
@@ -295,7 +295,7 @@ void Server::sendData(int fd) {
 
   if ((ret = send(fd, data.c_str(), data.length(), 0)) == -1) {
     closeConnection(fd);
-    log::warning << "send failed" << log::endl;
+    logger::warning << "send failed" << logger::endl;
   }
   else
     res.addSendLength(ret);
@@ -336,9 +336,9 @@ void Server::closeConnection(int fd) {
   if (fd == this->fdMax)
     this->fdMax -= 1;
   if (close(fd) == -1)
-    log::warning << "Closed, client(" << fd << ") with -1" << log::endl;
+    logger::warning << "Closed, client(" << fd << ") with -1" << logger::endl;
   else
-    log::info << "Closed, client(" << fd << ")" << log::endl;
+    logger::info << "Closed, client(" << fd << ")" << logger::endl;
   this->connection.remove(fd);
   this->connection.removeRequests(fd);
   this->requests[fd] = HttpRequest();
@@ -360,12 +360,12 @@ void Server::cleanUpConnection() {
   fd_list = this->connection.getTimeoutList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
     closeConnection(*it);
-    log::info << "Timeout, client(" << *it << ") closed" << log::endl;
+    logger::info << "Timeout, client(" << *it << ") closed" << logger::endl;
   }
 
   fd_list = this->connection.getMaxRequestList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
     closeConnection(*it);
-    log::info << "Exceeded max request, client(" << *it << ") closed" << log::endl;
+    logger::info << "Exceeded max request, client(" << *it << ") closed" << logger::endl;
   }
 }

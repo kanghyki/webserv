@@ -35,7 +35,6 @@ void SessionManager::cleanUpExpired() {
     }
   }
   for (size_t i = 0; i < cleanUpList.size(); ++i) {
-    log::debug << "Cleanup Session: " << cleanUpList[i]->first << log::endl;
     this->table.erase(cleanUpList[i]);
   }
   pthread_mutex_unlock(&this->table_mutex);
@@ -45,7 +44,6 @@ std::string SessionManager::createSession(unsigned int expired_time) {
   std::string randomID;
 
   randomID = generateRandomString(SESSION_ID_LENGTH);
-  log::debug << "Create Session: " << randomID << log::endl;
 
   pthread_mutex_lock(&this->table_mutex);
   this->table.insert(std::make_pair(randomID, time(NULL) + expired_time));
@@ -56,7 +54,6 @@ std::string SessionManager::createSession(unsigned int expired_time) {
 
 void SessionManager::removeSession(std::string sessionID) {
   pthread_mutex_lock(&this->table_mutex);
-  log::debug << "Remove Session: " << sessionID << log::endl;
   this->table.erase(sessionID);
   pthread_mutex_unlock(&this->table_mutex);
 }
@@ -74,22 +71,7 @@ bool SessionManager::isSessionAvailable(std::string sessionID) {
   }
   pthread_mutex_unlock(&this->table_mutex);
 
-  if (ret == false)
-    log::debug << "SessionID(" << sessionID << ") is unavailable" << log::endl;
-  else
-    log::debug << "SessionID(" << sessionID << ") is available" << log::endl;
-
   return ret;
-}
-
-// for debug
-void SessionManager::showSession() {
-  pthread_mutex_lock(&this->table_mutex);
-  log::debug << "===========" << log::endl;
-  for (std::map<std::string, time_t>::iterator it = this->table.begin(); it != this->table.end(); ++it) {
-    std::cout << it->first << "=" << it->second << std::endl;
-  }
-  pthread_mutex_unlock(&this->table_mutex);
 }
 
 std::string SessionManager::generateRandomString(int ch) {

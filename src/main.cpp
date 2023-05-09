@@ -8,26 +8,26 @@ int main(int argc, char **argv) {
 
   if (argc < 2) {
     config_file = "default.conf";
-    log::warning << "The argument is not entered" << log::endl;
+    logger::warning << "The argument is not entered" << logger::endl;
   }
   else {
     config_file = argv[1];
     if (argc > 2)
-      log::warning << "Arguments are ignored after one argument" << log::endl;
+      logger::warning << "Arguments are ignored after one argument" << logger::endl;
   }
-  log::info << "The config file is set to [" << config_file << "]" << log::endl;
+  logger::info << "The config file is set to [" << config_file << "]" << logger::endl;
 
   try {
     ConfigParser parser;
     Config conf = parser.parse(config_file);
-    log::info << "Config parsing ok" << log::endl;
+    logger::info << "Config parsing ok" << logger::endl;
 
     Server server(conf);
-    log::info << "Server setup done" << log::endl;
+    logger::info << "Server setup done" << logger::endl;
 
     server.run();
   } catch (std::exception &e) {
-    log::error << e.what() << log::endl;
+    logger::error << e.what() << logger::endl;
     return EXIT_FAILURE;
   }
 
