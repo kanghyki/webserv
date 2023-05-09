@@ -55,12 +55,12 @@ std::string HttpDataFecther::autoindex() const {
   ret = "<!DOCTYPE html>\
     <html>\
     <head>\
-    <title>Index of " + req.getPath() + "</title>\
-    </head>\
     <style>\
     table { width: 300px; }\
     th { height: 17px; }\
     </style>\
+    <title>Index of " + req.getPath() + "</title>\
+    </head>\
     <body>\
     <h1>Index of " + req.getPath() + "</h1>\
     <table>";
@@ -70,8 +70,8 @@ std::string HttpDataFecther::autoindex() const {
     if (name == ".")
       continue;
     ret += "<tr><td>";
-    if (ent->d_type == DT_DIR) ret += "<a href=" + name + "/>" + name + "/<a></td><td align=\"right\">directory";
-    else if (ent->d_type == DT_REG) ret += "<a href=" + name + ">" + name + "<a></td><td align=\"right\">file";
+    if (ent->d_type == DT_DIR) ret += "<a href=" + name + "/>" + name + "/</a></td><td align=\"right\">directory";
+    else if (ent->d_type == DT_REG) ret += "<a href=" + name + ">" + name + "</a></td><td align=\"right\">file";
     ret += "</td></tr>\n";
   }
   ret += "</table>\
