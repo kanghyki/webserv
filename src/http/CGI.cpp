@@ -167,8 +167,6 @@ std::string CGI::execute(void) {
 
   lseek(fd_out, 0, SEEK_SET);
   ret = util::readFd(fd_out);
-  log::error << "status : " << status << log::endl;
-  log::error << "ret : " << ret << log::endl;
   fclose(file_in);
   fclose(file_out);
 
