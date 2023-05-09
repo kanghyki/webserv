@@ -4,6 +4,7 @@
 # include "./CommonConfig.hpp"
 # include "./ServerConfig.hpp"
 
+# include <stdexcept>
 # include <vector>
 
 class HttpConfig: public CommonConfig {

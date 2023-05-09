@@ -63,7 +63,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
     if (lower_first == "status") {
       std::vector<std::string> vs = util::split(it->second, ' ');
       if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
-      res.setStatusCode(static_cast<HttpStatus>(std::atoi(vs[0].c_str())));
+      res.setStatusCode(static_cast<HttpStatus>(util::atoi(vs[0])));
     }
     else if (lower_first == HttpResponseHeader::SET_COOKIE)
       sm.addSession(it->second, req.getServerConfig().getSessionTimeout());

@@ -4,6 +4,7 @@
 # include "./Token.hpp"
 
 # include <string>
+# include <cstring>
 
 class Lexer {
   public:

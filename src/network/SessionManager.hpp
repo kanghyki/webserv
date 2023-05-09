@@ -20,7 +20,6 @@ class SessionManager {
     ~SessionManager(void);
 
     void                          cleanUpExpired(void);
-    std::string                   createSession(unsigned int expired_time);
     void                          removeSession(std::string sessionID);
     bool                          isSessionAvailable(std::string sessionID);
     void                          addSession(const std::string& sessionID, unsigned int expired_time);
@@ -32,8 +31,6 @@ class SessionManager {
     // sessionID, time(sec)
     std::map<std::string, time_t> table;
     pthread_mutex_t               table_mutex;
-
-    std::string                   generateRandomString(int ch);
 };
 
 #endif

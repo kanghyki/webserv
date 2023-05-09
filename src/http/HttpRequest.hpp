@@ -8,6 +8,7 @@
 # include "../config/Config.hpp"
 # include "../etc/Logger.hpp"
 
+# include <cstring>
 # include <sstream>
 # include <stdexcept>
 # include <string>
@@ -35,6 +36,8 @@ class HttpRequest {
     HttpRequest();
     ~HttpRequest();
     HttpRequest& operator=(const HttpRequest& obj);
+    HttpRequest(const HttpRequest& obj);
+
 
     void                                  parse(const std::string& req, const Config& conf);
     void                                  unchunkBody();
@@ -66,8 +69,6 @@ class HttpRequest {
     void                                  setError(HttpStatus status);
 
   private:
-    HttpRequest(const HttpRequest& obj);
-
     static const size_t                   URL_MAX_LENGTH;
 
     std::string                           method;

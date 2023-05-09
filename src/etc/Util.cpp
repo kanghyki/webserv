@@ -91,10 +91,16 @@ namespace util {
     return ss.str();
   }
 
+  int atoi(std::string s) {
+    int ret = std::atoi(s.c_str());
+
+    return ret;
+  }
+
   void  writeFile(const std::string& filename, const std::string& data) {
     std::ofstream out(filename, std::ofstream::out);
     if (!out.is_open()) throw util::IOException();
-    
+
     out.write(data.c_str(), data.length());
     if (out.fail() || out.bad() || out.eof()) throw util::IOException();
   }

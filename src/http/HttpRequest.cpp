@@ -12,6 +12,24 @@ HttpRequest::HttpRequest():
 
 HttpRequest::~HttpRequest() {}
 
+HttpRequest::HttpRequest(const HttpRequest& obj):
+  method(obj.method),
+  path(obj.path),
+  queryString(obj.queryString),
+  version(obj.version),
+  body(obj.body),
+  header(obj.header),
+  sc(obj.sc),
+  lc(obj.lc),
+  cgi(obj.cgi),
+  scriptPath(obj.scriptPath),
+  cgiPath(obj.getCGIPath()),
+  pathInfo(obj.pathInfo),
+  recv_status(obj.recv_status),
+  contentLength(obj.contentLength),
+  errorStatusCode(obj.errorStatusCode) {
+}
+
 HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
   if (this != &obj) {
     this->method = obj.method;
@@ -83,7 +101,7 @@ void HttpRequest::validateURI(const std::string &path) {
   if (path.length() > URL_MAX_LENGTH)     throw URI_TOO_LONG;
   if (path[i++] != '/')                   throw BAD_REQUEST;
   while (i < path.length()) {
-    if (!std::isalnum(path[i]) && !std::strchr(":%._\\+~#?&/=-", path[i]))
+    if (!std::isalnum(path[i]) && !strchr(":%._\\+~#?&/=-", path[i]))
       throw BAD_REQUEST;
     ++i;
   }

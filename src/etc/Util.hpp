@@ -1,6 +1,7 @@
 #ifndef UTIL_HPP
 # define UTIL_HPP
 
+# include <cstdlib>
 # include <fstream>
 # include <sstream>
 # include <vector>
@@ -19,6 +20,7 @@ namespace util {
   std::string toLowerStr(const std::string& s);
   std::string toUpperStr(const std::string& s);
   std::string itoa(int n);
+  int atoi(std::string s);
   const std::string getMimeType(const std::string& filename);
   void writeFile(const std::string& filename, const std::string& data);
   int ftFork(void);

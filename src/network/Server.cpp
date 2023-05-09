@@ -260,7 +260,7 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
       if (contentLength.empty())
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
       else {
-        req.setContentLength(atoi(contentLength.c_str()));
+        req.setContentLength(util::atoi(contentLength));
         req.setRecvStatus(HttpRequest::BODY_RECEIVE);
       }
     }

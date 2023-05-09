@@ -40,18 +40,6 @@ void SessionManager::cleanUpExpired() {
   pthread_mutex_unlock(&this->table_mutex);
 }
 
-std::string SessionManager::createSession(unsigned int expired_time) {
-  std::string randomID;
-
-  randomID = generateRandomString(SESSION_ID_LENGTH);
-
-  pthread_mutex_lock(&this->table_mutex);
-  this->table.insert(std::make_pair(randomID, time(NULL) + expired_time));
-  pthread_mutex_unlock(&this->table_mutex);
-
-  return randomID;
-}
-
 void SessionManager::removeSession(std::string sessionID) {
   pthread_mutex_lock(&this->table_mutex);
   this->table.erase(sessionID);
@@ -70,17 +58,6 @@ bool SessionManager::isSessionAvailable(std::string sessionID) {
     ret = false;
   }
   pthread_mutex_unlock(&this->table_mutex);
-
-  return ret;
-}
-
-std::string SessionManager::generateRandomString(int ch) {
-  std::string ret = "";
-  std::string letterTable = "abcdefghijklmnopqrstuvwx";
-
-  srand(time(0));
-  for (int i = 0; i < ch; i++)
-    ret = ret + letterTable[rand() % letterTable.length()];
 
   return ret;
 }

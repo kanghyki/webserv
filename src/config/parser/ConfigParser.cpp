@@ -312,7 +312,7 @@ void ConfigParser::expectCurToken(const std::string& expected) const {
 }
 
 std::string ConfigParser::errorPrefix() const {
-  return this->fileName + " " + std::to_string(curToken().getLineNumber()) + ":" + util::itoa(curToken().getPos()) + " ";
+  return this->fileName + " " + util::itoa(curToken().getLineNumber()) + ":" + util::itoa(curToken().getPos()) + " ";
 }
 
 void ConfigParser::throwError(const std::string& desc) const {
@@ -330,7 +330,7 @@ void ConfigParser::throwBadSyntax() const {
 }
 
 int ConfigParser::atoi(const std::string& s) const {
-  int ret;
+  int ret = 0;
 
   for (size_t i = 0; i < s.length(); ++i) {
     if (std::isdigit(s[i]) == false)
@@ -338,7 +338,7 @@ int ConfigParser::atoi(const std::string& s) const {
   }
 
   try {
-    ret = std::atoi(s.c_str());
+    ret = util::atoi(s.c_str());
   } catch (std::exception& e) {
     throwBadSyntax();
   }
