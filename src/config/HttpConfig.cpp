@@ -54,7 +54,15 @@ void HttpConfig::setClientBodyTimeout(int n) { this->client_body_timeout = n; }
 
 void HttpConfig::setSendTimeout(int n) { this->send_timeout = n; }
 
-void HttpConfig::addServerConfig(ServerConfig server) { servers.push_back(server); }
+void HttpConfig::addServerConfig(ServerConfig server) {
+  for (size_t i = 0; i < this->servers.size(); ++i) {
+    if (this->servers[i].getPort() == server.getPort())
+      throw std::runtime_error("Server blocks on the same port are not allowed");
+    if (this->servers[i].getServerName() == server.getServerName())
+      throw std::runtime_error("Server blocks on the same server_name are not allowed");
+  }
+  this->servers.push_back(server);
+}
 
 //
 
