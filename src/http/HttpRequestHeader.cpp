@@ -56,7 +56,6 @@ std::pair<std::string, std::string> HttpRequestHeader::splitField(std::string li
   std::string value;
   size_t pos;
 
-  std::cout << line << std::endl;
   if ((pos = line.find(":")) == std::string::npos) throw BAD_REQUEST;
   field = util::trimSpace(line.substr(0, pos));
   value = util::trimSpace(line.substr(pos + 1));

@@ -47,7 +47,7 @@ OBJS_DIR	=	./obj
 OBJS			=	$(addprefix $(OBJS_DIR)/, $(SRCS:.cpp=.o))
 CXX				=	c++
 CPPFLAGS	=	-I$(INCS)
-CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -g
+CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -fsanitize=address -g3
 RM				=	rm -rf
 
 vpath %.cpp $(SRCS_DIR) $(CONFIG_DIR) $(PARSER_DIR) $(HTTP_DIR) $(NETWORK_DIR) $(ETC_DIR)

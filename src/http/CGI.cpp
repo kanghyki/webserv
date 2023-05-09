@@ -87,10 +87,10 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
     ret.insert(std::pair<std::string, std::string>("HTTP_" + key, it->second));
     log::error << "HTTP_" + key << log::endl;
   }
-
-  for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
-    std::cout << it->first << " : " << it->second << std::endl;
-  }
+//
+//  for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
+//    std::cout << it->first << " : " << it->second << std::endl;
+//  }
 
   return ret;
 }
