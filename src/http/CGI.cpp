@@ -140,7 +140,8 @@ std::string CGI::execute(void) {
   fd_in = fileno(file_in);
   fd_out = fileno(file_out);
 
-  write(fd_in, getBody().c_str(), getBody().length());
+  if (write(fd_in, getBody().c_str(), getBody().length()) == -1)
+    throw INTERNAL_SERVER_ERROR;
   lseek(fd_in, 0, SEEK_SET);
 
   try {
@@ -165,7 +166,8 @@ std::string CGI::execute(void) {
     throw INTERNAL_SERVER_ERROR;
 
   lseek(fd_out, 0, SEEK_SET);
-  ret = util::readFd(fd_out);
+  if ((ret = util::readFd(fd_out)).empty())
+    throw INTERNAL_SERVER_ERROR;
   fclose(file_in);
   fclose(file_out);
 

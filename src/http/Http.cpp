@@ -92,7 +92,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  std::ofstream out(req.getTargetPath(), std::ofstream::out);
+  std::ofstream out(req.getTargetPath().c_str(), std::ofstream::out);
   if (!out.is_open()) throw FORBIDDEN;
 
   out.write(req.getBody().c_str(), req.getBody().length());
@@ -133,7 +133,7 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
       throw (FORBIDDEN);
   }
 
-  std::ofstream out(req.getTargetPath(), std::ofstream::out);
+  std::ofstream out(req.getTargetPath().c_str(), std::ofstream::out);
   if (!out.is_open()) throw NOT_FOUND;
 
   out.write(req.getBody().c_str(), req.getBody().length());

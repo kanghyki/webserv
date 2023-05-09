@@ -148,14 +148,13 @@ void HttpRequest::unchunkBody(void) {
   size_t            s_pos = 0;
   size_t            e_pos;
   bool              is_hex = true;
-  size_t            read_size;
+  size_t            read_size = 0;
 
   while ((e_pos = this->body.find("\r\n", s_pos)) != std::string::npos) {
     s = this->body.substr(s_pos, e_pos - s_pos);
 
-    if (is_hex == true) {
+    if (is_hex == true)
       read_size = strToHex(s);
-    }
     else if (read_size == 0)
       break;
     else if (read_size == s.size())

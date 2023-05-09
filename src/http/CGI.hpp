@@ -5,6 +5,7 @@
 # include <map>
 # include <cstring>
 # include <fcntl.h>
+# include <sys/wait.h>
 
 # include "./HttpRequest.hpp"
 # include "../etc/Util.hpp"

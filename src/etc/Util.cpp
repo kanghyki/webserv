@@ -53,7 +53,7 @@ namespace util {
   }
 
   std::string readFile(const std::string& fileName) {
-    std::ifstream in(fileName, std::ifstream::in);
+    std::ifstream in(fileName.c_str(), std::ifstream::in);
     std::string line;
     std::string ret;
 
@@ -98,7 +98,7 @@ namespace util {
   }
 
   void  writeFile(const std::string& filename, const std::string& data) {
-    std::ofstream out(filename, std::ofstream::out);
+    std::ofstream out(filename.c_str(), std::ofstream::out);
     if (!out.is_open()) throw util::IOException();
 
     out.write(data.c_str(), data.length());
@@ -115,14 +115,16 @@ namespace util {
 
   std::string readFd(int fd) {
     std::string ret;
-    int readSize;
-    int bufSize = 128;
-    char buf[bufSize + 1];
+    int         readSize;
+    int         bufSize = 128;
+    char        buf[bufSize + 1];
 
     while ((readSize = read(fd, buf, bufSize)) > 0) {
       buf[readSize] = 0;
       ret += buf;
     }
+    if (readSize == -1)
+      return "";
 
     return ret;
   }
