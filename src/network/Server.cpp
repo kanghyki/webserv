@@ -238,9 +238,10 @@ void Server::checkReceiveDone(int fd) {
     }
   }
 
-  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE ||
-      req.getRecvStatus() == HttpRequest::ERROR)
+  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE || req.getRecvStatus() == HttpRequest::ERROR) {
+    this->recvs[fd] = "";
     receiveDone(fd);
+  }
 }
 
 void Server::receiveHeader(int fd, HttpRequest& req) {
