@@ -138,10 +138,10 @@ void Server::run(void) {
 
       if (FD_ISSET(i, &this->writes)) {
         if (FD_ISSET(i, &writesCpy)) {
-          HttpResponse& res = this->responses[i];
-          if (res.isSendStatus(HttpResponse::SENDING))
+          HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
+          if (send_status == HttpResponse::SENDING)
             sendData(i);
-          else if (res.isSendStatus(HttpResponse::DONE)) {
+          else if (send_status == HttpResponse::DONE) {
             if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
               closeConnection(i);
             else

@@ -65,16 +65,6 @@ HttpResponse::SendStatus HttpResponse::getSendStatus() const {
   return SENDING;
 }
 
-bool HttpResponse::isSendStatus(SendStatus s) const {
-  SendStatus cur;
-
-  cur = getSendStatus();
-
-  if (cur == s)
-    return true;
-  return false;
-}
-
 /*
  * -------------------------- Setter -------------------------------
  */
