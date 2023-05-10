@@ -97,3 +97,15 @@ void LocationConfig::setReturnRes(int status, std::string path) {
 void LocationConfig::setAutoindex(bool autoIndex) { this->autoindex = autoIndex; }
 
 void LocationConfig::addLocationConfig(LocationConfig location) { this->locations.push_back(location); }
+
+std::string LocationConfig::toStringLimitExcept() const {
+  std::string ret;
+
+  for (size_t i = 0; i < this->limitExcept.size(); ++i) {
+    ret += this->limitExcept[i];
+    if (i + 1 < this->limitExcept.size())
+      ret += ", ";
+  }
+
+  return ret;
+}

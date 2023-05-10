@@ -31,6 +31,8 @@ class LocationConfig: public CommonConfig {
     void                                setAutoindex(bool autoindex);
     void                                addLocationConfig(LocationConfig location);
 
+    std::string                         toStringLimitExcept() const;
+
   private:
     static const bool                   DEFAULT_AUTOINDEX;
     static const std::string            DEFAULT_PATH;

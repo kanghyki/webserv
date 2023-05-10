@@ -43,10 +43,13 @@ void Connection::update(int fd, const ServerConfig& conf) {
 }
 
 int Connection::updateRequests(int fd, const ServerConfig& conf) {
+  int config_max = conf.getKeepAliveRequests();
   int reqs;
 
   if (this->req_table.find(fd) != this->req_table.end()) {
     reqs = this->req_table[fd] - 1;
+    if (config_max < reqs)
+      reqs = config_max;
     this->req_table.erase(fd);
   }
   else

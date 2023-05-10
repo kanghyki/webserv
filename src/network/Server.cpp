@@ -200,8 +200,8 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
-  logger::debug << "recv_size: " << recv_size << logger::endl;
-  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
+//  logger::debug << "recv_size: " << recv_size << logger::endl;
+//  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
   this->recvs[fd] += std::string(buf, recv_size);
   checkReceiveDone(fd);
 }
@@ -331,17 +331,8 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
     res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
 
   // allow
-  if (res.getStatusCode() == METHOD_NOT_ALLOWED) {
-    std::vector<std::string> vs = req.getLocationConfig().getLimitExcept();
-    std::string value;
-
-    for (size_t i = 0; i < vs.size(); ++i) {
-      value += vs[i];
-      if (i + 1 < vs.size())
-        value += ", ";
-    }
-    res.getHeader().set(HttpResponseHeader::ALLOW, value);
-  }
+  if (res.getStatusCode() == METHOD_NOT_ALLOWED)
+    res.getHeader().set(HttpResponseHeader::ALLOW, req.getLocationConfig().toStringLimitExcept());
 
   if (res.getStatusCode() == UPGRADE_REQUIRED)
     res.getHeader().set(HttpResponseHeader::UPGRADE, "HTTP/1.1");
