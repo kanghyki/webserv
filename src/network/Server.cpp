@@ -323,7 +323,7 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
       res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
     }
     else {
-      req.setConnection(HttpRequestHeader::CLOSE);
+      req.setConnection(HttpRequestHeader::CLOSE); // for closeConnection
       res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
     }
   }
