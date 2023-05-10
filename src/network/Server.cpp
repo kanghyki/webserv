@@ -218,7 +218,6 @@ void Server::checkReceiveDone(int fd) {
       size_t pos = this->recvs[fd].find(CHUNKED_DELIMETER);
       if (pos != std::string::npos) {
         req.setBody(this->recvs[fd].substr(0, pos));
-        this->recvs[fd] = this->recvs[fd].substr(pos + CHUNKED_DELIMETER.length());
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
         try {
           req.unchunkBody();
@@ -233,7 +232,6 @@ void Server::checkReceiveDone(int fd) {
 
       if (req.getContentLength() <= static_cast<int>(recvs[fd].length())) {
         req.setBody(this->recvs[fd].substr(0, req.getContentLength()));
-        this->recvs[fd] = this->recvs[fd].substr(req.getContentLength());
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
       }
 
@@ -341,14 +339,17 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
 void Server::closeConnection(int fd) {
   if (FD_ISSET(fd, &this->writes)) FD_CLR(fd, &this->writes);
   if (FD_ISSET(fd, &this->reads)) FD_CLR(fd, &this->reads);
+
   if (fd == this->fdMax)
     this->fdMax -= 1;
   if (close(fd) == -1)
     logger::warning << "Closed, client(" << fd << ") with -1" << logger::endl;
   else
     logger::info << "Closed, client(" << fd << ")" << logger::endl;
+
   this->connection.remove(fd);
   this->connection.removeRequests(fd);
+
   this->requests[fd] = HttpRequest();
   this->responses[fd] = HttpResponse();
   this->recvs[fd] = "";
@@ -356,9 +357,12 @@ void Server::closeConnection(int fd) {
 
 void Server::keepAliveConnection(int fd) {
   FD_CLR(fd, &this->writes);
+
   this->connection.update(fd, this->requests[fd].getServerConfig());
+
   this->requests[fd] = HttpRequest();
   this->responses[fd] = HttpResponse();
+  this->recvs[fd] = "";
 }
 
 void Server::cleanUpConnection() {
