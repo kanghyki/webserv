@@ -55,11 +55,16 @@ Server::~Server(void) {}
  */
 
 inline int Server::socketInit(void) {
-  int sock = socket(AF_INET, SOCK_STREAM, 0);
-  if (sock == -1)
+  int fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (fd == -1)
     throw std::runtime_error("Server initialization failed");
 
-  return sock;
+  // for develop
+  int option = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+  // -----------
+
+  return fd;
 }
 
 inline void Server::socketaddrInit(const std::string& host, int port, sockaddr_in& in) {
