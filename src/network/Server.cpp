@@ -148,7 +148,6 @@ void Server::run(void) {
               keepAliveConnection(i);
           }
         }
-
       }
       else if (FD_ISSET(i, &readsCpy)) {
         if (FD_ISSET(i, &this->listens))
@@ -156,6 +155,8 @@ void Server::run(void) {
         else
           receiveData(i);
       }
+      else if (this->recvs[i].empty() == false)
+        checkReceiveDone(i);
     }
   }
 
@@ -213,29 +214,34 @@ void Server::checkReceiveDone(int fd) {
 
   if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
-      if (this->recvs[fd].find(CHUNKED_DELIMETER) != std::string::npos)
+
+      size_t pos = this->recvs[fd].find(CHUNKED_DELIMETER);
+      if (pos != std::string::npos) {
+        req.setBody(this->recvs[fd].substr(0, pos));
+        this->recvs[fd] = this->recvs[fd].substr(pos + CHUNKED_DELIMETER.length());
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
+        try {
+          req.unchunkBody();
+        } catch (HttpStatus s) {
+          logger::warning << "Chunked message is wrong" << logger::endl;
+          req.setError(s);
+        }
+      }
+
     }
     else if (req.getHeader().getTransferEncoding() == HttpRequestHeader::UNSET) {
-      if (req.getContentLength() == static_cast<int>(recvs[fd].length()))
+
+      if (req.getContentLength() <= static_cast<int>(recvs[fd].length())) {
+        req.setBody(this->recvs[fd].substr(0, req.getContentLength()));
+        this->recvs[fd] = this->recvs[fd].substr(req.getContentLength());
         req.setRecvStatus(HttpRequest::RECEIVE_DONE);
-    }
-  }
-
-  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE) {
-    req.setBody(this->recvs[fd]);
-    if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
-      try {
-        req.unchunkBody();
-      } catch (HttpStatus s) {
-        logger::warning << "Chunked message is wrong" << logger::endl;
-        req.setError(s);
       }
+
     }
-    receiveDone(fd);
   }
 
-  if (req.getRecvStatus() == HttpRequest::ERROR)
+  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE ||
+      req.getRecvStatus() == HttpRequest::ERROR)
     receiveDone(fd);
 }
 
@@ -356,7 +362,6 @@ void Server::keepAliveConnection(int fd) {
   this->connection.update(fd, this->requests[fd].getServerConfig());
   this->requests[fd] = HttpRequest();
   this->responses[fd] = HttpResponse();
-  this->recvs[fd] = "";
 }
 
 void Server::cleanUpConnection() {
