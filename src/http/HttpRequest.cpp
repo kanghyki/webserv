@@ -305,3 +305,7 @@ void HttpRequest::setError(HttpStatus status) {
   this->errorStatusCode = status;
   this->recv_status = ERROR;
 }
+
+void HttpRequest::setConnection(HttpRequestHeader::connection c) {
+  this->header.setConnection(c);
+}

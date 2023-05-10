@@ -38,6 +38,8 @@ class HttpRequestHeader {
     transfer_encoding                         getTransferEncoding() const;
     const std::map<std::string, std::string>  getCustomeHeader() const;
 
+    void                                      setConnection(connection conn);
+
   private:
     std::map<std::string, std::string>  header;
     connection                          conn;
@@ -46,7 +48,6 @@ class HttpRequestHeader {
     void parseConnection();
     void parseTransferEncoding();
 
-    void setConnection(connection conn);
     void setTransferEncoding(transfer_encoding te);
 
     std::pair<std::string, std::string> splitField(std::string line);

@@ -318,8 +318,12 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
   if (connection == HttpRequestHeader::KEEP_ALIVE) {
     int timeout = req.getServerConfig().getKeepAliveTimeout();
     int req_max = this->connection.updateRequests(fd, req.getServerConfig());
-    res.getHeader().set(HttpResponseHeader::CONNECTION, "keep-alive");
-    res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
+    if (req_max > 0) {
+      res.getHeader().set(HttpResponseHeader::CONNECTION, "keep-alive");
+      res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
+    }
+    else
+      res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
   }
   else if (connection == HttpRequestHeader::CLOSE)
     res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
@@ -369,13 +373,13 @@ void Server::cleanUpConnection() {
 
   fd_list = this->connection.getTimeoutList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    logger::info << "Timeout, client(" << *it << ")" << logger::endl;
     closeConnection(*it);
-    logger::info << "Timeout, client(" << *it << ") closed" << logger::endl;
   }
 
   fd_list = this->connection.getMaxRequestList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    logger::info << "Exceeded max request, client(" << *it << ")" << logger::endl;
     closeConnection(*it);
-    logger::info << "Exceeded max request, client(" << *it << ") closed" << logger::endl;
   }
 }

@@ -67,6 +67,7 @@ class HttpRequest {
     void                                  setRecvStatus(recvStatus status);
     void                                  setContentLength(int len);
     void                                  setError(HttpStatus status);
+    void                                  setConnection(HttpRequestHeader::connection c);
 
   private:
     static const size_t                   URL_MAX_LENGTH;
