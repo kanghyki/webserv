@@ -177,7 +177,7 @@ std::string CGI::execute(void) {
 void CGI::changeWorkingDirectory(void) {
   std::string target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
-  if (chdir(target.c_str()) == -1) throw INTERNAL_SERVER_ERROR;
+  if (chdir(target.c_str()) == -1) throw util::SystemFunctionException();
 }
 
 const std::string CGI::getCurrentPath(void) const {
