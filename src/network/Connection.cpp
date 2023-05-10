@@ -20,18 +20,6 @@ std::set<int> Connection::getTimeoutList() {
   return timeout_fd_list;
 }
 
-std::set<int> Connection::getMaxRequestList() {
-  std::set<int> max_request_list;
-
-  for (std::map<int, int>::iterator it = this->req_table.begin(); it != this->req_table.end(); ++it) {
-    if (it->second <= 0) {
-      max_request_list.insert(it->first);
-    }
-  }
-
-  return max_request_list;
-}
-
 void Connection::update(int fd, enum WHAT timeout) {
   int to = 60;
 

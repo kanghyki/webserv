@@ -21,7 +21,6 @@ class Connection {
     };
 
     std::set<int>             getTimeoutList();
-    std::set<int>             getMaxRequestList();
 
     void                      update(int fd, enum WHAT timeout);
     void                      update(int fd, const ServerConfig& conf);
