@@ -12,7 +12,7 @@
 class HttpResponse {
 
   public:
-    enum sendStatus {
+    enum SendStatus {
       SENDING,
       DONE
     };
@@ -28,7 +28,7 @@ class HttpResponse {
     void                                addSendLength(unsigned int length);
 
     HttpStatus                          getStatusCode() const;
-    sendStatus                          getSendStatus() const;
+    bool                                isSendStatus(SendStatus status) const;
     HttpResponseHeader&                 getHeader();
 
     std::string                         toString() throw();
@@ -46,6 +46,7 @@ class HttpResponse {
     unsigned int                        sendLength;
 
     std::string                         makeStatusLine() const;
+    SendStatus                          getSendStatus() const;
     std::string                         getCurrentTimeStr() const;
 };
 

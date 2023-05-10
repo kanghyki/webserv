@@ -59,10 +59,20 @@ HttpStatus HttpResponse::getStatusCode() const {
   return this->statusCode;
 }
 
-HttpResponse::sendStatus HttpResponse::getSendStatus() const {
+HttpResponse::SendStatus HttpResponse::getSendStatus() const {
   if (this->buffer_size == this->sendLength)
     return DONE;
   return SENDING;
+}
+
+bool HttpResponse::isSendStatus(SendStatus s) const {
+  SendStatus cur;
+
+  cur = getSendStatus();
+
+  if (cur == s)
+    return true;
+  return false;
 }
 
 /*
