@@ -291,14 +291,15 @@ void Server::receiveDone(int fd) {
 void Server::sendData(int fd) {
   HttpResponse& res = this->responses[fd];
   std::string   data = res.toString();
-  int           ret;
+  int           send_size;
 
-  if ((ret = send(fd, data.c_str(), data.length(), 0)) == -1) {
+  if ((send_size = send(fd, data.c_str(), data.length(), 0)) <= 0) {
+    if (send_size == -1)
+      logger::warning << "send_size < 0 with client(" << fd  << ")" << logger::endl;
     closeConnection(fd);
-    logger::warning << "send failed" << logger::endl;
   }
   else
-    res.addSendLength(ret);
+    res.addSendLength(send_size);
 }
 
 void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
