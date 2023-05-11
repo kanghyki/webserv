@@ -29,8 +29,8 @@ class Server {
     static const size_t       BIND_MAX_TRIES;
     static const size_t       LISTEN_MAX_TRIES;
     static const size_t       TRY_SLEEP_TIME;
-    static const int          BUF_SIZE;
-    static const int          MANAGE_FD_MAX;
+    static const size_t       BUF_SIZE;
+    static const size_t       MANAGE_FD_MAX;
 
     static const std::string  HEADER_DELIMETER;
     static const std::string  CHUNKED_DELIMETER;
