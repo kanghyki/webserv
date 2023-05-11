@@ -1,7 +1,7 @@
 #ifndef HTTP_REQUEST_HPP
 # define HTTP_REQUEST_HPP
 
-# include "./HttpRequestHeader.hpp"
+# include "./header/HttpRequestHeader.hpp"
 # include "./HttpStatus.hpp"
 # include "./MimeType.hpp"
 # include "../etc/Util.hpp"
