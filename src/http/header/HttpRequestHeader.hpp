@@ -45,10 +45,10 @@ class HttpRequestHeader {
     connection                          conn;
     transfer_encoding                   te;
 
-    void parseConnection();
-    void parseTransferEncoding();
+    void                                parseConnection();
+    void                                parseTransferEncoding();
 
-    void setTransferEncoding(transfer_encoding te);
+    void                                setTransferEncoding(transfer_encoding te);
 
     std::pair<std::string, std::string> splitField(std::string line);
 };

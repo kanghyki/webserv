@@ -33,7 +33,6 @@ class HttpResponseHeader {
     std::string toStringForResponse();
 
   private:
-
     HttpHeader  header;
 
     std::string makeHeaderStr(const std::string& key, const std::string& value);
