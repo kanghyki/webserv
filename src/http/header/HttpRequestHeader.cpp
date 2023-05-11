@@ -86,7 +86,7 @@ const std::map<std::string, std::string>  HttpRequestHeader::getCustomeHeader() 
   hd = this->header.getCopy();
   std::map<std::string, std::string>::const_iterator it = hd.begin();
   for (; it != hd.end(); ++it) {
-    if (it->first[0] == 'X')
+    if (it->first[0] == 'x')
       ret.insert(std::pair<std::string, std::string>(it->first, it->second));
   }
 
