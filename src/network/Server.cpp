@@ -3,7 +3,7 @@
 const size_t        Server::BIND_MAX_TRIES = 10;
 const size_t        Server::LISTEN_MAX_TRIES = 10;
 const size_t        Server::TRY_SLEEP_TIME = 5;
-const int           Server::BUF_SIZE = 1024 * 12;
+const int           Server::BUF_SIZE = 1024 * 128;
 const int           Server::MANAGE_FD_MAX = 1024;
 const std::string   Server::HEADER_DELIMETER = "\r\n\r\n";
 const std::string   Server::CHUNKED_DELIMETER = "0\r\n\r\n";
@@ -187,8 +187,8 @@ void Server::acceptConnect(int server_fd) {
 }
 
 void Server::receiveData(int fd) {
-  char buf[BUF_SIZE + 1];
-  int recv_size;
+  static char buf[BUF_SIZE + 1];
+  int         recv_size;
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   if (recv_size <= 0) {
@@ -198,9 +198,9 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
-//  logger::debug << "recv_size: " << recv_size << logger::endl;
-//  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
+  logger::debug << "recv_size: " << recv_size << logger::endl;
   this->recvs[fd] += std::string(buf, recv_size);
+  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
   checkReceiveDone(fd);
 }
 
