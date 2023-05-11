@@ -155,8 +155,6 @@ void Server::run(void) {
         else
           receiveData(i);
       }
-      else if (this->recvs[i].empty() == false)
-        checkReceiveDone(i);
     }
   }
 
@@ -254,7 +252,11 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
 
     try {
       req.parse(header, this->config);
-      logger::info << "Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << logger::endl;
+      logger::info << "Request from " << fd
+        << " to " << req.getServerConfig().getServerName()
+        << ", Method=\"" << req.getMethod()
+        << "\" URI=\"" << req.getPath() << "\""
+        << logger::endl;
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
       logger::debug << "Request header message is wrong" << logger::endl;
@@ -293,7 +295,10 @@ void Server::receiveDone(int fd) {
   addExtraHeader(fd, req, res);
   this->connection.update(fd, Connection::SEND);
   FD_SET(fd, &this->writes);
-  logger::info << "Response to " << fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << logger::endl;
+  logger::info << "Response to " << fd
+    << " from " << req.getServerConfig().getServerName()
+    << ", Status=" << res.getStatusCode()
+    << logger::endl;
   sendData(fd);
 }
 
