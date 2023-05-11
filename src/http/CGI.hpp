@@ -6,6 +6,7 @@
 # include <cstring>
 # include <fcntl.h>
 # include <sys/wait.h>
+# include <sys/select.h>
 
 # include "./HttpRequest.hpp"
 # include "../etc/Util.hpp"
@@ -17,7 +18,12 @@ class CGI {
   public:
     CGI(const HttpRequest& req, const bool sessionAvailable);
     ~CGI(void);
-    std::string execute(void);
+    void execute(fd_set& reads, fd_set& writes);
+
+    pid_t getChildPid() const;
+    int   getReadFd() const;
+    int   getWriteFd() const;
+    int   getStatus() const;
 
   private:
     static const int READ = 0;
@@ -30,6 +36,10 @@ class CGI {
     std::string pathInfo;
     std::string body;
     bool        sessionAvailable;
+    pid_t       childPid;
+    int         readFd;
+    int         writeFd;
+    int         status;
 
     const std::map<std::string, std::string> getEnvMap(const HttpRequest& req) const;
     char** getArgv() const;

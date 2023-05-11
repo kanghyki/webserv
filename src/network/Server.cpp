@@ -138,22 +138,32 @@ void Server::run(void) {
 
       if (FD_ISSET(i, &this->writes)) {
         if (FD_ISSET(i, &writesCpy)) {
-          HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
-          if (send_status == HttpResponse::SENDING)
-            sendData(i);
-          else if (send_status == HttpResponse::DONE) {
-            if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
-              closeConnection(i);
-            else
-              keepAliveConnection(i);
+          if (checkCGIFd(i)) {
+            // writing or writing done
+          }
+          else {
+            HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
+            if (send_status == HttpResponse::SENDING)
+              sendData(i);
+            else if (send_status == HttpResponse::DONE) {
+              if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
+                closeConnection(i);
+              else
+                keepAliveConnection(i);
+            }
           }
         }
       }
       else if (FD_ISSET(i, &readsCpy)) {
-        if (FD_ISSET(i, &this->listens))
-          acceptConnect(i);
-        else
-          receiveData(i);
+        if (checkCGIFd(i)) {
+          // reading or reading done
+        }
+        else {
+          if (FD_ISSET(i, &this->listens))
+            acceptConnect(i);
+          else
+            receiveData(i);
+        }
       }
     }
   }
@@ -198,8 +208,6 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
-//  logger::debug << "recv_size: " << recv_size << logger::endl;
-//  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
   this->recvs[fd] += std::string(buf, recv_size);
   checkReceiveDone(fd);
 }
@@ -283,7 +291,7 @@ void Server::receiveDone(int fd) {
   HttpResponse& res = this->responses[fd];
 
   try {
-    res = Http::processing(req, this->sessionManager);
+    res = Http::processing(req, this->sessionManager, this->reads, this->writes, this->cgis);
   } catch (HttpStatus s) {
     res = Http::getErrorPage(s, req);
   }
@@ -378,4 +386,21 @@ void Server::cleanUpConnection() {
     logger::info << "Timeout, client(" << *it << ")" << logger::endl;
     closeConnection(*it);
   }
+}
+
+bool Server::checkCGIFd(int fd) {
+  std::vector<CGI>& cgis = this->cgis;
+  for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
+    if (fd == it->getReadFd() || fd == it->getWriteFd())
+      return true;
+  }
+  return false;
+}
+
+void Server::writeCGI(int fd) {
+
+}
+
+void Server::readCGI(int fd) {
+
 }

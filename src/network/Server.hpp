@@ -26,28 +26,29 @@ class Server {
     void run();
 
   private:
-    static const size_t       BIND_MAX_TRIES;
-    static const size_t       LISTEN_MAX_TRIES;
-    static const size_t       TRY_SLEEP_TIME;
-    static const int          BUF_SIZE;
-    static const int          MANAGE_FD_MAX;
+    static const size_t         BIND_MAX_TRIES;
+    static const size_t         LISTEN_MAX_TRIES;
+    static const size_t         TRY_SLEEP_TIME;
+    static const int            BUF_SIZE;
+    static const int            MANAGE_FD_MAX;
 
-    static const std::string  HEADER_DELIMETER;
-    static const std::string  CHUNKED_DELIMETER;
+    static const std::string    HEADER_DELIMETER;
+    static const std::string    CHUNKED_DELIMETER;
 
-    std::vector<int>          listens_fd;
-    std::vector<HttpRequest>  requests;
-    std::vector<HttpResponse> responses;
-    std::vector<std::string>  recvs;
+    std::vector<int>            listens_fd;
+    std::vector<HttpRequest>    requests;
+    std::vector<HttpResponse>   responses;
+    std::vector<std::string>    recvs;
+    std::vector<CGI>            cgis; 
 
-    int                       fdMax;
-    fd_set                    listens;
-    fd_set                    reads;
-    fd_set                    writes;
+    int                         fdMax;
+    fd_set                      listens;
+    fd_set                      reads;
+    fd_set                      writes;
 
-    const Config&             config;
-    Connection                connection;
-    SessionManager            sessionManager;
+    const Config&               config;
+    Connection                  connection;
+    SessionManager              sessionManager;
 
     inline int  socketInit(void);
     inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
@@ -64,6 +65,9 @@ class Server {
     void        closeConnection(int fd);
     void        keepAliveConnection(int fd);
     void        cleanUpConnection();
+    bool        checkCGIFd(int fd);
+    void        writeCGI(int fd);
+    void        readCGI(int fd);
 
 };
 

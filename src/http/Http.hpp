@@ -19,12 +19,16 @@ class Http {
     Http();
     ~Http();
 
-    static HttpResponse processing(const HttpRequest& req, SessionManager& manager);
+    static HttpResponse processing(const HttpRequest& req, SessionManager& manager,
+                                    fd_set& reads, fd_set& writes,
+                                    std::vector<CGI>& cgis);
     static HttpResponse getErrorPage(HttpStatus s, const HttpRequest& req);
 
   private:
     static void         checkAndThrowError(const HttpRequest& req);
-    static HttpResponse executeCGI(const HttpRequest& req, SessionManager& sm);
+    static void         executeCGI(const HttpRequest& req, SessionManager& sm,
+                                    fd_set& reads, fd_set& writes,
+                                    std::vector<CGI>& cgis);
     static HttpResponse getMethod(const HttpRequest& req);
     static HttpResponse postMethod(const HttpRequest& req);
     static HttpResponse deleteMethod(const HttpRequest& req);

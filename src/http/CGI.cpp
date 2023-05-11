@@ -123,28 +123,19 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
   return ret;
 }
 
-std::string CGI::execute(void) {
+void CGI::execute(fd_set& reads, fd_set& writes) {
   std::string ret;
-  int         pid = -1;
-  int         status;
-  int         fd_in;
-  int         fd_out;
-  FILE*       file_in;
-  FILE*       file_out;
+  pid_t       pid = -1;
+  int         fd1[2];
+  int         fd2[2];
 
 
   if (access(this->cgiPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
 
-  file_in = tmpfile();
-  file_out = tmpfile();
-  fd_in = fileno(file_in);
-  fd_out = fileno(file_out);
-
-  if (write(fd_in, getBody().c_str(), getBody().length()) == -1)
-    throw INTERNAL_SERVER_ERROR;
-  lseek(fd_in, 0, SEEK_SET);
 
   try {
+    util::ftPipe(fd1);
+    util::ftPipe(fd2);
     pid = util::ftFork();
   } catch (util::SystemFunctionException& e) {
     throw INTERNAL_SERVER_ERROR;
@@ -152,26 +143,35 @@ std::string CGI::execute(void) {
 
   if (pid == 0) {
     try {
-      util::ftDup2(fd_in, STDIN_FILENO);
-      util::ftDup2(fd_out, STDOUT_FILENO);
+      close(fd1[WRITE]);
+      close(fd2[READ]);
+      util::ftDup2(fd1[READ], STDIN_FILENO);
+      util::ftDup2(fd2[WRITE], STDOUT_FILENO);
+      close(fd1[READ]);
+      close(fd2[WRITE]);
       changeWorkingDirectory();
       util::ftExecve(this->cgiPath, this->argv, this->env);
     } catch (util::SystemFunctionException& e) {
       exit(-1);
     }
   }
+  this->childPid = pid;
+  this->readFd = fd2[READ];
+  this->writeFd = fd1[WRITE];
 
-  waitpid(pid, &status, 0);
-  if (status == -1)
+  close(fd1[READ]);
+  close(fd2[WRITE]);
+  fcntl(fd1[WRITE], F_SETFL, O_NONBLOCK);
+  FD_SET(fd1[WRITE], &writes);
+  if (write(fd1[WRITE], getBody().c_str(), getBody().length()) == -1)
     throw INTERNAL_SERVER_ERROR;
 
-  lseek(fd_out, 0, SEEK_SET);
-  if ((ret = util::readFd(fd_out)).empty())
-    throw INTERNAL_SERVER_ERROR;
-  fclose(file_in);
-  fclose(file_out);
-
-  return ret;
+//  waitpid(pid, &status, 0);
+//  if (status == -1)
+//    throw INTERNAL_SERVER_ERROR;
+//
+//  if ((ret = util::readFd(fd_out)).empty())
+//    throw INTERNAL_SERVER_ERROR;
 }
 
 void CGI::changeWorkingDirectory(void) {
@@ -206,6 +206,22 @@ const std::string CGI::convertHeaderKey(const std::string& key) const {
   }
 
   return ret;
+}
+
+pid_t CGI::getChildPid() const{
+  return this->childPid;
+}
+
+int   CGI::getReadFd() const {
+  return this->readFd;
+}
+
+int   CGI::getWriteFd () const {
+  return this->writeFd;
+}
+
+int   CGI::getStatus() const {
+  return this->status;
 }
 
 /*
