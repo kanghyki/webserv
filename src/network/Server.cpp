@@ -368,7 +368,6 @@ void Server::keepAliveConnection(int fd) {
 
   this->requests[fd] = HttpRequest();
   this->responses[fd] = HttpResponse();
-  this->recvs[fd] = "";
 }
 
 void Server::cleanUpConnection() {
