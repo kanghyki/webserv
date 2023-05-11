@@ -30,15 +30,17 @@ void HttpRequestHeader::parse(const std::string& reqHeader) {
   std::vector<std::string>::iterator  it;
 
   vs = util::split(reqHeader, CRLF);
-  for (it = vs.begin(); it != vs.end(); ++it)
-    this->header.insert(splitField(*it));
-
+  for (it = vs.begin(); it != vs.end(); ++it) {
+    std::pair<std::string, std::string> p = splitField(*it);
+    this->header.set(p.first, p.second);
+  }
   parseConnection();
   parseTransferEncoding();
 }
 
 void HttpRequestHeader::parseConnection() {
   std::string s = util::toLowerStr(get(CONNECTION));
+
   if (s == "keep-alive")
     setConnection(KEEP_ALIVE);
   else if (s == "close")
@@ -66,20 +68,7 @@ std::pair<std::string, std::string> HttpRequestHeader::splitField(std::string li
 // getter
 
 std::string HttpRequestHeader::get(std::string key) const {
-  std::string lkey(util::toLowerStr(key));
-  std::map<std::string, std::string>::const_iterator it;
-
-  for (it = this->header.begin(); it != this->header.end(); ++it) {
-    std::string lfirst = util::toLowerStr(it->first);
-    if (lfirst == lkey)
-      return it->second;
-  }
-
-  return "";
-}
-
-const std::map<std::string, std::string>& HttpRequestHeader::getOrigin() const {
-  return this->header;
+  return this->header.get(key);
 }
 
 HttpRequestHeader::transfer_encoding HttpRequestHeader::getTransferEncoding() const {
@@ -91,10 +80,12 @@ HttpRequestHeader::connection HttpRequestHeader::getConnection() const {
 }
 
 const std::map<std::string, std::string>  HttpRequestHeader::getCustomeHeader() const {
-  std::map<std::string, std::string> ret;
+  std::map<std::string, std::string>  ret;
+  std::map<std::string, std::string>  hd;
 
-  std::map<std::string, std::string>::const_iterator it = this->header.begin();
-  for (; it != this->header.end(); ++it) {
+  hd = this->header.getCopy();
+  std::map<std::string, std::string>::const_iterator it = hd.begin();
+  for (; it != hd.end(); ++it) {
     if (it->first[0] == 'X')
       ret.insert(std::pair<std::string, std::string>(it->first, it->second));
   }

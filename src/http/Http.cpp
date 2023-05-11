@@ -100,7 +100,11 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
 
   res.setStatusCode(CREATED);
   res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
-  res.getHeader().set(HttpResponseHeader::LOCATION, req.getServerConfig().getServerName() + ":" + util::itoa(req.getServerConfig().getPort()) + req.getSubstitutedPath() );
+  res.getHeader().set(HttpResponseHeader::LOCATION,\
+      req.getServerConfig().getServerName()
+      + ":"
+      + util::itoa(req.getServerConfig().getPort())
+      + req.getSubstitutedPath());
 
   res.setBody(req.getBody());
 

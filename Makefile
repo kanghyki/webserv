@@ -32,6 +32,7 @@ SRCS			=	main.cpp\
 						Lexer.cpp\
 						ConfigParser.cpp\
 						Util.cpp\
+						HttpHeader.cpp\
 						HttpRequest.cpp\
 						HttpRequestHeader.cpp\
 						HttpResponse.cpp\

@@ -18,9 +18,11 @@ void HttpHeader::set(const std::string& key, const std::string& value) {
 }
 
 std::string HttpHeader::get(const std::string& key) const {
-  std::map<std::string, std::string>::const_iterator it;
+  std::string                                         lkey;
+  std::map<std::string, std::string>::const_iterator  it;
 
-  it = this->header.find(key);
+  lkey = util::toLowerStr(key);
+  it = this->header.find(lkey);
   if (it != this->header.end())
     return it->second;
 
@@ -44,6 +46,6 @@ void HttpHeader::remove(const std::string& key) {
     this->header.erase(t);
 }
 
-std::map<std::string, std::string> HttpHeader::copy() const {
+std::map<std::string, std::string> HttpHeader::getCopy() const {
   return this->header;
 }

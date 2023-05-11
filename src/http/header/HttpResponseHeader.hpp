@@ -1,6 +1,7 @@
 #ifndef HTTP_RESPONSE_HEADER_HPP
 # define HTTP_RESPONSE_HEADER_HPP
 
+# include "./HttpHeader.hpp"
 # include "../../etc/Util.hpp"
 
 # include <string>
@@ -33,7 +34,7 @@ class HttpResponseHeader {
 
   private:
 
-    std::map<std::string, std::string>  header;
+    HttpHeader  header;
 
     std::string makeHeaderStr(const std::string& key, const std::string& value);
 };

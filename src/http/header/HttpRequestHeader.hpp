@@ -1,6 +1,7 @@
 #ifndef HTTP_REQUEST_HEADER_HPP
 # define HTTP_REQUEST_HEADER_HPP
 
+# include "./HttpHeader.hpp"
 # include "../../etc/Util.hpp"
 # include "../HttpStatus.hpp"
 
@@ -33,7 +34,6 @@ class HttpRequestHeader {
     void parse(const std::string& reqHeader);
 
     std::string                               get(std::string key) const;
-    const std::map<std::string, std::string>& getOrigin() const;
     connection                                getConnection() const;
     transfer_encoding                         getTransferEncoding() const;
     const std::map<std::string, std::string>  getCustomeHeader() const;
@@ -41,7 +41,7 @@ class HttpRequestHeader {
     void                                      setConnection(connection conn);
 
   private:
-    std::map<std::string, std::string>  header;
+    HttpHeader                          header;
     connection                          conn;
     transfer_encoding                   te;
 

@@ -27,43 +27,23 @@ HttpResponseHeader& HttpResponseHeader::operator=(const HttpResponseHeader& obj)
 }
 
 void HttpResponseHeader::set(const std::string& key, const std::string& value) {
-  std::string lkey;
-
-  lkey = util::toLowerStr(key);
-  this->header.insert(std::make_pair(lkey, value));
+  this->header.set(key, value);
 }
 
 std::string HttpResponseHeader::get(const std::string& key) const {
-  std::map<std::string, std::string>::const_iterator it;
-
-  it = this->header.find(key);
-  if (it != this->header.end())
-    return it->second;
-
-  return "";
+  return this->header.get(key);
 }
 
 void HttpResponseHeader::remove(const std::string& key) {
-  std::map<std::string, std::string>::iterator  t;
-  std::string                                   lkey;
-
-  lkey = util::toLowerStr(key);
-  t = this->header.end();
-  for (std::map<std::string, std::string>::iterator it = this->header.begin(); it != this->header.end(); ++it) {
-    if (it->first == lkey) {
-      t = it;
-      break;
-    }
-  }
-
-  if (t != this->header.end())
-    this->header.erase(t);
+  this->header.remove(key);
 }
 
 std::string HttpResponseHeader::toStringForResponse() {
-  std::string ret;
+  std::string                         ret;
+  std::map<std::string, std::string>  hd;
 
-  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
+  hd = this->header.getCopy();
+  for (std::map<std::string, std::string>::iterator it = hd.begin(); it != hd.end(); ++it)
     ret += makeHeaderStr(it->first, it->second);
 
   return ret;
