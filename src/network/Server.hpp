@@ -68,7 +68,7 @@ class Server {
     void        keepAliveConnection(int fd);
     void        cleanUpConnection();
 
-    bool        isCgiPipe(int fd);
+    bool        isCgiPipe(int fd) const;
     void        writeCGI(int fd);
     void        readCGI(int fd);
 

@@ -174,10 +174,13 @@ void Server::run(void) {
       logger::warning << "Closed, listen fd(" << i << ") with -1" << logger::endl;
 }
 
-bool Server::isCgiPipe(int fd) {
-  if (cgi_map[fd] != 0)
-    return true;
-  return false;
+bool Server::isCgiPipe(int fd) const {
+  std::map<int, int>::const_iterator it;
+
+  it = this->cgi_map.find(fd);
+  if (it == this->cgi_map.end())
+    return false;
+  return it->second;
 }
 
 void Server::writeCGI(int fd) {
@@ -186,7 +189,7 @@ void Server::writeCGI(int fd) {
   client_fd = cgi_map[fd];
   CGI& cgi = this->responses[client_fd].getCGI();
   int write_size = cgi.writeCGI();
-  logger::debug << "cgi write_size: " << write_size << logger::endl;
+  logger::debug << "cgi write_size: " << write_size  << " into " << fd << logger::endl;
   if (write_size == 0) {
     FD_CLR(fd, &this->writes);
     close(cgi.getWriteFD());
@@ -207,7 +210,7 @@ void Server::readCGI(int fd) {
   client_fd = cgi_map[fd];
   CGI& cgi = this->responses[client_fd].getCGI();
   int read_size = cgi.readCGI();
-  logger::debug << "cgi read_size: " << read_size << logger::endl;
+  logger::debug << "cgi read_size: " << read_size  << " into " << fd << logger::endl;
   if (read_size == 0) {
     FD_CLR(fd, &this->reads);
 
