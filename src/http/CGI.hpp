@@ -18,12 +18,11 @@ class CGI {
     CGI();
     ~CGI();
     CGI(const CGI& obj);
+    CGI& operator=(const CGI& obj);
 
-    void              prepareCGI(const HttpRequest& req, const bool sessionAvailable);
     void              initCGI(const HttpRequest& req, const bool sessionAvailable);
     int               writeCGI();
     int               readCGI();
-    void              withdrawCGI();
 
     int               getReadFD() const;
     int               getWriteFD() const;
@@ -32,8 +31,6 @@ class CGI {
 
 
   private:
-    CGI& operator=(const CGI& obj);
-
     static const int  READ_BUF_SIZE = 1024 * 5;
     static const int  READ = 0;
     static const int  WRITE = 1;
@@ -65,6 +62,8 @@ class CGI {
     const std::string                         getPathInfo(void) const;
     const std::string                         getSessionAvailable(void) const;
     const std::string                         convertHeaderKey(const std::string& key) const;
+
+    void                                      prepareCGI(const HttpRequest& req, const bool sessionAvailable);
 
 };
 

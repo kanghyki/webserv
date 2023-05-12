@@ -22,6 +22,23 @@ CGI::CGI(const CGI& obj):
   sessionAvailable(obj.sessionAvailable) {
 }
 
+CGI& CGI::operator=(const CGI& obj) {
+  if (this != &obj) {
+    pid = obj.pid;
+    read_fd = obj.read_fd;
+    write_fd = obj.write_fd;
+    cgi_result = obj.cgi_result;
+    body_offset = obj.body_offset;
+    scriptPath = obj.scriptPath;
+    cgiPath = obj.cgiPath;
+    pathInfo = obj.pathInfo;
+    body = obj.body;
+    sessionAvailable = obj.sessionAvailable;
+  }
+
+  return *this;
+}
+
 void CGI::prepareCGI(const HttpRequest& req, const bool sessionAvailable) {
   this->scriptPath = req.getScriptPath();
   this->cgiPath = req.getCGIPath();
@@ -97,29 +114,38 @@ void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
   int     pipe2[2];
 
   prepareCGI(req, sessionAvailable);
-  pipe(pipe1);
-  pipe(pipe2);
   argv = this->getArgv();
   env = this->envMapToEnv(this->getEnvMap(req));
-  this->pid = fork();
+
+  try {
+    util::ftPipe(pipe1);
+    util::ftPipe(pipe2);
+    this->pid = util::ftFork();
+  } catch (util::SystemFunctionException& e) {
+    throw INTERNAL_SERVER_ERROR;
+  }
 
   if (this->pid == 0) {
-    close(pipe1[READ]);
-    close(pipe2[WRITE]);
-    dup2(pipe1[WRITE], STDOUT_FILENO);
-    dup2(pipe2[READ], STDIN_FILENO);
-    changeWorkingDirectory();
-    if (execve(this->cgiPath.c_str(), argv, env) == -1) {
+    try {
+      util::ftClose(pipe1[READ]);
+      util::ftClose(pipe2[WRITE]);
+      util::ftDup2(pipe1[WRITE], STDOUT_FILENO);
+      util::ftDup2(pipe2[READ], STDIN_FILENO);
+      changeWorkingDirectory();
+      util::ftExecve(this->cgiPath.c_str(), argv, env);
+    } catch (util::SystemFunctionException& e) {
       exit(-1);
     }
   }
 
-  close(pipe1[WRITE]);
-  close(pipe2[READ]);
   this->read_fd = pipe1[READ];
   this->write_fd = pipe2[WRITE];
-  fcntl(this->write_fd, F_SETFL, O_NONBLOCK);
-  fcntl(this->read_fd, F_SETFL, O_NONBLOCK);
+
+  std::cout << close(pipe1[WRITE]) << std::endl;
+  std::cout << close(pipe2[READ]) << std::endl;
+  std::cout << fcntl(this->write_fd, F_SETFL, O_NONBLOCK) << std::endl;
+  std::cout << fcntl(this->read_fd, F_SETFL, O_NONBLOCK) << std::endl;
+
   util::ftFree(argv);
   util::ftFree(env);
 }
@@ -146,14 +172,6 @@ int CGI::readCGI() {
     this->cgi_result += std::string(buf, read_size);
 
   return read_size;
-}
-
-void CGI::withdrawCGI() {
-  int status;
-
-  waitpid(this->pid, &status, 0);
-  close(this->write_fd);
-  close(this->read_fd);
 }
 
 const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) const {

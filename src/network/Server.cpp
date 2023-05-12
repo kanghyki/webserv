@@ -134,7 +134,7 @@ void Server::run(void) {
         // 2
         if (FD_ISSET(i, &writesCpy)) {
           // 3
-          if (isCgiPipe(i)) 
+          if (isCgiPipe(i))
             writeCGI(i);
           else {
             HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
@@ -177,36 +177,45 @@ bool Server::isCgiPipe(int fd) {
 }
 
 void Server::writeCGI(int fd) {
-  int client_fd = cgi_map[fd];
+  int client_fd;
+
+  client_fd = cgi_map[fd];
   CGI& cgi = this->responses[client_fd].getCGI();
   int write_size = cgi.writeCGI();
   if (write_size == 0) {
-    close(cgi.getWriteFD());
     ft_fd_clr(fd, this->writes);
+    close(cgi.getWriteFD());
     cgi_map.erase(fd);
     cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
     ft_fd_set(cgi.getReadFD(), this->reads);
   }
   else if (write_size == -1) {
-    cgi.withdrawCGI();
+    // withdraw
     closeConnection(client_fd);
     logger::error << "oh cgi write error" << logger::endl;
   }
 }
 
 void Server::readCGI(int fd) {
-  int client_fd = cgi_map[fd];
+  int client_fd;
+
+  client_fd = cgi_map[fd];
   CGI& cgi = this->responses[client_fd].getCGI();
   int read_size = cgi.readCGI();
   if (read_size == 0) {
-    cgi.withdrawCGI();
     ft_fd_clr(fd, this->reads);
+
+    // withdraw
+    close(cgi.getReadFD());
+    int status;
+    waitpid(cgi.getPid(), &status, 0);
+
     cgi_map.erase(fd);
     Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
     postProcessing(client_fd);
   }
   else if (read_size == -1) {
-    cgi.withdrawCGI();
+    // withdraw
     closeConnection(client_fd);
     logger::error << "oh cgi read error" << logger::endl;
   }
@@ -333,9 +342,8 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(s, req);
   }
 
-  if (res.get_cgi_status() == HttpResponse::NOT_CGI) {
+  if (res.get_cgi_status() == HttpResponse::NOT_CGI)
     postProcessing(fd);
-  }
   else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
     CGI& cgi = res.getCGI();
     ft_fd_set(cgi.getWriteFD(), this->writes);

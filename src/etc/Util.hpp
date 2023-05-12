@@ -29,6 +29,7 @@ namespace util {
   void ftFree(char** data);
   void ftDup2(int oldFd, int newFd);
   void ftExecve(const std::string& file, char* const* argv, char* const* envp);
+  void ftClose(int fd);
 
   std::pair<std::string, std::string> splitHeaderBody(const std::string& str, const std::string& delim);
   std::map<std::string, std::string> parseCGIHeader(const std::string& str);

@@ -146,7 +146,13 @@ namespace util {
   }
   
   void ftDup2(int oldFd, int newFd) {
-    if (dup2(oldFd, newFd) == -1) throw util::SystemFunctionException();
+    if (dup2(oldFd, newFd) == -1)
+      throw util::SystemFunctionException();
+  }
+
+  void ftClose(int fd) {
+    if (close(fd) == -1)
+      throw util::SystemFunctionException();
   }
 
   void ftExecve(const std::string& file, char* const* argv, char* const* envp) {
