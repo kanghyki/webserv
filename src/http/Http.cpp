@@ -6,8 +6,7 @@ Http::Http() {}
 Http::~Http() {}
 
 HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager,
-                              fd_set& reads, fd_set& writes,
-                              std::vector<CGI>& cgis) {
+                                const std::string& cgiRet) {
   HttpResponse res;
 
   checkAndThrowError(req);
@@ -19,7 +18,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager,
   }
 
   try {
-    if (req.isCGI()) executeCGI(req, manager, reads, writes, cgis);
+    if (req.isCGI()) res = cgiProcessing(req, manager, cgiRet);
     else if (req.getMethod() == request_method::GET || req.getMethod() == request_method::HEAD) res = getMethod(req);
     else if (req.getMethod() == request_method::POST) res = postMethod(req);
     else if (req.getMethod() == request_method::DELETE) res = deleteMethod(req);
@@ -27,6 +26,46 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager,
   } catch (HttpStatus status) {
     res = getErrorPage(status, req);
   }
+
+  return res;
+}
+
+HttpResponse Http::cgiProcessing(const HttpRequest& req, SessionManager& sm,
+                                  const std::string& cgiRet) {
+  HttpResponse                        res;
+  std::map<std::string, std::string>  header;
+  std::string                         body;
+
+  try {
+    logger::error << "cgi ret : " << cgiRet << logger::endl;
+    std::pair<std::string, std::string> p = util::splitHeaderBody(cgiRet, CRLF + CRLF);
+    logger::error << "1" << logger::endl;
+    header = util::parseCGIHeader(p.first);
+    logger::error << "2" << logger::endl;
+    body = p.second;
+    logger::error << "3" << logger::endl;
+  } catch (std::exception& e) {
+    throw INTERNAL_SERVER_ERROR;
+  }
+
+  // FIXME:
+  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
+    res.getHeader().set(it->first, it->second);
+
+    std::string lower_first = util::toLowerStr(it->first);
+    if (lower_first == "status") {
+      std::vector<std::string> vs = util::split(it->second, ' ');
+      if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
+      logger::error << "4" << logger::endl;
+      res.setStatusCode(static_cast<HttpStatus>(util::atoi(vs[0])));
+    }
+    else if (lower_first == HttpResponseHeader::SET_COOKIE)
+      sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
+
+  }
+
+  res.getHeader().remove("status");
+  res.setBody(body);
 
   return res;
 }
@@ -40,46 +79,46 @@ void Http::checkAndThrowError(const HttpRequest& req) {
     throw (METHOD_NOT_ALLOWED);
 }
 
-void Http::executeCGI(const HttpRequest& req, SessionManager& sm,
-                                fd_set& reads, fd_set& writes,
-                                std::vector<CGI>& cgis) {
-  std::string                         cgi_ret;
-  HttpResponse                        res;
-  std::string                         body;
-  std::map<std::string, std::string>  header;
-
-  try {
-    std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
-    CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
-    cgis.push_back(cgi);
-    cgi.execute(reads, writes);
-//    std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
-//    header = util::parseCGIHeader(p.first);
-//    body = p.second;
-  } catch (std::exception& e) {
-    throw INTERNAL_SERVER_ERROR;
-  }
-
-//  // FIXME:
-//  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
-//    res.getHeader().set(it->first, it->second);
+//void Http::executeCGI(const HttpRequest& req, SessionManager& sm,
+//                                fd_set& reads, fd_set& writes,
+//                                std::vector<CGI>& cgis, int& fdMax) {
+//  std::string                         cgi_ret;
+//  HttpResponse                        res;
+//  std::string                         body;
+//  std::map<std::string, std::string>  header;
 //
-//    std::string lower_first = util::toLowerStr(it->first);
-//    if (lower_first == "status") {
-//      std::vector<std::string> vs = util::split(it->second, ' ');
-//      if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
-//      res.setStatusCode(static_cast<HttpStatus>(util::atoi(vs[0])));
-//    }
-//    else if (lower_first == HttpResponseHeader::SET_COOKIE)
-//      sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
-//
+//  try {
+//    std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
+//    CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
+//    cgis.push_back(cgi);
+//    cgi.execute(reads, writes, fdMax);
+////    std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
+////    header = util::parseCGIHeader(p.first);
+////    body = p.second;
+//  } catch (std::exception& e) {
+//    throw INTERNAL_SERVER_ERROR;
 //  }
 //
-//  res.getHeader().remove("status");
-//  res.setBody(body);
-//
-//  return res;
-}
+////  // FIXME:
+////  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
+////    res.getHeader().set(it->first, it->second);
+////
+////    std::string lower_first = util::toLowerStr(it->first);
+////    if (lower_first == "status") {
+////      std::vector<std::string> vs = util::split(it->second, ' ');
+////      if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
+////      res.setStatusCode(static_cast<HttpStatus>(util::atoi(vs[0])));
+////    }
+////    else if (lower_first == HttpResponseHeader::SET_COOKIE)
+////      sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
+////
+////  }
+////
+////  res.getHeader().remove("status");
+////  res.setBody(body);
+////
+////  return res;
+//}
 
 HttpResponse Http::getMethod(const HttpRequest& req) {
   HttpResponse res;

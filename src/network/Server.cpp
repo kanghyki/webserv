@@ -135,11 +135,13 @@ void Server::run(void) {
     cleanUpConnection();
 
     for (int i = 0; i < this->fdMax + 1; i++) {
-
       if (FD_ISSET(i, &this->writes)) {
         if (FD_ISSET(i, &writesCpy)) {
-          if (checkCGIFd(i)) {
-            // writing or writing done
+          CGI* cgi = getCGI(i);
+          if (cgi != NULL) {
+            if (cgi->getStatus() == CGI::WRITING) {
+              cgi->writeCGI(this->writes);
+            }
           }
           else {
             HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
@@ -155,8 +157,12 @@ void Server::run(void) {
         }
       }
       else if (FD_ISSET(i, &readsCpy)) {
-        if (checkCGIFd(i)) {
-          // reading or reading done
+        CGI* cgi = getCGI(i);
+        if (cgi != NULL) {
+          if (cgi->getStatus() == CGI::READING)
+            cgi->readCGI(this->reads);
+          if (cgi->getStatus() == CGI::DONE)
+            cgiDone(cgi);
         }
         else {
           if (FD_ISSET(i, &this->listens))
@@ -291,7 +297,12 @@ void Server::receiveDone(int fd) {
   HttpResponse& res = this->responses[fd];
 
   try {
-    res = Http::processing(req, this->sessionManager, this->reads, this->writes, this->cgis);
+    if (req.isCGI()) {
+      executeCGI(req, this->sessionManager, fd);
+      return;
+    }
+    else
+      res = Http::processing(req, this->sessionManager, "");
   } catch (HttpStatus s) {
     res = Http::getErrorPage(s, req);
   }
@@ -302,6 +313,27 @@ void Server::receiveDone(int fd) {
   }
   addExtraHeader(fd, req, res);
   this->connection.update(fd, Connection::SEND);
+  FD_SET(fd, &this->writes);
+  logger::info << "Response to " << fd
+    << " from " << req.getServerConfig().getServerName()
+    << ", Status=" << res.getStatusCode()
+    << logger::endl;
+  sendData(fd);
+}
+
+void Server::cgiDone(CGI* cgi) {
+
+  logger::error << "cgiDone" << logger::endl;
+  int fd = cgi->getReqFd();
+  HttpRequest&  req = this->requests[fd];
+  HttpResponse& res = this->responses[fd];
+
+  logger::error << "cgi ret : " << cgi->getBody() << logger::endl;
+  try {
+    res = Http::processing(req, this->sessionManager, cgi->getBody());
+  } catch (HttpStatus s) {
+    res = Http::getErrorPage(s, req);
+  }
   FD_SET(fd, &this->writes);
   logger::info << "Response to " << fd
     << " from " << req.getServerConfig().getServerName()
@@ -397,10 +429,32 @@ bool Server::checkCGIFd(int fd) {
   return false;
 }
 
-void Server::writeCGI(int fd) {
-
+CGI* Server::getCGI(int fd) {
+  std::vector<CGI>& cgis = this->cgis;
+  logger::error << "cgis len : " << cgis.size() << logger::endl;
+  for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
+      logger::error << "fd : " << fd << logger::endl;
+      logger::error << "writeFd : " << it->getWriteFd() << logger::endl;
+      logger::error << "readFd : " << it->getReadFd() << logger::endl;
+    if (fd == it->getReadFd() || fd == it->getWriteFd()) {
+      logger::error << "return cgi" << logger::endl;
+      return &(*it);
+    }
+  }
+  logger::error << "return null" << logger::endl;
+  return NULL;
 }
 
-void Server::readCGI(int fd) {
-
+void Server::executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd) {
+  try {
+    std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
+    CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]), reqFd);
+    cgi.execute(this->reads, this->writes, this->fdMax);
+    this->cgis.push_back(cgi);
+//    std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
+//    header = util::parseCGIHeader(p.first);
+//    body = p.second;
+  } catch (std::exception& e) {
+    throw INTERNAL_SERVER_ERROR;
+  }
 }

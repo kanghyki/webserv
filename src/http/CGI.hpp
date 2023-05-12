@@ -10,24 +10,39 @@
 
 # include "./HttpRequest.hpp"
 # include "../etc/Util.hpp"
+# include "../etc/Logger.hpp"
 
 static const std::string CGI_VERSION = "CGI/1.1";
 static const std::string SOFTWARE_NAME = "NGINX MINUS";
 
 class CGI {
   public:
-    CGI(const HttpRequest& req, const bool sessionAvailable);
+    enum Status {
+      WRITING,
+      READING,
+      DONE
+    };
+
+    CGI(const HttpRequest& req, const bool sessionAvailable, int reqFd);
+    CGI(const CGI& obj);
     ~CGI(void);
-    void execute(fd_set& reads, fd_set& writes);
+    
+    void execute(fd_set& reads, fd_set& writes, int& fdMax);
 
     pid_t getChildPid() const;
     int   getReadFd() const;
     int   getWriteFd() const;
-    int   getStatus() const;
+    enum Status getStatus() const;
+    int   getReqFd() const;
+    const std::string getBody(void) const;
+
+    void writeCGI(fd_set& writes);
+    void readCGI(fd_set& reads);
 
   private:
     static const int READ = 0;
     static const int WRITE = 1;
+    static const int BUF_SIZE = 1024 * 16;
 
     char** argv;
     char** env;
@@ -35,11 +50,14 @@ class CGI {
     std::string cgiPath;
     std::string pathInfo;
     std::string body;
+    int         bodySize;
+    int         offset;
     bool        sessionAvailable;
     pid_t       childPid;
     int         readFd;
     int         writeFd;
-    int         status;
+    int         reqFd;
+    enum Status status;
 
     const std::map<std::string, std::string> getEnvMap(const HttpRequest& req) const;
     char** getArgv() const;
@@ -51,7 +69,6 @@ class CGI {
     const std::string getCgiPath(void) const;
     const std::string getCurrentPath(void) const;
     const std::string getPathInfo(void) const;
-    const std::string getBody(void) const;
     const std::string getSessionAvailable(void) const;
     const std::string convertHeaderKey(const std::string& key) const;
 

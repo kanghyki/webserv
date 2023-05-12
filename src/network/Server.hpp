@@ -60,15 +60,15 @@ class Server {
     void        checkReceiveDone(int fd);
     void        receiveHeader(int fd, HttpRequest& req);
     void        receiveDone(int fd);
+    void        cgiDone(CGI* cgi);
     void        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
     void        sendData(int fd);
     void        closeConnection(int fd);
     void        keepAliveConnection(int fd);
     void        cleanUpConnection();
     bool        checkCGIFd(int fd);
-    void        writeCGI(int fd);
-    void        readCGI(int fd);
-
+    CGI*        getCGI(int fd);
+    void        executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd);
 };
 
 #endif
