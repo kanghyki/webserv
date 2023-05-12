@@ -183,7 +183,7 @@ void Server::writeCGI(int fd) {
   CGI& cgi = this->responses[client_fd].getCGI();
   int write_size = cgi.writeCGI();
   if (write_size == 0) {
-    ft_fd_clr(fd, this->writes);
+    FD_CLR(fd, &this->writes);
     close(cgi.getWriteFD());
     cgi_map.erase(fd);
     cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
@@ -203,7 +203,7 @@ void Server::readCGI(int fd) {
   CGI& cgi = this->responses[client_fd].getCGI();
   int read_size = cgi.readCGI();
   if (read_size == 0) {
-    ft_fd_clr(fd, this->reads);
+    FD_CLR(fd, &this->reads);
 
     // withdraw
     close(cgi.getReadFD());
@@ -410,9 +410,12 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
 
 void Server::closeConnection(int fd) {
   if (FD_ISSET(fd, &this->writes))
-    ft_fd_clr(fd, this->writes);
+    FD_CLR(fd, &this->writes);
   if (FD_ISSET(fd, &this->reads))
-    ft_fd_clr(fd, this->reads);
+    FD_CLR(fd, &this->reads);
+
+  if (fd == this->fdMax)
+    --this->fdMax;
 
   if (close(fd) == -1)
     logger::warning << "Closed, client(" << fd << ") with -1" << logger::endl;
@@ -428,7 +431,7 @@ void Server::closeConnection(int fd) {
 }
 
 void Server::keepAliveConnection(int fd) {
-  ft_fd_clr(fd, this->writes);
+  FD_CLR(fd, &this->writes);
 
   this->connection.update(fd, this->requests[fd].getServerConfig());
 
@@ -450,10 +453,4 @@ void Server::ft_fd_set(int fd, fd_set& set) {
   FD_SET(fd, &set);
   if (this->fdMax < fd)
     this->fdMax = fd;
-}
-
-void Server::ft_fd_clr(int fd, fd_set& set) {
-  FD_CLR(fd, &set);
-  if (fd == this->fdMax)
-    this->fdMax -= 1;
 }

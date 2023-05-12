@@ -55,7 +55,6 @@ class Server {
     inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
     inline void socketOpen(int servFd, sockaddr_in& in);
     void        ft_fd_set(int fd, fd_set& set);
-    void        ft_fd_clr(int fd, fd_set& set);
 
     void        acceptConnect(int server_fd);
     void        receiveData(int fd);
