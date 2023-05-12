@@ -32,10 +32,8 @@ Server::Server(Config& config) :
       socketaddrInit(sit->getHost(), sit->getPort(), sock);
       socketOpen(fd, sock);
 
-      FD_SET(fd, &this->reads);
-      FD_SET(fd, &this->listens);
-      if (this->fdMax < fd)
-        this->fdMax = fd;
+      ft_fd_set(fd, this->reads);
+      ft_fd_set(fd, this->listens);
       this->listens_fd.push_back(fd);
     }
 }
@@ -111,11 +109,6 @@ inline void Server::socketOpen(int servFd, sockaddr_in& in) {
   logger::info << "Listening... (" << servFd << ") \n\n\"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n" << logger::endl;
 }
 
-inline void Server::fdSetInit(fd_set& fs, int fd) {
-  FD_ZERO(&fs);
-  FD_SET(fd, &fs);
-}
-
 void Server::run(void) {
   struct timeval t;
 
@@ -136,24 +129,38 @@ void Server::run(void) {
 
     for (int i = 0; i < this->fdMax + 1; i++) {
 
+      // 1
       if (FD_ISSET(i, &this->writes)) {
+        // 2
         if (FD_ISSET(i, &writesCpy)) {
-          HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
-          if (send_status == HttpResponse::SENDING)
-            sendData(i);
-          else if (send_status == HttpResponse::DONE) {
-            if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
-              closeConnection(i);
-            else
-              keepAliveConnection(i);
+          // 3
+          if (isCgiPipe(i)) 
+            writeCGI(i);
+          else {
+            HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
+            if (send_status == HttpResponse::SENDING)
+              sendData(i);
+            else if (send_status == HttpResponse::DONE) {
+              if (this->requests[i].getHeader().getConnection() == HttpRequestHeader::CLOSE)
+                closeConnection(i);
+              else
+                keepAliveConnection(i);
+            }
           }
+          // 3 ---
         }
+        // 2 ---
       }
+      // 1 ---
       else if (FD_ISSET(i, &readsCpy)) {
-        if (FD_ISSET(i, &this->listens))
-          acceptConnect(i);
-        else
-          receiveData(i);
+        if (isCgiPipe(i))
+          readCGI(i);
+        else {
+          if (FD_ISSET(i, &this->listens))
+            acceptConnect(i);
+          else
+            receiveData(i);
+        }
       }
     }
   }
@@ -163,6 +170,47 @@ void Server::run(void) {
       logger::warning << "Closed, listen fd(" << i << ") with -1" << logger::endl;
 }
 
+bool Server::isCgiPipe(int fd) {
+  if (cgi_map[fd] != 0)
+    return true;
+  return false;
+}
+
+void Server::writeCGI(int fd) {
+  int client_fd = cgi_map[fd];
+  CGI& cgi = this->responses[client_fd].getCGI();
+  int write_size = cgi.writeCGI();
+  if (write_size == 0) {
+    close(cgi.getWriteFD());
+    ft_fd_clr(fd, this->writes);
+    cgi_map.erase(fd);
+    cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
+    ft_fd_set(cgi.getReadFD(), this->reads);
+  }
+  else if (write_size == -1) {
+    cgi.withdrawCGI();
+    closeConnection(client_fd);
+    logger::error << "oh cgi write error" << logger::endl;
+  }
+}
+
+void Server::readCGI(int fd) {
+  int client_fd = cgi_map[fd];
+  CGI& cgi = this->responses[client_fd].getCGI();
+  int read_size = cgi.readCGI();
+  if (read_size == 0) {
+    cgi.withdrawCGI();
+    ft_fd_clr(fd, this->reads);
+    cgi_map.erase(fd);
+    Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
+    postProcessing(client_fd);
+  }
+  else if (read_size == -1) {
+    cgi.withdrawCGI();
+    closeConnection(client_fd);
+    logger::error << "oh cgi read error" << logger::endl;
+  }
+}
 
 void Server::acceptConnect(int server_fd) {
   struct sockaddr_in  client_addr;
@@ -175,10 +223,7 @@ void Server::acceptConnect(int server_fd) {
     return ;
   }
 
-  FD_SET(client_fd, &this->reads);
-  if (this->fdMax < client_fd)
-    this->fdMax = client_fd;
-
+  ft_fd_set(client_fd, this->reads);
 
   logger::info << "Accept, client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << logger::endl;
   this->connection.update(client_fd, Connection::HEADER);
@@ -288,18 +333,31 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(s, req);
   }
 
+  if (res.get_cgi_status() == HttpResponse::NOT_CGI) {
+    postProcessing(fd);
+  }
+  else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
+    CGI& cgi = res.getCGI();
+    ft_fd_set(cgi.getWriteFD(), this->writes);
+    cgi_map.insert(std::make_pair(cgi.getWriteFD(), fd));
+  }
+}
+
+void Server::postProcessing(int fd) {
+  HttpRequest&  req = this->requests[fd];
+  HttpResponse& res = this->responses[fd];
+
   if (req.getMethod() == request_method::HEAD) {
     res.getHeader().remove(HttpRequestHeader::CONTENT_TYPE);
     res.removeBody();
   }
   addExtraHeader(fd, req, res);
   this->connection.update(fd, Connection::SEND);
-  FD_SET(fd, &this->writes);
+  ft_fd_set(fd, this->writes);
   logger::info << "Response to " << fd
     << " from " << req.getServerConfig().getServerName()
     << ", Status=" << res.getStatusCode()
     << logger::endl;
-  sendData(fd);
 }
 
 void Server::sendData(int fd) {
@@ -343,11 +401,11 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
 }
 
 void Server::closeConnection(int fd) {
-  if (FD_ISSET(fd, &this->writes)) FD_CLR(fd, &this->writes);
-  if (FD_ISSET(fd, &this->reads)) FD_CLR(fd, &this->reads);
+  if (FD_ISSET(fd, &this->writes))
+    ft_fd_clr(fd, this->writes);
+  if (FD_ISSET(fd, &this->reads))
+    ft_fd_clr(fd, this->reads);
 
-  if (fd == this->fdMax)
-    this->fdMax -= 1;
   if (close(fd) == -1)
     logger::warning << "Closed, client(" << fd << ") with -1" << logger::endl;
   else
@@ -362,7 +420,7 @@ void Server::closeConnection(int fd) {
 }
 
 void Server::keepAliveConnection(int fd) {
-  FD_CLR(fd, &this->writes);
+  ft_fd_clr(fd, this->writes);
 
   this->connection.update(fd, this->requests[fd].getServerConfig());
 
@@ -378,4 +436,16 @@ void Server::cleanUpConnection() {
     logger::info << "Timeout, client(" << *it << ")" << logger::endl;
     closeConnection(*it);
   }
+}
+
+void Server::ft_fd_set(int fd, fd_set& set) {
+  FD_SET(fd, &set);
+  if (this->fdMax < fd)
+    this->fdMax = fd;
+}
+
+void Server::ft_fd_clr(int fd, fd_set& set) {
+  FD_CLR(fd, &set);
+  if (fd == this->fdMax)
+    this->fdMax -= 1;
 }

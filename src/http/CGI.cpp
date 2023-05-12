@@ -4,20 +4,54 @@
  * -------------------------- Constructor --------------------------
  */
 
-CGI::CGI(const HttpRequest& req, const bool sessionAvailable) : scriptPath(req.getScriptPath()), cgiPath(req.getCGIPath()), pathInfo(req.getPathInfo()), sessionAvailable(sessionAvailable) {
-  if (!req.getBody().empty()) this->body = req.getBody();
-  this->argv = this->getArgv();
-  this->env = this->envMapToEnv(this->getEnvMap(req));
+CGI::CGI():
+  body_offset(0)
+//  status(WRITING),
+{}
+
+CGI::CGI(const CGI& obj):
+  pid(obj.pid),
+  read_fd(obj.read_fd),
+  write_fd(obj.write_fd),
+  cgi_result(obj.cgi_result),
+  body_offset(obj.body_offset),
+  scriptPath(obj.scriptPath),
+  cgiPath(obj.cgiPath),
+  pathInfo(obj.pathInfo),
+  body(obj.body),
+  sessionAvailable(obj.sessionAvailable) {
+}
+
+void CGI::prepareCGI(const HttpRequest& req, const bool sessionAvailable) {
+  this->scriptPath = req.getScriptPath();
+  this->cgiPath = req.getCGIPath();
+  this->pathInfo = req.getPathInfo();
+  this->sessionAvailable = sessionAvailable;
+  if (!req.getBody().empty())
+    this->body = req.getBody();
+}
+
+int CGI::getReadFD() const {
+  return this->read_fd;
+}
+
+int CGI::getWriteFD() const {
+  return this->write_fd;
+}
+
+int CGI::getPid() const {
+  return this->pid;
+}
+
+std::string CGI::getCgiResult() const {
+  return this->cgi_result;
 }
 
 /*
  * -------------------------- Destructor ---------------------------
  */
 
-CGI::~CGI(void) {
-  util::ftFree(this->argv);
-  util::ftFree(this->env);
-}
+CGI::~CGI() {}
 
 /*
  * -------------------------- Operator -----------------------------
@@ -40,7 +74,11 @@ const std::string CGI::getPathInfo(void) const {
 }
 
 const std::string CGI::getBody(void) const {
-  return this->body;
+  return this->body.substr(body_offset);
+}
+
+void CGI::addBodyOffset(size_t s) {
+  this->body_offset += s;
 }
 
 
@@ -51,6 +89,72 @@ const std::string CGI::getBody(void) const {
 /*
  * ----------------------- Member Function -------------------------
  */
+
+void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
+  char**  argv;
+  char**  env;
+  int     pipe1[2];
+  int     pipe2[2];
+
+  prepareCGI(req, sessionAvailable);
+  pipe(pipe1);
+  pipe(pipe2);
+  argv = this->getArgv();
+  env = this->envMapToEnv(this->getEnvMap(req));
+  this->pid = fork();
+
+  if (this->pid == 0) {
+    close(pipe1[READ]);
+    close(pipe2[WRITE]);
+    dup2(pipe1[WRITE], STDOUT_FILENO);
+    dup2(pipe2[READ], STDIN_FILENO);
+    changeWorkingDirectory();
+    if (execve(this->cgiPath.c_str(), argv, env) == -1) {
+      exit(-1);
+    }
+  }
+
+  close(pipe1[WRITE]);
+  close(pipe2[READ]);
+  this->read_fd = pipe1[READ];
+  this->write_fd = pipe2[WRITE];
+  fcntl(this->write_fd, F_SETFL, O_NONBLOCK);
+  fcntl(this->read_fd, F_SETFL, O_NONBLOCK);
+  util::ftFree(argv);
+  util::ftFree(env);
+}
+
+int CGI::writeCGI() {
+  std::string body;
+  int         write_size;
+
+  body = getBody();
+  write_size = write(this->write_fd, body.c_str(), body.length());
+  if (write_size > 0)
+    this->body_offset += write_size;
+
+  return write_size;
+}
+
+int CGI::readCGI() {
+  char  buf[READ_BUF_SIZE + 1];
+  int   read_size;
+
+  read_size = read(this->read_fd, buf, READ_BUF_SIZE);
+  buf[read_size] = 0;
+  if (read_size > 0)
+    this->cgi_result += std::string(buf, read_size);
+
+  return read_size;
+}
+
+void CGI::withdrawCGI() {
+  int status;
+
+  waitpid(this->pid, &status, 0);
+  close(this->write_fd);
+  close(this->read_fd);
+}
 
 const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) const {
   std::map<std::string, std::string> ret;
@@ -86,10 +190,6 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
     std::string key = convertHeaderKey(it->first);
     ret.insert(std::pair<std::string, std::string>("HTTP_" + key, it->second));
   }
-//
-//  for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
-//    std::cout << it->first << " : " << it->second << std::endl;
-//  }
 
   return ret;
 }
@@ -120,57 +220,6 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
   }
   ret[i] = NULL;
   
-  return ret;
-}
-
-std::string CGI::execute(void) {
-  std::string ret;
-  int         pid = -1;
-  int         status;
-  int         fd_in;
-  int         fd_out;
-  FILE*       file_in;
-  FILE*       file_out;
-
-
-  if (access(this->cgiPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
-
-  file_in = tmpfile();
-  file_out = tmpfile();
-  fd_in = fileno(file_in);
-  fd_out = fileno(file_out);
-
-  if (write(fd_in, getBody().c_str(), getBody().length()) == -1)
-    throw INTERNAL_SERVER_ERROR;
-  lseek(fd_in, 0, SEEK_SET);
-
-  try {
-    pid = util::ftFork();
-  } catch (util::SystemFunctionException& e) {
-    throw INTERNAL_SERVER_ERROR;
-  }
-
-  if (pid == 0) {
-    try {
-      util::ftDup2(fd_in, STDIN_FILENO);
-      util::ftDup2(fd_out, STDOUT_FILENO);
-      changeWorkingDirectory();
-      util::ftExecve(this->cgiPath, this->argv, this->env);
-    } catch (util::SystemFunctionException& e) {
-      exit(-1);
-    }
-  }
-
-  waitpid(pid, &status, 0);
-  if (status == -1)
-    throw INTERNAL_SERVER_ERROR;
-
-  lseek(fd_out, 0, SEEK_SET);
-  if ((ret = util::readFd(fd_out)).empty())
-    throw INTERNAL_SERVER_ERROR;
-  fclose(file_in);
-  fclose(file_out);
-
   return ret;
 }
 

@@ -21,6 +21,7 @@ class Http {
 
     static HttpResponse processing(const HttpRequest& req, SessionManager& manager);
     static HttpResponse getErrorPage(HttpStatus s, const HttpRequest& req);
+    static void         finishCGI(HttpResponse& res, const HttpRequest& req, SessionManager& sm);
 
   private:
     static void         checkAndThrowError(const HttpRequest& req);

@@ -40,6 +40,8 @@ class Server {
     std::vector<HttpResponse> responses;
     std::vector<std::string>  recvs;
 
+    std::map<int, int>        cgi_map;
+
     int                       fdMax;
     fd_set                    listens;
     fd_set                    reads;
@@ -52,18 +54,24 @@ class Server {
     inline int  socketInit(void);
     inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
     inline void socketOpen(int servFd, sockaddr_in& in);
-    inline void fdSetInit(fd_set& fs, int fd);
+    void        ft_fd_set(int fd, fd_set& set);
+    void        ft_fd_clr(int fd, fd_set& set);
 
     void        acceptConnect(int server_fd);
     void        receiveData(int fd);
     void        checkReceiveDone(int fd);
     void        receiveHeader(int fd, HttpRequest& req);
     void        receiveDone(int fd);
+    void        postProcessing(int fd);
     void        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
     void        sendData(int fd);
     void        closeConnection(int fd);
     void        keepAliveConnection(int fd);
     void        cleanUpConnection();
+
+    bool        isCgiPipe(int fd);
+    void        writeCGI(int fd);
+    void        readCGI(int fd);
 
 };
 

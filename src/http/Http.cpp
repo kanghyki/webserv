@@ -46,15 +46,22 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
 
   try {
     std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
-    CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
-    cgi_ret = cgi.execute();
-    std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
-    header = util::parseCGIHeader(p.first);
-    body = p.second;
+    res.set_cgi_status(HttpResponse::IS_CGI);
+    res.getCGI().initCGI(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
   }
 
+  return res;
+}
+
+void Http::finishCGI(HttpResponse& res, const HttpRequest& req, SessionManager& sm) {
+  std::string                         body;
+  std::map<std::string, std::string>  header;
+
+  std::pair<std::string, std::string> p = util::splitHeaderBody(res.getCGI().getCgiResult(), CRLF + CRLF);
+  header = util::parseCGIHeader(p.first);
+  body = p.second;
   // FIXME:
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
     res.getHeader().set(it->first, it->second);
@@ -72,8 +79,6 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
 
   res.getHeader().remove("status");
   res.setBody(body);
-
-  return res;
 }
 
 HttpResponse Http::getMethod(const HttpRequest& req) {
