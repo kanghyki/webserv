@@ -91,7 +91,7 @@ const std::string CGI::getPathInfo(void) const {
 }
 
 const std::string CGI::getBody(void) const {
-  return this->body.substr(body_offset);
+  return this->body;
 }
 
 void CGI::addBodyOffset(size_t s) {
@@ -154,7 +154,7 @@ int CGI::writeCGI() {
   std::string body;
   int         write_size;
 
-  body = getBody();
+  body = getBody().substr(this->body_offset);
   write_size = write(this->write_fd, body.c_str(), body.length());
   if (write_size > 0)
     this->body_offset += write_size;
