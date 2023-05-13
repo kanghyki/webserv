@@ -69,6 +69,7 @@ class Server {
     bool        checkCGIFd(int fd);
     CGI*        getCGI(int fd);
     void        executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd);
+    void        eraseCGI(std::vector<CGI>& cgis, CGI* cgi);
 };
 
 #endif

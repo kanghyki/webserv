@@ -306,7 +306,6 @@ void Server::receiveDone(int fd) {
   } catch (HttpStatus s) {
     res = Http::getErrorPage(s, req);
   }
-
   if (req.getMethod() == request_method::HEAD) {
     res.getHeader().remove(HttpRequestHeader::CONTENT_TYPE);
     res.removeBody();
@@ -322,18 +321,17 @@ void Server::receiveDone(int fd) {
 }
 
 void Server::cgiDone(CGI* cgi) {
-
   logger::error << "cgiDone" << logger::endl;
   int fd = cgi->getReqFd();
   HttpRequest&  req = this->requests[fd];
   HttpResponse& res = this->responses[fd];
-
-  logger::error << "cgi ret : " << cgi->getBody() << logger::endl;
+  logger::error << "cgi body : " << cgi->getBody() << logger::endl;
   try {
     res = Http::processing(req, this->sessionManager, cgi->getBody());
   } catch (HttpStatus s) {
     res = Http::getErrorPage(s, req);
   }
+  eraseCGI(this->cgis, cgi);
   FD_SET(fd, &this->writes);
   logger::info << "Response to " << fd
     << " from " << req.getServerConfig().getServerName()
@@ -431,17 +429,17 @@ bool Server::checkCGIFd(int fd) {
 
 CGI* Server::getCGI(int fd) {
   std::vector<CGI>& cgis = this->cgis;
-  logger::error << "cgis len : " << cgis.size() << logger::endl;
+//  logger::error << "cgis len : " << cgis.size() << logger::endl;
   for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
-      logger::error << "fd : " << fd << logger::endl;
-      logger::error << "writeFd : " << it->getWriteFd() << logger::endl;
-      logger::error << "readFd : " << it->getReadFd() << logger::endl;
+//      logger::error << "fd : " << fd << logger::endl;
+//      logger::error << "writeFd : " << it->getWriteFd() << logger::endl;
+//      logger::error << "readFd : " << it->getReadFd() << logger::endl;
     if (fd == it->getReadFd() || fd == it->getWriteFd()) {
-      logger::error << "return cgi" << logger::endl;
+//      logger::error << "return cgi" << logger::endl;
       return &(*it);
     }
   }
-  logger::error << "return null" << logger::endl;
+//  logger::error << "return null" << logger::endl;
   return NULL;
 }
 
@@ -456,5 +454,14 @@ void Server::executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd) {
 //    body = p.second;
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
+  }
+}
+
+void Server::eraseCGI(std::vector<CGI>& cgis, CGI* cgi) {
+  for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
+    if (&(*it) == cgi) {
+      cgis.erase(it);
+      return;
+    }
   }
 }

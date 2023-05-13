@@ -59,9 +59,12 @@ const std::string CGI::getPathInfo(void) const {
 }
 
 const std::string CGI::getBody(void) const {
-  return this->body.substr(offset);
+  return this->body;
 }
 
+const std::string CGI::getBody(int offset) const {
+  return this->body.substr(offset);
+}
 
 /*
  * -------------------------- Setter -------------------------------
@@ -250,7 +253,7 @@ CGI::Status CGI::getStatus() const {
 void CGI::writeCGI(fd_set& writes) {
   logger::error << "write cgi" << logger::endl;
   int writeSize;
-  if ((writeSize = write(this->writeFd, getBody().c_str(), getBody().length())) == -1)
+  if ((writeSize = write(this->writeFd, getBody(this->offset).c_str(), getBody(this->offset).length())) == -1)
     throw INTERNAL_SERVER_ERROR;
   logger::error << "write size : " << writeSize << logger::endl;
   logger::error << "body size : " << this->bodySize << logger::endl;
@@ -276,11 +279,13 @@ void CGI::readCGI(fd_set& reads) {
     FD_CLR(this->readFd, &reads);
     close(this->readFd);
     this->status = DONE;
+    logger::error << "body : " << this->body << logger::endl;
     return ;
   }
   buf[read_size] = 0;
   this->body += std::string(buf, read_size);
   this->bodySize += read_size;
+  this->offset += read_size;
   logger::error << "read : " << buf << logger::endl;
   logger::error << "read_size : " << read_size << logger::endl;
 }

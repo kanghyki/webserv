@@ -35,6 +35,7 @@ class CGI {
     enum Status getStatus() const;
     int   getReqFd() const;
     const std::string getBody(void) const;
+    const std::string getBody(int offset) const;
 
     void writeCGI(fd_set& writes);
     void readCGI(fd_set& reads);

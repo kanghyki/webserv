@@ -37,13 +37,9 @@ HttpResponse Http::cgiProcessing(const HttpRequest& req, SessionManager& sm,
   std::string                         body;
 
   try {
-    logger::error << "cgi ret : " << cgiRet << logger::endl;
     std::pair<std::string, std::string> p = util::splitHeaderBody(cgiRet, CRLF + CRLF);
-    logger::error << "1" << logger::endl;
     header = util::parseCGIHeader(p.first);
-    logger::error << "2" << logger::endl;
     body = p.second;
-    logger::error << "3" << logger::endl;
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
   }
@@ -56,7 +52,6 @@ HttpResponse Http::cgiProcessing(const HttpRequest& req, SessionManager& sm,
     if (lower_first == "status") {
       std::vector<std::string> vs = util::split(it->second, ' ');
       if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
-      logger::error << "4" << logger::endl;
       res.setStatusCode(static_cast<HttpStatus>(util::atoi(vs[0])));
     }
     else if (lower_first == HttpResponseHeader::SET_COOKIE)
