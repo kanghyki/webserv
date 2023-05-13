@@ -321,6 +321,8 @@ void Server::receiveDone(int fd) {
 }
 
 void Server::cgiDone(CGI* cgi) {
+  int status;
+
   logger::error << "cgiDone" << logger::endl;
   int fd = cgi->getReqFd();
   HttpRequest&  req = this->requests[fd];
@@ -328,6 +330,9 @@ void Server::cgiDone(CGI* cgi) {
   logger::error << "cgi body : " << cgi->getBody() << logger::endl;
   try {
     res = Http::processing(req, this->sessionManager, cgi->getBody());
+    waitpid(cgi->getChildPid(), &status, 0);
+    if (status == -1)
+      throw INTERNAL_SERVER_ERROR;
   } catch (HttpStatus s) {
     res = Http::getErrorPage(s, req);
   }
@@ -429,17 +434,11 @@ bool Server::checkCGIFd(int fd) {
 
 CGI* Server::getCGI(int fd) {
   std::vector<CGI>& cgis = this->cgis;
-//  logger::error << "cgis len : " << cgis.size() << logger::endl;
   for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
-//      logger::error << "fd : " << fd << logger::endl;
-//      logger::error << "writeFd : " << it->getWriteFd() << logger::endl;
-//      logger::error << "readFd : " << it->getReadFd() << logger::endl;
     if (fd == it->getReadFd() || fd == it->getWriteFd()) {
-//      logger::error << "return cgi" << logger::endl;
       return &(*it);
     }
   }
-//  logger::error << "return null" << logger::endl;
   return NULL;
 }
 
@@ -449,9 +448,6 @@ void Server::executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd) {
     CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]), reqFd);
     cgi.execute(this->reads, this->writes, this->fdMax);
     this->cgis.push_back(cgi);
-//    std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
-//    header = util::parseCGIHeader(p.first);
-//    body = p.second;
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
   }
@@ -460,6 +456,8 @@ void Server::executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd) {
 void Server::eraseCGI(std::vector<CGI>& cgis, CGI* cgi) {
   for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
     if (&(*it) == cgi) {
+      if (this->fdMax == cgi->getReadFd())
+        this->fdMax -= 1;
       cgis.erase(it);
       return;
     }
