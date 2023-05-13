@@ -3,7 +3,7 @@
 const size_t        Server::BIND_MAX_TRIES = 10;
 const size_t        Server::LISTEN_MAX_TRIES = 10;
 const size_t        Server::TRY_SLEEP_TIME = 5;
-const int           Server::BUF_SIZE = 1024 * 12;
+const int           Server::BUF_SIZE = 1024 * 128;
 const int           Server::MANAGE_FD_MAX = 1024;
 const std::string   Server::HEADER_DELIMETER = "\r\n\r\n";
 const std::string   Server::CHUNKED_DELIMETER = "0\r\n\r\n";
@@ -132,6 +132,8 @@ void Server::run(void) {
       break;
     }
 
+    logger::debug << "selecting..." << logger::endl;
+
     cleanUpConnection();
 
     for (int i = 0; i < this->fdMax + 1; i++) {
@@ -140,7 +142,7 @@ void Server::run(void) {
           CGI* cgi = getCGI(i);
           if (cgi != NULL) {
             if (cgi->getStatus() == CGI::WRITING) {
-              cgi->writeCGI(this->writes);
+              cgi->writeCGI(this->writes, this->reads);
             }
           }
           else {
@@ -157,6 +159,7 @@ void Server::run(void) {
         }
       }
       else if (FD_ISSET(i, &readsCpy)) {
+        logger::error << "in read fd" << logger::endl;
         CGI* cgi = getCGI(i);
         if (cgi != NULL) {
           if (cgi->getStatus() == CGI::READING)
@@ -215,6 +218,7 @@ void Server::receiveData(int fd) {
   }
   buf[recv_size] = 0;
   this->recvs[fd] += std::string(buf, recv_size);
+  logger::error << "recv_size : "  << this->recvs[fd].length() << logger::endl;
   checkReceiveDone(fd);
 }
 

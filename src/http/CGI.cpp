@@ -182,13 +182,14 @@ void CGI::execute(fd_set& reads, fd_set& writes, int& fdMax) {
   close(fd1[READ]);
   close(fd2[WRITE]);
   fcntl(fd1[WRITE], F_SETFL, O_NONBLOCK);
-  fcntl(fd2[READ], F_SETFL, O_NONBLOCK);
+
   FD_SET(fd1[WRITE], &writes);
-  FD_SET(fd2[READ], &reads);
+//  fcntl(fd2[READ], F_SETFL, O_NONBLOCK);
+//  FD_SET(fd2[READ], &reads);
   fdMax = fd2[READ];
 
   this->status = WRITING;
-  writeCGI(writes);
+  writeCGI(writes, reads);
 //  if (write(fd1[WRITE], getBody().c_str(), getBody().length()) == -1)
 //    throw INTERNAL_SERVER_ERROR;
 
@@ -250,7 +251,7 @@ CGI::Status CGI::getStatus() const {
   return this->status;
 }
 
-void CGI::writeCGI(fd_set& writes) {
+void CGI::writeCGI(fd_set& writes, fd_set& reads) {
   logger::error << "write cgi" << logger::endl;
   int writeSize;
   if ((writeSize = write(this->writeFd, getBody(this->offset).c_str(), getBody(this->offset).length())) == -1)
@@ -264,6 +265,8 @@ void CGI::writeCGI(fd_set& writes) {
     this->bodySize = 0;
     FD_CLR(this->writeFd, &writes);
     close(this->writeFd);
+    fcntl(this->readFd, F_SETFL, O_NONBLOCK);
+    FD_SET(this->readFd, &reads);
     this->status = READING;
   }
 }

@@ -7,6 +7,7 @@
 # include <fcntl.h>
 # include <sys/wait.h>
 # include <sys/select.h>
+# include <sys/socket.h>
 
 # include "./HttpRequest.hpp"
 # include "../etc/Util.hpp"
@@ -37,7 +38,7 @@ class CGI {
     const std::string getBody(void) const;
     const std::string getBody(int offset) const;
 
-    void writeCGI(fd_set& writes);
+    void writeCGI(fd_set& writes, fd_set& reads);
     void readCGI(fd_set& reads);
 
   private:
