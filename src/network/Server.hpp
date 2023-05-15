@@ -26,50 +26,52 @@ class Server {
     void run();
 
   private:
-    static const size_t         BIND_MAX_TRIES;
-    static const size_t         LISTEN_MAX_TRIES;
-    static const size_t         TRY_SLEEP_TIME;
-    static const int            BUF_SIZE;
-    static const int            MANAGE_FD_MAX;
+    static const size_t       BIND_MAX_TRIES;
+    static const size_t       LISTEN_MAX_TRIES;
+    static const size_t       TRY_SLEEP_TIME;
+    static const size_t       BUF_SIZE;
+    static const size_t       MANAGE_FD_MAX;
 
-    static const std::string    HEADER_DELIMETER;
-    static const std::string    CHUNKED_DELIMETER;
+    static const std::string  HEADER_DELIMETER;
+    static const std::string  CHUNKED_DELIMETER;
 
-    std::vector<int>            listens_fd;
-    std::vector<HttpRequest>    requests;
-    std::vector<HttpResponse>   responses;
-    std::vector<std::string>    recvs;
-    std::vector<CGI>            cgis; 
+    std::vector<int>          listens_fd;
+    std::vector<HttpRequest>  requests;
+    std::vector<HttpResponse> responses;
+    std::vector<std::string>  recvs;
 
-    int                         fdMax;
-    fd_set                      listens;
-    fd_set                      reads;
-    fd_set                      writes;
+    std::map<int, int>        cgi_map;
 
-    const Config&               config;
-    Connection                  connection;
-    SessionManager              sessionManager;
+    int                       fdMax;
+    fd_set                    listens;
+    fd_set                    reads;
+    fd_set                    writes;
+
+    const Config&             config;
+    Connection                connection;
+    SessionManager            sessionManager;
 
     inline int  socketInit(void);
     inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
     inline void socketOpen(int servFd, sockaddr_in& in);
-    inline void fdSetInit(fd_set& fs, int fd);
+    void        ft_fd_set(int fd, fd_set& set);
 
     void        acceptConnect(int server_fd);
     void        receiveData(int fd);
     void        checkReceiveDone(int fd);
     void        receiveHeader(int fd, HttpRequest& req);
     void        receiveDone(int fd);
-    void        cgiDone(CGI* cgi);
+    void        postProcessing(int fd);
     void        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
     void        sendData(int fd);
     void        closeConnection(int fd);
     void        keepAliveConnection(int fd);
     void        cleanUpConnection();
-    bool        checkCGIFd(int fd);
-    CGI*        getCGI(int fd);
-    void        executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd);
-    void        eraseCGI(std::vector<CGI>& cgis, CGI* cgi);
+
+    bool        isCgiPipe(int fd) const;
+    void        writeCGI(int fd);
+    void        readCGI(int fd);
+
 };
 
 #endif

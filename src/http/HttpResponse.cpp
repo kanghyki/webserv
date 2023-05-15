@@ -11,9 +11,12 @@ HttpResponse::HttpResponse():
   statusText(""),
   header(),
   body(""),
+  isSetBuffer(false),
   buffer(""),
   buffer_size(0),
-  sendLength(0) {
+  sendLength(0),
+  cgi_stat(NOT_CGI),
+  cgi() {
 }
 
 HttpResponse::HttpResponse(const HttpResponse& obj):
@@ -21,9 +24,12 @@ HttpResponse::HttpResponse(const HttpResponse& obj):
   statusText(obj.statusText),
   header(obj.header),
   body(obj.body),
+  isSetBuffer(obj.isSetBuffer),
   buffer(obj.buffer),
   buffer_size(obj.buffer_size),
-  sendLength(obj.sendLength) {
+  sendLength(obj.sendLength),
+  cgi_stat(obj.cgi_stat),
+  cgi(obj.cgi) {
 }
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
@@ -33,9 +39,13 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
     this->header = obj.header;
     this->body = obj.body;
 
+    this->isSetBuffer = obj.isSetBuffer;
     this->buffer = obj.buffer;
     this->buffer_size = obj.buffer_size;
     this->sendLength = obj.sendLength;
+
+    this->cgi_stat = obj.cgi_stat;
+    this->cgi = obj.cgi;
   }
 
   return *this;
@@ -60,7 +70,7 @@ HttpStatus HttpResponse::getStatusCode() const {
 }
 
 HttpResponse::SendStatus HttpResponse::getSendStatus() const {
-  if (this->buffer_size == this->sendLength)
+  if (this->isSetBuffer == true && this->buffer_size == this->sendLength)
     return DONE;
   return SENDING;
 }
@@ -88,7 +98,7 @@ void HttpResponse::removeBody() {
 std::string HttpResponse::toString() throw() {
   std::string ret;
 
-  if (this->buffer.empty() == false)
+  if (this->isSetBuffer == true)
     return this->buffer.substr(this->sendLength);
 
   this->statusText = getStatusText(this->statusCode);
@@ -102,6 +112,7 @@ std::string HttpResponse::toString() throw() {
 
   this->buffer = ret;
   this->buffer_size = ret.length();
+  this->isSetBuffer = true;
 
   return ret;
 }
@@ -110,7 +121,6 @@ std::string HttpResponse::makeStatusLine() const {
   return this->version + " " + util::itoa(this->statusCode) + " " + this->statusText + "\r\n";
 }
 
-// TODO: move
 std::string HttpResponse::getCurrentTimeStr() const {
   // example: "Date: Sat, 9 Jul 2023 13:12:42 UTC"
   time_t curr_time;
@@ -121,4 +131,16 @@ std::string HttpResponse::getCurrentTimeStr() const {
   strftime(buf, 100, "%a, %d %b %Y %X GMT", time);
 
   return buf;
+}
+
+void HttpResponse::set_cgi_status(HttpResponse::cgi_status s) {
+  this->cgi_stat = s;
+}
+
+HttpResponse::cgi_status HttpResponse::get_cgi_status() const {
+  return this->cgi_stat;
+}
+
+CGI& HttpResponse::getCGI() {
+  return this->cgi;
 }

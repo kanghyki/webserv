@@ -1,6 +1,7 @@
 #ifndef HTTPRESPONSE_HPP
 # define HTTPRESPONSE_HPP
 
+# include "./CGI.hpp"
 # include "./header/HttpResponseHeader.hpp"
 # include "./HttpStatus.hpp"
 # include "./HttpRequest.hpp"
@@ -12,6 +13,11 @@
 class HttpResponse {
 
   public:
+    enum cgi_status {
+      NOT_CGI,
+      IS_CGI
+    };
+
     enum SendStatus {
       SENDING,
       DONE
@@ -31,6 +37,11 @@ class HttpResponse {
     SendStatus                          getSendStatus() const;
     HttpResponseHeader&                 getHeader();
 
+    cgi_status                          get_cgi_status() const;
+    void                                set_cgi_status(cgi_status s);
+
+    CGI&                                getCGI();
+
     std::string                         toString() throw();
 
   private:
@@ -41,9 +52,13 @@ class HttpResponse {
     HttpResponseHeader                  header;
     std::string                         body;
 
+    bool                                isSetBuffer;
     std::string                         buffer;
     unsigned int                        buffer_size;
     unsigned int                        sendLength;
+
+    cgi_status                          cgi_stat;
+    CGI                                 cgi;
 
     std::string                         makeStatusLine() const;
     std::string                         getCurrentTimeStr() const;

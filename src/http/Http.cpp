@@ -5,8 +5,7 @@ Http::Http() {}
 
 Http::~Http() {}
 
-HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager,
-                                const std::string& cgiRet) {
+HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
   HttpResponse res;
 
   checkAndThrowError(req);
@@ -18,7 +17,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager,
   }
 
   try {
-    if (req.isCGI()) res = cgiProcessing(req, manager, cgiRet);
+    if (req.isCGI()) res = executeCGI(req, manager);
     else if (req.getMethod() == request_method::GET || req.getMethod() == request_method::HEAD) res = getMethod(req);
     else if (req.getMethod() == request_method::POST) res = postMethod(req);
     else if (req.getMethod() == request_method::DELETE) res = deleteMethod(req);
@@ -30,20 +29,39 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager,
   return res;
 }
 
-HttpResponse Http::cgiProcessing(const HttpRequest& req, SessionManager& sm,
-                                  const std::string& cgiRet) {
+void Http::checkAndThrowError(const HttpRequest& req) {
+  if (req.getRecvStatus() == HttpRequest::ERROR)
+    throw req.getErrorStatusCode();
+  if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
+    throw (PAYLOAD_TOO_LARGE);
+  if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
+    throw (METHOD_NOT_ALLOWED);
+}
+
+HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
+  std::string                         cgi_ret;
   HttpResponse                        res;
-  std::map<std::string, std::string>  header;
   std::string                         body;
+  std::map<std::string, std::string>  header;
 
   try {
-    std::pair<std::string, std::string> p = util::splitHeaderBody(cgiRet, CRLF + CRLF);
-    header = util::parseCGIHeader(p.first);
-    body = p.second;
+    std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
+    res.set_cgi_status(HttpResponse::IS_CGI);
+    res.getCGI().initCGI(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
   }
 
+  return res;
+}
+
+void Http::finishCGI(HttpResponse& res, const HttpRequest& req, SessionManager& sm) {
+  std::string                         body;
+  std::map<std::string, std::string>  header;
+
+  std::pair<std::string, std::string> p = util::splitHeaderBody(res.getCGI().getCgiResult(), CRLF + CRLF);
+  header = util::parseCGIHeader(p.first);
+  body = p.second;
   // FIXME:
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
     res.getHeader().set(it->first, it->second);
@@ -61,59 +79,7 @@ HttpResponse Http::cgiProcessing(const HttpRequest& req, SessionManager& sm,
 
   res.getHeader().remove("status");
   res.setBody(body);
-
-  return res;
 }
-
-void Http::checkAndThrowError(const HttpRequest& req) {
-  if (req.getRecvStatus() == HttpRequest::ERROR)
-    throw req.getErrorStatusCode();
-  if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
-    throw (PAYLOAD_TOO_LARGE);
-  if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
-    throw (METHOD_NOT_ALLOWED);
-}
-
-//void Http::executeCGI(const HttpRequest& req, SessionManager& sm,
-//                                fd_set& reads, fd_set& writes,
-//                                std::vector<CGI>& cgis, int& fdMax) {
-//  std::string                         cgi_ret;
-//  HttpResponse                        res;
-//  std::string                         body;
-//  std::map<std::string, std::string>  header;
-//
-//  try {
-//    std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
-//    CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
-//    cgis.push_back(cgi);
-//    cgi.execute(reads, writes, fdMax);
-////    std::pair<std::string, std::string> p = util::splitHeaderBody(cgi_ret, CRLF + CRLF);
-////    header = util::parseCGIHeader(p.first);
-////    body = p.second;
-//  } catch (std::exception& e) {
-//    throw INTERNAL_SERVER_ERROR;
-//  }
-//
-////  // FIXME:
-////  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
-////    res.getHeader().set(it->first, it->second);
-////
-////    std::string lower_first = util::toLowerStr(it->first);
-////    if (lower_first == "status") {
-////      std::vector<std::string> vs = util::split(it->second, ' ');
-////      if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
-////      res.setStatusCode(static_cast<HttpStatus>(util::atoi(vs[0])));
-////    }
-////    else if (lower_first == HttpResponseHeader::SET_COOKIE)
-////      sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
-////
-////  }
-////
-////  res.getHeader().remove("status");
-////  res.setBody(body);
-////
-////  return res;
-//}
 
 HttpResponse Http::getMethod(const HttpRequest& req) {
   HttpResponse res;
@@ -139,7 +105,11 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
 
   res.setStatusCode(CREATED);
   res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
-  res.getHeader().set(HttpResponseHeader::LOCATION, req.getServerConfig().getServerName() + ":" + util::itoa(req.getServerConfig().getPort()) + req.getSubstitutedPath() );
+  res.getHeader().set(HttpResponseHeader::LOCATION,\
+      req.getServerConfig().getServerName()
+      + ":"
+      + util::itoa(req.getServerConfig().getPort())
+      + req.getSubstitutedPath());
 
   res.setBody(req.getBody());
 

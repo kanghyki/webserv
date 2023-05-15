@@ -6,76 +6,69 @@
 # include <cstring>
 # include <fcntl.h>
 # include <sys/wait.h>
-# include <sys/select.h>
-# include <sys/socket.h>
 
 # include "./HttpRequest.hpp"
 # include "../etc/Util.hpp"
-# include "../etc/Logger.hpp"
 
 static const std::string CGI_VERSION = "CGI/1.1";
 static const std::string SOFTWARE_NAME = "NGINX MINUS";
 
 class CGI {
   public:
-    enum Status {
-      WRITING,
-      READING,
-      DONE
-    };
-
-    CGI(const HttpRequest& req, const bool sessionAvailable, int reqFd);
+    CGI();
+    ~CGI();
     CGI(const CGI& obj);
-    ~CGI(void);
-    
-    void initCGI(fd_set& reads, fd_set& writes, int& fdMax);
+    CGI&              operator=(const CGI& obj);
 
-    pid_t getChildPid() const;
-    int   getReadFd() const;
-    int   getWriteFd() const;
-    enum Status getStatus() const;
-    int   getReqFd() const;
-    const std::string getBody(void) const;
-    const std::string getBody(int offset) const;
+    void              initCGI(const HttpRequest& req, const bool sessionAvailable);
+    void              forkCGI();
+    int               writeCGI();
+    int               readCGI();
 
-    void writeCGI(fd_set& writes, fd_set& reads, int& fdMax);
-    void readCGI(fd_set& reads);
+    FILE*             getTmpFile() const;
+    int               getReadFD() const;
+    int               getWriteFD() const;
+    int               getPid() const;
+    std::string       getCgiResult() const;
+
 
   private:
-    static const int READ = 0;
-    static const int WRITE = 1;
-    static const int BUF_SIZE = 1024 * 16;
+    static const int                    READ_BUF_SIZE = 1024 * 5;
+    static const int                    READ = 0;
+    static const int                    WRITE = 1;
 
-    char** argv;
-    char** env;
-    std::string scriptPath;
-    std::string cgiPath;
-    std::string pathInfo;
-    std::string body;
-    int         bodySize;
-    int         offset;
-    bool        sessionAvailable;
-    pid_t       childPid;
-    int         readFd;
-    int         writeFd;
-    int         reqFd;
-    enum Status status;
-    FILE*       in;
+    std::map<std::string, std::string>  env_map;
+    FILE*                               tmp_file;
+    pid_t                               pid;
+    int                                 read_fd;
+    int                                 write_fd;
+    std::string                         cgi_result;
 
-    const std::map<std::string, std::string> getEnvMap(const HttpRequest& req) const;
-    char** getArgv() const;
-    char** envMapToEnv(const std::map<std::string, std::string>& envMap) const;
+    size_t                              body_offset;
+    const std::string                   getBody(void) const;
+    void                                addBodyOffset(size_t s);
 
-    void changeWorkingDirectory(void);
+    std::string                         scriptPath;
+    std::string                         cgiPath;
+    std::string                         pathInfo;
+    std::string                         body;
+    bool                                sessionAvailable;
 
-    const std::string getScriptPath(void) const;
-    const std::string getCgiPath(void) const;
-    const std::string getCurrentPath(void) const;
-    const std::string getPathInfo(void) const;
-    const std::string getSessionAvailable(void) const;
-    const std::string convertHeaderKey(const std::string& key) const;
+    const std::map<std::string, std::string>  getEnvMap(const HttpRequest& req) const;
+    char**                                    getArgv() const;
+    char**                                    envMapToEnv(const std::map<std::string, std::string>& envMap) const;
 
-    void  executeCGI(int& fdMax, fd_set& reads);
+    void                                      changeWorkingDirectory(void);
+
+    const std::string                         getScriptPath(void) const;
+    const std::string                         getCgiPath(void) const;
+    const std::string                         getCurrentPath(void) const;
+    const std::string                         getPathInfo(void) const;
+    const std::string                         getSessionAvailable(void) const;
+    const std::string                         convertHeaderKey(const std::string& key) const;
+
+    void                                      prepareCGI(const HttpRequest& req, const bool sessionAvailable);
+
 };
 
 namespace cgi_env {

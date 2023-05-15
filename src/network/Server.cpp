@@ -3,8 +3,8 @@
 const size_t        Server::BIND_MAX_TRIES = 10;
 const size_t        Server::LISTEN_MAX_TRIES = 10;
 const size_t        Server::TRY_SLEEP_TIME = 5;
-const int           Server::BUF_SIZE = 1024 * 128;
-const int           Server::MANAGE_FD_MAX = 1024;
+const size_t        Server::BUF_SIZE = 1024 * 16;
+const size_t        Server::MANAGE_FD_MAX = 1024;
 const std::string   Server::HEADER_DELIMETER = "\r\n\r\n";
 const std::string   Server::CHUNKED_DELIMETER = "0\r\n\r\n";
 
@@ -32,10 +32,8 @@ Server::Server(Config& config) :
       socketaddrInit(sit->getHost(), sit->getPort(), sock);
       socketOpen(fd, sock);
 
-      FD_SET(fd, &this->reads);
-      FD_SET(fd, &this->listens);
-      if (this->fdMax < fd)
-        this->fdMax = fd;
+      ft_fd_set(fd, this->reads);
+      ft_fd_set(fd, this->listens);
       this->listens_fd.push_back(fd);
     }
 }
@@ -47,6 +45,10 @@ Server::Server(Config& config) :
 Server::~Server(void) {}
 
 /*
+ * -------------------------- Operator -----------------------------
+ */
+
+/*
  * ----------------------- Member Function -------------------------
  */
 
@@ -55,8 +57,10 @@ inline int Server::socketInit(void) {
   if (fd == -1)
     throw std::runtime_error("Server initialization failed");
 
+  // for develop
   int option = 1;
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+  // -----------
 
   return fd;
 }
@@ -105,11 +109,6 @@ inline void Server::socketOpen(int servFd, sockaddr_in& in) {
   logger::info << "Listening... (" << servFd << ") \n\n\"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n" << logger::endl;
 }
 
-inline void Server::fdSetInit(fd_set& fs, int fd) {
-  FD_ZERO(&fs);
-  FD_SET(fd, &fs);
-}
-
 void Server::run(void) {
   struct timeval t;
 
@@ -126,19 +125,17 @@ void Server::run(void) {
       break;
     }
 
-    logger::debug << "selecting..." << logger::endl;
-
     cleanUpConnection();
 
     for (int i = 0; i < this->fdMax + 1; i++) {
+
+      // 1
       if (FD_ISSET(i, &this->writes)) {
+        // 2
         if (FD_ISSET(i, &writesCpy)) {
-          CGI* cgi = getCGI(i);
-          if (cgi != NULL) {
-            if (cgi->getStatus() == CGI::WRITING) {
-              cgi->writeCGI(this->writes, this->reads, this->fdMax);
-            }
-          }
+          // 3
+          if (isCgiPipe(i))
+            writeCGI(i);
           else {
             HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
             if (send_status == HttpResponse::SENDING)
@@ -150,17 +147,14 @@ void Server::run(void) {
                 keepAliveConnection(i);
             }
           }
+          // 3 ---
         }
+        // 2 ---
       }
+      // 1 ---
       else if (FD_ISSET(i, &readsCpy)) {
-        logger::error << "in read fd" << logger::endl;
-        CGI* cgi = getCGI(i);
-        if (cgi != NULL) {
-          if (cgi->getStatus() == CGI::READING)
-            cgi->readCGI(this->reads);
-          if (cgi->getStatus() == CGI::DONE)
-            cgiDone(cgi);
-        }
+        if (isCgiPipe(i))
+          readCGI(i);
         else {
           if (FD_ISSET(i, &this->listens))
             acceptConnect(i);
@@ -176,6 +170,63 @@ void Server::run(void) {
       logger::warning << "Closed, listen fd(" << i << ") with -1" << logger::endl;
 }
 
+bool Server::isCgiPipe(int fd) const {
+  std::map<int, int>::const_iterator it;
+
+  it = this->cgi_map.find(fd);
+  if (it == this->cgi_map.end())
+    return false;
+  return it->second;
+}
+
+void Server::writeCGI(int fd) {
+  int client_fd;
+
+  client_fd = cgi_map[fd];
+  CGI& cgi = this->responses[client_fd].getCGI();
+  int write_size = cgi.writeCGI();
+  if (write_size == 0) {
+    FD_CLR(fd, &this->writes);
+    lseek(fd, 0, SEEK_SET);
+
+    cgi.forkCGI();
+
+    cgi_map.erase(fd);
+    cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
+    ft_fd_set(cgi.getReadFD(), this->reads);
+  }
+  else if (write_size == -1) {
+    // withdraw
+    closeConnection(client_fd);
+    logger::error << "oh cgi write error" << logger::endl;
+  }
+}
+
+void Server::readCGI(int fd) {
+  int client_fd;
+
+  client_fd = cgi_map[fd];
+  CGI& cgi = this->responses[client_fd].getCGI();
+  int read_size = cgi.readCGI();
+  if (read_size == 0) {
+    FD_CLR(fd, &this->reads);
+
+    // withdraw
+    int status;
+    waitpid(cgi.getPid(), &status, 0);
+    fclose(cgi.getTmpFile());
+    close(cgi.getReadFD());
+
+    cgi_map.erase(fd);
+    Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
+    postProcessing(client_fd);
+  }
+  else if (read_size == -1) {
+    // withdraw
+    closeConnection(client_fd);
+    logger::error << "oh cgi read error" << logger::endl;
+  }
+}
 
 void Server::acceptConnect(int server_fd) {
   struct sockaddr_in  client_addr;
@@ -188,10 +239,7 @@ void Server::acceptConnect(int server_fd) {
     return ;
   }
 
-  FD_SET(client_fd, &this->reads);
-  if (this->fdMax < client_fd)
-    this->fdMax = client_fd;
-
+  ft_fd_set(client_fd, this->reads);
 
   logger::info << "Accept, client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << logger::endl;
   this->connection.update(client_fd, Connection::HEADER);
@@ -200,8 +248,8 @@ void Server::acceptConnect(int server_fd) {
 }
 
 void Server::receiveData(int fd) {
-  char buf[BUF_SIZE + 1];
-  int recv_size;
+  static char buf[BUF_SIZE + 1];
+  int         recv_size;
 
   recv_size = recv(fd, buf, BUF_SIZE, 0);
   if (recv_size <= 0) {
@@ -211,8 +259,9 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
+//  logger::debug << "recv_size: " << recv_size << logger::endl;
   this->recvs[fd] += std::string(buf, recv_size);
-  logger::error << "recv_size : "  << this->recvs[fd].length() << logger::endl;
+//  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
   checkReceiveDone(fd);
 }
 
@@ -295,52 +344,35 @@ void Server::receiveDone(int fd) {
   HttpResponse& res = this->responses[fd];
 
   try {
-    if (req.isCGI()) {
-      executeCGI(req, this->sessionManager, fd);
-      return;
-    }
-    else
-      res = Http::processing(req, this->sessionManager, "");
+    res = Http::processing(req, this->sessionManager);
   } catch (HttpStatus s) {
     res = Http::getErrorPage(s, req);
   }
+
+  if (res.get_cgi_status() == HttpResponse::NOT_CGI)
+    postProcessing(fd);
+  else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
+    CGI& cgi = res.getCGI();
+    ft_fd_set(cgi.getWriteFD(), this->writes);
+    cgi_map.insert(std::make_pair(cgi.getWriteFD(), fd));
+  }
+}
+
+void Server::postProcessing(int fd) {
+  HttpRequest&  req = this->requests[fd];
+  HttpResponse& res = this->responses[fd];
+
   if (req.getMethod() == request_method::HEAD) {
     res.getHeader().remove(HttpRequestHeader::CONTENT_TYPE);
     res.removeBody();
   }
   addExtraHeader(fd, req, res);
   this->connection.update(fd, Connection::SEND);
-  FD_SET(fd, &this->writes);
+  ft_fd_set(fd, this->writes);
   logger::info << "Response to " << fd
     << " from " << req.getServerConfig().getServerName()
     << ", Status=" << res.getStatusCode()
     << logger::endl;
-  sendData(fd);
-}
-
-void Server::cgiDone(CGI* cgi) {
-  int status;
-
-  logger::error << "cgiDone" << logger::endl;
-  int fd = cgi->getReqFd();
-  HttpRequest&  req = this->requests[fd];
-  HttpResponse& res = this->responses[fd];
-//  logger::error << "cgi body : " << cgi->getBody() << logger::endl;
-  try {
-    res = Http::processing(req, this->sessionManager, cgi->getBody());
-    waitpid(cgi->getChildPid(), &status, 0);
-    if (status == -1)
-      throw INTERNAL_SERVER_ERROR;
-  } catch (HttpStatus s) {
-    res = Http::getErrorPage(s, req);
-  }
-  eraseCGI(this->cgis, cgi);
-  FD_SET(fd, &this->writes);
-  logger::info << "Response to " << fd
-    << " from " << req.getServerConfig().getServerName()
-    << ", Status=" << res.getStatusCode()
-    << logger::endl;
-  sendData(fd);
 }
 
 void Server::sendData(int fd) {
@@ -384,11 +416,14 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
 }
 
 void Server::closeConnection(int fd) {
-  if (FD_ISSET(fd, &this->writes)) FD_CLR(fd, &this->writes);
-  if (FD_ISSET(fd, &this->reads)) FD_CLR(fd, &this->reads);
+  if (FD_ISSET(fd, &this->writes))
+    FD_CLR(fd, &this->writes);
+  if (FD_ISSET(fd, &this->reads))
+    FD_CLR(fd, &this->reads);
 
   if (fd == this->fdMax)
-    this->fdMax -= 1;
+    --this->fdMax;
+
   if (close(fd) == -1)
     logger::warning << "Closed, client(" << fd << ") with -1" << logger::endl;
   else
@@ -421,43 +456,8 @@ void Server::cleanUpConnection() {
   }
 }
 
-bool Server::checkCGIFd(int fd) {
-  std::vector<CGI>& cgis = this->cgis;
-  for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
-    if (fd == it->getReadFd() || fd == it->getWriteFd())
-      return true;
-  }
-  return false;
-}
-
-CGI* Server::getCGI(int fd) {
-  std::vector<CGI>& cgis = this->cgis;
-  for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
-    if (fd == it->getReadFd() || fd == it->getWriteFd()) {
-      return &(*it);
-    }
-  }
-  return NULL;
-}
-
-void Server::executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd) {
-  try {
-    std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
-    CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]), reqFd);
-    cgi.initCGI(this->reads, this->writes, this->fdMax);
-    this->cgis.push_back(cgi);
-  } catch (std::exception& e) {
-    throw INTERNAL_SERVER_ERROR;
-  }
-}
-
-void Server::eraseCGI(std::vector<CGI>& cgis, CGI* cgi) {
-  for (std::vector<CGI>::iterator it = cgis.begin(); it != cgis.end(); ++it) {
-    if (&(*it) == cgi) {
-      if (this->fdMax == cgi->getReadFd())
-        this->fdMax -= 1;
-      cgis.erase(it);
-      return;
-    }
-  }
+void Server::ft_fd_set(int fd, fd_set& set) {
+  FD_SET(fd, &set);
+  if (this->fdMax < fd)
+    this->fdMax = fd;
 }
