@@ -5,9 +5,8 @@
  */
 
 CGI::CGI():
-  body_offset(0)
-//  status(WRITING),
-{}
+  body_offset(0) {
+}
 
 CGI::CGI(const CGI& obj):
   env_map(obj.env_map),
@@ -117,6 +116,7 @@ void CGI::addBodyOffset(size_t s) {
 
 void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
   prepareCGI(req, sessionAvailable);
+
   this->env_map = getEnvMap(req);
   this->tmp_file = tmpfile();
   this->write_fd = fileno(this->tmp_file);
@@ -155,7 +155,6 @@ int CGI::writeCGI() {
   std::string body;
   int         write_size;
 
-  logger::debug << "body size: " << getBody().length() << logger::endl;
   body = getBody().substr(this->body_offset);
   write_size = write(this->write_fd, body.c_str(), body.length());
   if (write_size > 0)
@@ -196,7 +195,7 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
 
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getSubstitutedPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
-  ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod())); 
+  ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SCRIPT_NAME, req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_NAME, req.getServerConfig().getHost()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SERVER_PORT, util::itoa(req.getServerConfig().getPort())));
@@ -230,7 +229,7 @@ char** CGI::getArgv() const {
 
 char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const {
   char** ret;
-  
+
   ret = (char**)malloc(sizeof(char*) * (envMap.size() + 1));
   if (ret == NULL) throw INTERNAL_SERVER_ERROR;
 
@@ -240,7 +239,7 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
     i++;
   }
   ret[i] = NULL;
-  
+
   return ret;
 }
 

@@ -134,10 +134,8 @@ void Server::run(void) {
         // 2
         if (FD_ISSET(i, &writesCpy)) {
           // 3
-          if (isCgiPipe(i)) {
-            logger::warning << "writing cgi" << logger::endl;
+          if (isCgiPipe(i))
             writeCGI(i);
-          }
           else {
             HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
             if (send_status == HttpResponse::SENDING)
@@ -155,10 +153,8 @@ void Server::run(void) {
       }
       // 1 ---
       else if (FD_ISSET(i, &readsCpy)) {
-        if (isCgiPipe(i)) {
-          logger::warning << "reading cgi" << logger::endl;
+        if (isCgiPipe(i))
           readCGI(i);
-        }
         else {
           if (FD_ISSET(i, &this->listens))
             acceptConnect(i);
@@ -189,13 +185,10 @@ void Server::writeCGI(int fd) {
   client_fd = cgi_map[fd];
   CGI& cgi = this->responses[client_fd].getCGI();
   int write_size = cgi.writeCGI();
-  logger::debug << "cgi write_size: " << write_size  << " into " << fd << logger::endl;
   if (write_size == 0) {
     FD_CLR(fd, &this->writes);
-//    close(cgi.getWriteFD());
     lseek(fd, 0, SEEK_SET);
 
-    logger::debug << "fork fork" << logger::endl;
     cgi.forkCGI();
 
     cgi_map.erase(fd);
@@ -215,7 +208,6 @@ void Server::readCGI(int fd) {
   client_fd = cgi_map[fd];
   CGI& cgi = this->responses[client_fd].getCGI();
   int read_size = cgi.readCGI();
-  logger::debug << "cgi read_size: " << read_size  << " into " << fd << logger::endl;
   if (read_size == 0) {
     FD_CLR(fd, &this->reads);
 
@@ -267,9 +259,9 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
-  logger::debug << "recv_size: " << recv_size << logger::endl;
+//  logger::debug << "recv_size: " << recv_size << logger::endl;
   this->recvs[fd] += std::string(buf, recv_size);
-  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
+//  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
   checkReceiveDone(fd);
 }
 
