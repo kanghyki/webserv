@@ -39,6 +39,9 @@ namespace util {
   std::pair<std::string, std::string> splitField(const std::string& str);
   std::map<std::string, std::string> splitHeaderField(const std::string& str);
 
+  std::string combinePath(const std::string& s1, const std::string& s2);
+  std::string trimChar(std::string s, char c);
+
   class StringFoundException : public std::exception
   {
     public:

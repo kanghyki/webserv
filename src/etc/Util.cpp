@@ -227,6 +227,33 @@ namespace util {
     return fd;
   }
 
+  std::string trimChar(std::string s, char c) {
+    size_t f, r;
+
+    f = 0;
+    while (f < s.length() && s[f] == c)
+      ++f;
+    s.erase(0, f);
+    r = s.length() - 1;
+    while (r > 0 && s[f] == c)
+      --r;
+    s.erase(r + 1, s.length() - 1 - r);
+
+    return s;
+  }
+
+  std::string combinePath(const std::string& s1, const std::string& s2) {
+    std::string ret;
+    std::string ts1 = trimChar(s1, '/');
+    std::string ts2 = trimChar(s2, '/');
+
+    if (ts1.size() > 0)
+      ret += "/" + ts1;
+    if (ts2.size() > 0)
+      ret += "/" + ts2;
+
+    return ret;
+  }
 
   const char* StringFoundException::what() const throw() {
     return "Target not found";

@@ -186,6 +186,7 @@ std::string HttpRequest::getPath() const { return this->path; }
 
 std::string HttpRequest::getSubstitutedPath() const {
   std::string root_path = getLocationConfig().getRoot();
+  std::string alias_path = getLocationConfig().getAlias();
   std::string req_path = getPath();
   std::string loc_path = getLocationConfig().getPath();
   size_t      loc_path_len = getLocationConfig().getPath().length();
@@ -193,16 +194,17 @@ std::string HttpRequest::getSubstitutedPath() const {
   if (req_path.find(loc_path) != std::string::npos) {
 
     if (req_path != "/" && (req_path.length() == loc_path_len || req_path[loc_path_len] == '/')) {
-      if (loc_path != req_path && root_path == "/")
-        root_path = "";
-      req_path.replace(req_path.find(loc_path), loc_path_len, root_path);
+      if (loc_path != req_path && alias_path == "/")
+        alias_path = "";
+      req_path.replace(req_path.find(loc_path), loc_path_len, alias_path);
     }
 
-    if (loc_path == "/" && root_path != "/") {
-      req_path = root_path + req_path;
+    if (loc_path == "/" && alias_path != "/") {
+      req_path = alias_path + req_path;
     }
 
   }
+  req_path = util::combinePath(root_path, req_path);
 
   return req_path;
 }
