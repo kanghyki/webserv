@@ -50,26 +50,31 @@ example) send_timeout 50;
 ### Server
 ```
 1.
-session timeout [second(int)];
+gateway_timeout [second(int)];
+default value) 60
+example) gateway_timeout 30;
+
+2.
+session_timeout [second(int)];
 default value) 600
 example) session_timeout 30;
 
-2.
+3.
 keepalive_timeout [second(int)];
 default value) 60
 example) keepalive_timeout 30;
 
-3.
+4.
 keepalive_requests [second(int)];
 default value) 1000
 example) keepalive_requests 500;
 
-4.
+5.
 listen [host(ident)]:[port(int)];
 default value) 127.0.0.1:80
 example) listen 192.168.0.1:4242;
 
-5.
+6.
 server_name [path(ident)];
 default value) NONE
 example) server_name webserv.42.kr;

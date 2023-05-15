@@ -34,12 +34,20 @@ void Connection::update(int fd, enum WHAT timeout) {
   this->table.insert(std::make_pair(fd, time(NULL) + to));
 }
 
-void Connection::update(int fd, const ServerConfig& conf) {
+void Connection::updateKeepAlive(int fd, const ServerConfig& conf) {
   if (this->table.find(fd) != this->table.end()) {
     this->table.erase(fd);
   }
 
   this->table.insert(std::make_pair(fd, time(NULL) + conf.getKeepAliveTimeout()));
+}
+
+void Connection::updateGateway(int fd, const ServerConfig& conf) {
+  if (this->table.find(fd) != this->table.end()) {
+    this->table.erase(fd);
+  }
+
+  this->table.insert(std::make_pair(fd, time(NULL) + conf.getGatewayTimeout()));
 }
 
 int Connection::updateRequests(int fd, const ServerConfig& conf) {

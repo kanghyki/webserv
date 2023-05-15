@@ -47,8 +47,8 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
 
   try {
     std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
-    res.set_cgi_status(HttpResponse::IS_CGI);
     res.getCGI().initCGI(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
+    res.set_cgi_status(HttpResponse::IS_CGI);
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
   }
@@ -63,23 +63,24 @@ void Http::finishCGI(HttpResponse& res, const HttpRequest& req, SessionManager& 
   std::pair<std::string, std::string> p = util::splitHeaderBody(res.getCGI().getCgiResult(), CRLF + CRLF);
   header = util::parseCGIHeader(p.first);
   body = p.second;
-  // FIXME:
-  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it) {
+
+  for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
     res.getHeader().set(it->first, it->second);
 
-    std::string lower_first = util::toLowerStr(it->first);
-    if (lower_first == "status") {
-      std::vector<std::string> vs = util::split(it->second, ' ');
-      if (vs.size() < 1) throw INTERNAL_SERVER_ERROR;
-      res.setStatusCode(static_cast<HttpStatus>(util::atoi(vs[0])));
-    }
-    else if (lower_first == HttpResponseHeader::SET_COOKIE)
-      sm.addSession(it->second, req.getServerConfig().getSessionTimeout());
-
-  }
-
-  res.getHeader().remove("status");
   res.setBody(body);
+
+  std::string setCookieVal = res.getHeader().get(HttpResponseHeader::SET_COOKIE);
+  if (setCookieVal != "")
+    sm.addSession(setCookieVal, req.getServerConfig().getSessionTimeout());
+
+  const std::string CGI_STATUS = "status";
+  std::string statusVal = res.getHeader().get(CGI_STATUS);
+  if (statusVal != "") {
+    res.setStatusCode(static_cast<HttpStatus>(util::atoi(statusVal)));
+    res.getHeader().remove(CGI_STATUS);
+  }
+  else
+    res = Http::getErrorPage(BAD_GATEWAY, req);
 }
 
 HttpResponse Http::getMethod(const HttpRequest& req) {

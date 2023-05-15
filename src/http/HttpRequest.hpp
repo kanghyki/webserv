@@ -38,7 +38,6 @@ class HttpRequest {
     HttpRequest& operator=(const HttpRequest& obj);
     HttpRequest(const HttpRequest& obj);
 
-
     void                                  parse(const std::string& req, const Config& conf);
     void                                  unchunkBody();
 

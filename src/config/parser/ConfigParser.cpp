@@ -47,6 +47,7 @@ ServerConfig ConfigParser::parseServer(HttpConfig& httpConf) {
   for (nextToken(); curToken().isNot(Token::END_OF_FILE) && curToken().isNot(Token::RBRACE); nextToken()) {
     if (curToken().is(Token::LOCATION)) conf.addLocationConfig(parseLocation(conf));
     else if (curToken().isCommon()) parseCommon(conf);
+    else if (curToken().is(Token::GATEWAY_TIMEOUT)) parseGatewayTimeout(conf);
     else if (curToken().is(Token::SESSION_TIMEOUT)) parseSessionTimeout(conf);
     else if (curToken().is(Token::KEEPALIVE_TIMEOUT)) parseKeepAliveTimeout(conf);
     else if (curToken().is(Token::KEEPALIVE_REQUESTS)) parseKeepAliveRequests(conf);
@@ -133,6 +134,13 @@ void ConfigParser::parseSendTimeout(HttpConfig& conf) {
 // server
 // server
 // server
+
+// gateway_timeout [second(int)];
+void ConfigParser::parseGatewayTimeout(ServerConfig& conf) {
+  expectNextToken(Token::INT);
+  conf.setGatewayTimeout(atoi(curToken().getLiteral()));
+  expectNextToken(Token::SEMICOLON);
+}
 
 // session_timeout [second(int)];
 void ConfigParser::parseSessionTimeout(ServerConfig& conf) {
@@ -338,6 +346,9 @@ int ConfigParser::atoi(const std::string& s) const {
   }
 
   ret = util::atoi(s.c_str());
+
+  if (ret <= 0)
+    throwError("Allow only nonzero positive numbers");
 
   return ret;
 }

@@ -3,7 +3,7 @@
 const std::string Token::ILLEGAL                  = "ILLEGAL";
 const std::string Token::END_OF_FILE              = "EOF";
 const std::string Token::IDENT                    = "IDENT";
-const std::string Token::INT                      = "int";
+const std::string Token::INT                      = "UNSIGNED INT";
 const std::string Token::SEMICOLON                = ";";
 const std::string Token::LBRACE                   = "{";
 const std::string Token::RBRACE                   = "}";
@@ -27,6 +27,7 @@ const std::string Token::CLIENT_HEADER_TIMEOUT    = "client_header_timeout";
 const std::string Token::SEND_TIMEOUT             = "send_timeout";
 const std::string Token::KEEPALIVE_TIMEOUT        = "keepalive_timeout";
 const std::string Token::KEEPALIVE_REQUESTS       = "keepalive_requests";
+const std::string Token::GATEWAY_TIMEOUT          = "gateway_timeout";
 
 const int         Token::IDENT_IDX                = 0;
 const int         Token::TYPE_IDX                 = 1;
@@ -51,6 +52,7 @@ const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"send_timeout",                               Token::SEND_TIMEOUT},
   {"keepalive_timeout",                          Token::KEEPALIVE_TIMEOUT},
   {"keepalive_requests",                         Token::KEEPALIVE_REQUESTS},
+  {"gateway_timeout",                            Token::GATEWAY_TIMEOUT},
 };
 
 Token::Token():

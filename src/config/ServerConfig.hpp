@@ -19,6 +19,7 @@ class ServerConfig: public CommonConfig {
 
     const LocationConfig                      findLocationConfig(std::string path) const;
 
+    int                                       getGatewayTimeout() const;
     int                                       getSessionTimeout() const;
     int                                       getKeepAliveTimeout() const;
     int                                       getKeepAliveRequests() const;
@@ -28,6 +29,7 @@ class ServerConfig: public CommonConfig {
     const std::map<std::string, std::string>& getCGI() const;
     const std::vector<LocationConfig>&        getLocationConfig() const;
 
+    void                                      setGatewayTimeout(int n);
     void                                      setSessionTimeout(int n);
     void                                      setKeepAliveTimeout(int n);
     void                                      setKeepAliveRequests(int n);
@@ -38,12 +40,14 @@ class ServerConfig: public CommonConfig {
     void                                      addLocationConfig(LocationConfig location);
 
   private:
+    static const int                          DEFAULT_GATEWAY_TIMEOUT;
     static const int                          DEFAULT_SESSION_TIMEOUT;
     static const int                          DEFAULT_KEEPALIVE_TIMEOUT;
     static const int                          DEFAULT_KEEPALIVE_REQUESTS;
     static const short                        DEFAULT_PORT;
     static const std::string                  DEFAULT_HOST;
 
+    int                                       gateway_timeout;
     int                                       session_timeout;
     int                                       keepalive_timeout;
     int                                       keepalive_requests;
