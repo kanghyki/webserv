@@ -21,12 +21,15 @@ class Connection {
     };
 
     std::set<int>             getTimeoutList();
+    std::set<int>             getGatewayTimeoutList();
 
     void                      update(int fd, enum WHAT timeout);
-    void                      update(int fd, const ServerConfig& conf);
+    void                      updateKeepAlive(int fd, const ServerConfig& conf);
+    void                      updateGateway(int fd);
     int                       updateRequests(int fd, const ServerConfig& conf);
 
     void                      remove(int fd);
+    void                      removeGateway(int fd);
     void                      removeRequests(int fd);
 
   private:
@@ -36,6 +39,7 @@ class Connection {
 
     // fd, time(sec)
     std::map<int, time_t>     table;
+    std::map<int, time_t>     gateway_table;
 
     // fd, requests
     std::map<int, int>        req_table;

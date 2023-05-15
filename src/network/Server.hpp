@@ -11,6 +11,7 @@
 # include "../http/HttpResponse.hpp"
 # include "../http/HttpStatus.hpp"
 
+# include <signal.h>
 # include <arpa/inet.h>
 # include <fcntl.h>
 # include <time.h>

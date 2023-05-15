@@ -129,7 +129,6 @@ void CGI::forkCGI() {
 
   pipe(p);
   this->pid = fork();
-
   if (this->pid == 0) {
     char**  argv;
     char**  env;
@@ -243,11 +242,10 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
   return ret;
 }
 
-void CGI::changeWorkingDirectory(void) {
+int CGI::changeWorkingDirectory(void) {
   std::string target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
-  // FIXME: throw
-  if (chdir(target.c_str()) == -1) throw util::SystemFunctionException();
+  return chdir(target.c_str());
 }
 
 const std::string CGI::getCurrentPath(void) const {

@@ -352,6 +352,7 @@ void Server::receiveDone(int fd) {
   if (res.get_cgi_status() == HttpResponse::NOT_CGI)
     postProcessing(fd);
   else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
+    this->connection.updateGateway(fd);
     CGI& cgi = res.getCGI();
     ft_fd_set(cgi.getWriteFD(), this->writes);
     cgi_map.insert(std::make_pair(cgi.getWriteFD(), fd));
@@ -440,7 +441,7 @@ void Server::closeConnection(int fd) {
 void Server::keepAliveConnection(int fd) {
   FD_CLR(fd, &this->writes);
 
-  this->connection.update(fd, this->requests[fd].getServerConfig());
+  this->connection.updateKeepAlive(fd, this->requests[fd].getServerConfig());
 
   this->requests[fd] = HttpRequest();
   this->responses[fd] = HttpResponse();
@@ -451,8 +452,45 @@ void Server::cleanUpConnection() {
 
   fd_list = this->connection.getTimeoutList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    int fd = *it;
+    HttpRequest& req = this->requests[fd];
+    HttpResponse& res = this->responses[fd];
+
+    if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE
+        || req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
+      FD_CLR(fd, &this->reads);
+      res = Http::getErrorPage(REQUEST_TIMEOUT, req);
+      ft_fd_set(fd, this->writes);
+      this->connection.update(fd, Connection::SEND);
+    }
+    else
+      closeConnection(*it);
+
     logger::info << "Timeout, client(" << *it << ")" << logger::endl;
-    closeConnection(*it);
+  }
+
+  fd_list = this->connection.getGatewayTimeoutList();
+  for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
+    int fd = *it;
+    HttpRequest& req = this->requests[fd];
+    HttpResponse& res = this->responses[fd];
+    CGI& cgi = res.getCGI();
+
+    this->cgi_map.erase(cgi.getReadFD());
+    this->cgi_map.erase(cgi.getWriteFD());
+    FD_CLR(cgi.getReadFD(), &this->reads);
+    FD_CLR(cgi.getWriteFD(), &this->writes);
+
+    kill(cgi.getPid(), SIGKILL);
+    waitpid(cgi.getPid(), 0, 0);
+
+    res = Http::getErrorPage(GATEWAY_TIMEOUT, req);
+    ft_fd_set(fd, this->writes);
+
+    logger::info << "Gateway Timeout, client(" << *it << ")" << logger::endl;
+    this->connection.update(fd, Connection::SEND);
+    this->connection.removeGateway(fd);
+//    closeConnection(*it);
   }
 }
 

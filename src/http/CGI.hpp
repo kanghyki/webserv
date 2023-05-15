@@ -58,7 +58,7 @@ class CGI {
     char**                                    getArgv() const;
     char**                                    envMapToEnv(const std::map<std::string, std::string>& envMap) const;
 
-    void                                      changeWorkingDirectory(void);
+    int                                       changeWorkingDirectory(void);
 
     const std::string                         getScriptPath(void) const;
     const std::string                         getCgiPath(void) const;
