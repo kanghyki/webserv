@@ -192,7 +192,12 @@ void Server::writeCGI(int fd) {
   logger::debug << "cgi write_size: " << write_size  << " into " << fd << logger::endl;
   if (write_size == 0) {
     FD_CLR(fd, &this->writes);
-    close(cgi.getWriteFD());
+//    close(cgi.getWriteFD());
+    lseek(fd, 0, SEEK_SET);
+
+    logger::debug << "fork fork" << logger::endl;
+    cgi.forkCGI();
+
     cgi_map.erase(fd);
     cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
     ft_fd_set(cgi.getReadFD(), this->reads);
@@ -215,6 +220,7 @@ void Server::readCGI(int fd) {
     FD_CLR(fd, &this->reads);
 
     // withdraw
+    fclose(cgi.getTmpFile());
     close(cgi.getReadFD());
     int status;
     waitpid(cgi.getPid(), &status, 0);

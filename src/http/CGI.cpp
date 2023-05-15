@@ -10,6 +10,8 @@ CGI::CGI():
 {}
 
 CGI::CGI(const CGI& obj):
+  env_map(obj.env_map),
+  tmp_file(obj.tmp_file),
   pid(obj.pid),
   read_fd(obj.read_fd),
   write_fd(obj.write_fd),
@@ -24,6 +26,8 @@ CGI::CGI(const CGI& obj):
 
 CGI& CGI::operator=(const CGI& obj) {
   if (this != &obj) {
+    env_map = obj.env_map;
+    tmp_file = obj.tmp_file;
     pid = obj.pid;
     read_fd = obj.read_fd;
     write_fd = obj.write_fd;
@@ -46,6 +50,10 @@ void CGI::prepareCGI(const HttpRequest& req, const bool sessionAvailable) {
   this->sessionAvailable = sessionAvailable;
   if (!req.getBody().empty())
     this->body = req.getBody();
+}
+
+FILE* CGI::getTmpFile() const {
+  return this->tmp_file;
 }
 
 int CGI::getReadFD() const {
@@ -108,53 +116,38 @@ void CGI::addBodyOffset(size_t s) {
  */
 
 void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
-  int     pipe1[2];
-  int     pipe2[2];
-
   prepareCGI(req, sessionAvailable);
+  this->env_map = getEnvMap(req);
+  this->tmp_file = tmpfile();
+  this->write_fd = fileno(this->tmp_file);
 
-  if (pipe(pipe1) == -1) {
-    throw INTERNAL_SERVER_ERROR;
-  }
-  if (pipe(pipe2) == -1) {
-    close(pipe1[0]);
-    close(pipe1[1]);
-    throw INTERNAL_SERVER_ERROR;
-  }
-  if ((this->pid = fork()) == -1) {
-    close(pipe1[0]);
-    close(pipe1[1]);
-    close(pipe2[0]);
-    close(pipe2[1]);
-    throw INTERNAL_SERVER_ERROR;
-  }
+  fcntl(this->write_fd, F_SETFL, O_NONBLOCK);
+}
+
+void CGI::forkCGI() {
+  int     p[2];
+
+  pipe(p);
+  this->pid = fork();
 
   if (this->pid == 0) {
     char**  argv;
     char**  env;
 
     argv = this->getArgv();
-    env = this->envMapToEnv(this->getEnvMap(req));
+    env = this->envMapToEnv(this->env_map);
 
-    close(pipe1[READ]);
-    dup2(pipe1[WRITE], STDOUT_FILENO);
-    close(pipe1[WRITE]);
+    close(p[READ]);
+    dup2(p[WRITE], STDOUT_FILENO);
+    dup2(this->write_fd, STDIN_FILENO);
 
-    close(pipe2[WRITE]);
-    dup2(pipe2[READ], STDIN_FILENO);
-    close(pipe2[READ]);
     changeWorkingDirectory();
     execve(this->cgiPath.c_str(), argv, env);
     exit(EXIT_FAILURE);
   }
 
-  close(pipe1[WRITE]);
-  close(pipe2[READ]);
-
-  this->read_fd = pipe1[READ];
-  this->write_fd = pipe2[WRITE];
-
-  fcntl(this->write_fd, F_SETFL, O_NONBLOCK);
+  close(p[WRITE]);
+  this->read_fd = p[READ];
   fcntl(this->read_fd, F_SETFL, O_NONBLOCK);
 }
 

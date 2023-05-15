@@ -18,12 +18,14 @@ class CGI {
     CGI();
     ~CGI();
     CGI(const CGI& obj);
-    CGI& operator=(const CGI& obj);
+    CGI&              operator=(const CGI& obj);
 
     void              initCGI(const HttpRequest& req, const bool sessionAvailable);
+    void              forkCGI();
     int               writeCGI();
     int               readCGI();
 
+    FILE*             getTmpFile() const;
     int               getReadFD() const;
     int               getWriteFD() const;
     int               getPid() const;
@@ -31,24 +33,26 @@ class CGI {
 
 
   private:
-    static const int  READ_BUF_SIZE = 1024 * 5;
-    static const int  READ = 0;
-    static const int  WRITE = 1;
+    static const int                    READ_BUF_SIZE = 1024 * 5;
+    static const int                    READ = 0;
+    static const int                    WRITE = 1;
 
-    pid_t             pid;
-    int               read_fd;
-    int               write_fd;
-    std::string       cgi_result;
+    std::map<std::string, std::string>  env_map;
+    FILE*                               tmp_file;
+    pid_t                               pid;
+    int                                 read_fd;
+    int                                 write_fd;
+    std::string                         cgi_result;
 
-    size_t            body_offset;
-    const std::string getBody(void) const;
-    void              addBodyOffset(size_t s);
+    size_t                              body_offset;
+    const std::string                   getBody(void) const;
+    void                                addBodyOffset(size_t s);
 
-    std::string       scriptPath;
-    std::string       cgiPath;
-    std::string       pathInfo;
-    std::string       body;
-    bool              sessionAvailable;
+    std::string                         scriptPath;
+    std::string                         cgiPath;
+    std::string                         pathInfo;
+    std::string                         body;
+    bool                                sessionAvailable;
 
     const std::map<std::string, std::string>  getEnvMap(const HttpRequest& req) const;
     char**                                    getArgv() const;
