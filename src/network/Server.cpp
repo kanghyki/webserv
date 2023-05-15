@@ -212,10 +212,10 @@ void Server::readCGI(int fd) {
     FD_CLR(fd, &this->reads);
 
     // withdraw
-    fclose(cgi.getTmpFile());
-    close(cgi.getReadFD());
     int status;
     waitpid(cgi.getPid(), &status, 0);
+    fclose(cgi.getTmpFile());
+    close(cgi.getReadFD());
 
     cgi_map.erase(fd);
     Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
