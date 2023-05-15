@@ -9,6 +9,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
   HttpResponse res;
 
   try {
+    logger::debug << "target: " << req.getSubstitutedPath() << logger::endl;
     checkAndThrowError(req);
     if (req.getLocationConfig().isSetReturn()) {
       res.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));

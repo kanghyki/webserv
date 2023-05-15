@@ -203,7 +203,8 @@ void Server::writeCGI(int fd) {
     ft_fd_clr(fd, this->writes);
     cgi_map.erase(fd);
     cgi.withdrawResource();
-    closeConnection(client_fd);
+    this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
+    prepareIO(client_fd);
   }
 }
 
@@ -224,7 +225,8 @@ void Server::readCGI(int fd) {
     ft_fd_clr(fd, this->reads);
     cgi_map.erase(fd);
     cgi.withdrawResource();
-    closeConnection(client_fd);
+    this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
+    prepareIO(client_fd);
   }
 }
 
@@ -444,6 +446,8 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
 }
 
 void Server::closeConnection(int fd) {
+  HttpResponse& res = this->responses[fd];
+
   ft_fd_clr(fd, this->writes);
   ft_fd_clr(fd, this->reads);
 
@@ -457,6 +461,22 @@ void Server::closeConnection(int fd) {
 
   this->connection.remove(fd);
   this->connection.removeRequests(fd);
+
+  if (res.get_cgi_status() == HttpResponse::IS_CGI) {
+    CGI& cgi = res.getCGI();
+
+    cgi.withdrawResource();
+    ft_fd_clr(cgi.getReadFD(), this->reads);
+    ft_fd_clr(cgi.getWriteFD(), this->writes);
+    cgi_map.erase(cgi.getReadFD());
+    cgi_map.erase(cgi.getWriteFD());
+  }
+  else {
+    close(res.getFd());
+    ft_fd_clr(res.getFd(), this->reads);
+    ft_fd_clr(res.getFd(), this->writes);
+    file_map.erase(res.getFd());
+  }
 
   this->requests.erase(fd);
   this->responses.erase(fd);
