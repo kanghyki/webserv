@@ -60,7 +60,7 @@ void Connection::updateGateway(int fd) {
   }
 
   // TODO: GATEWAT TIMEOUT
-  this->gateway_table.insert(std::make_pair(fd, time(NULL) + 30));
+  this->gateway_table.insert(std::make_pair(fd, time(NULL) + 3000));
 }
 
 int Connection::updateRequests(int fd, const ServerConfig& conf) {
