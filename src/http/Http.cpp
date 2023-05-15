@@ -10,7 +10,6 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
 
   try {
     checkAndThrowError(req);
-
     if (req.getLocationConfig().isSetReturn()) {
       res.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
       res.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturnRes().second);

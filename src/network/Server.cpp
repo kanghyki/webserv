@@ -358,7 +358,7 @@ void Server::receiveDone(int fd) {
       int fileFd = res.getFd();
       fcntl(fileFd, F_SETFL, O_NONBLOCK);
       file_map.insert(std::make_pair(fileFd, fd));
-      if (res.getMethod() == request_method::GET)
+      if (res.getMethod() == request_method::GET || res.getMethod() == request_method::HEAD)
         ft_fd_set(fileFd, this->reads);
       else if (res.getMethod() == request_method::POST || res.getMethod() == request_method::PUT)
         ft_fd_set(fileFd, this->writes);
