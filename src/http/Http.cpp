@@ -22,6 +22,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
     else if (req.getMethod() == request_method::POST) res = postMethod(req);
     else if (req.getMethod() == request_method::DELETE) res = deleteMethod(req);
     else if (req.getMethod() == request_method::PUT) res = putMethod(req);
+    res.setMethod(req.getMethod());
   } catch (HttpStatus status) {
     res = getErrorPage(status, req);
   }
@@ -83,13 +84,25 @@ void Http::finishCGI(HttpResponse& res, const HttpRequest& req, SessionManager& 
 
 HttpResponse Http::getMethod(const HttpRequest& req) {
   HttpResponse res;
+  struct stat _stat;
 
-  HttpDataFecther fetcher(req);
-  std::string data = fetcher.fetch();
+  if (stat(req.getTargetPath().c_str(), &_stat) == -1)
+    throw NOT_FOUND;
 
-  res.setStatusCode(OK);
-  res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
-  res.setBody(data);
+  if (S_ISDIR(_stat.st_mode)) {
+    if (req.getLocationConfig().isAutoindex()) {
+      res.setAutoIndex(true);
+      res.setBody(autoindex(req));
+    }
+    else if (req.getLocationConfig().getIndex() != "")
+      res.openToRead(req.getTargetPath() + req.getLocationConfig().getIndex());
+    else
+      throw NOT_FOUND;
+  }
+  else if (S_ISREG(_stat.st_mode))
+    res.openToRead(req.getTargetPath());
+  else
+    throw FORBIDDEN;
 
   return res;
 }
@@ -187,6 +200,50 @@ std::string Http::defaultErrorPage(HttpStatus s) {
 <hr><center>webserv/1.0.0</center>\
 </body>\
 </html>";
+
+  return ret;
+}
+
+std::string Http::autoindex(const HttpRequest& req) {
+  std::string     ret;
+  DIR*            dir;
+  struct dirent*  ent;
+
+  if ((dir = opendir(req.getTargetPath().c_str())) == NULL) {
+    if (errno == ENOTDIR)
+      throw (FORBIDDEN);
+    if (errno == ENOENT)
+      throw (NOT_FOUND);
+    else
+      throw (INTERNAL_SERVER_ERROR);
+  }
+  ret = "<!DOCTYPE html>\
+    <html>\
+    <head>\
+    <style>\
+    table { width: 300px; }\
+    th { height: 17px; }\
+    </style>\
+    <title>Index of " + req.getPath() + "</title>\
+    </head>\
+    <body>\
+    <h1>Index of " + req.getPath() + "</h1>\
+    <table>";
+
+  while ((ent = readdir(dir)) != NULL) {
+    std::string name(ent->d_name);
+    if (name == ".")
+      continue;
+    ret += "<tr><td>";
+    if (ent->d_type == DT_DIR) ret += "<a href=" + name + "/>" + name + "/</a></td><td align=\"right\">directory";
+    else if (ent->d_type == DT_REG) ret += "<a href=" + name + ">" + name + "</a></td><td align=\"right\">file";
+    ret += "</td></tr>\n";
+  }
+  ret += "</table>\
+          </body>\
+          </html>";
+
+  closedir(dir);
 
   return ret;
 }

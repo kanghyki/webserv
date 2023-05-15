@@ -41,6 +41,7 @@ class Server {
     std::vector<std::string>  recvs;
 
     std::map<int, int>        cgi_map;
+    std::map<int, int>        file_map;
 
     int                       fdMax;
     fd_set                    listens;
@@ -72,6 +73,9 @@ class Server {
     void        writeCGI(int fd);
     void        readCGI(int fd);
 
+    bool        isFileFd(int fd) const;
+    void        writeFile(int fd);
+    void        readFile(int fd);
 };
 
 #endif

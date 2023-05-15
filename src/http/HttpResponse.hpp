@@ -42,6 +42,20 @@ class HttpResponse {
 
     CGI&                                getCGI();
 
+    int                                 getStatus() const;
+    int                                 getWriteFd() const;
+    int                                 getReadFd() const;
+    int                                 getFd() const;
+
+    void                                openToWrite(const std::string& fileName);
+    void                                openToRead(const std::string& fileName);
+
+    void                                setAutoIndex(bool autoindex);
+    bool                                isAutoindex() const;
+
+    void                                setMethod(const std::string& method);
+    std::string                         getMethod(void) const;
+
     std::string                         toString() throw();
 
   private:
@@ -59,6 +73,14 @@ class HttpResponse {
 
     cgi_status                          cgi_stat;
     CGI                                 cgi;
+
+    int                                 status;
+    int                                 writeFd;
+    int                                 readFd;
+    int                                 fd;
+
+    bool                                autoindex;
+    std::string                         method;
 
     std::string                         makeStatusLine() const;
     std::string                         getCurrentTimeStr() const;

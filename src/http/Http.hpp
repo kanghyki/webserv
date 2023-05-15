@@ -32,6 +32,7 @@ class Http {
     static HttpResponse putMethod(const HttpRequest& req);
 
     static std::string  defaultErrorPage(HttpStatus s);
+    static std::string  autoindex(const HttpRequest& req);
 };
 
 #endif

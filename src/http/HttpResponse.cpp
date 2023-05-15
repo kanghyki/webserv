@@ -16,7 +16,10 @@ HttpResponse::HttpResponse():
   buffer_size(0),
   sendLength(0),
   cgi_stat(NOT_CGI),
-  cgi() {
+  cgi(),
+  status(-1),
+  writeFd(-1),
+  readFd(-1) {
 }
 
 HttpResponse::HttpResponse(const HttpResponse& obj):
@@ -29,7 +32,13 @@ HttpResponse::HttpResponse(const HttpResponse& obj):
   buffer_size(obj.buffer_size),
   sendLength(obj.sendLength),
   cgi_stat(obj.cgi_stat),
-  cgi(obj.cgi) {
+  cgi(obj.cgi),
+  status(obj.status),
+  writeFd(obj.writeFd),
+  readFd(obj.readFd),
+  fd(obj.fd),
+  autoindex(obj.autoindex),
+  method(obj.method) {
 }
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
@@ -46,6 +55,14 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
 
     this->cgi_stat = obj.cgi_stat;
     this->cgi = obj.cgi;
+
+    this->status = obj.status;
+    this->writeFd = obj.writeFd;
+    this->readFd = obj.readFd;
+    this->fd = obj.fd;
+
+    this->autoindex = obj.autoindex;
+    this->method = obj.method;
   }
 
   return *this;
@@ -143,4 +160,53 @@ HttpResponse::cgi_status HttpResponse::get_cgi_status() const {
 
 CGI& HttpResponse::getCGI() {
   return this->cgi;
+}
+
+int HttpResponse::getStatus() const {
+  return this->status;
+}
+
+int HttpResponse::getWriteFd() const {
+  return this->writeFd;
+}
+int HttpResponse::getReadFd() const {
+  return this->readFd;
+}
+
+void HttpResponse::openToWrite(const std::string& fileName) {
+  int fd;
+
+  if ((fd = open(fileName.c_str(), O_WRONLY)) == -1)
+    throw util::SystemFunctionException();
+  fcntl(fd, F_SETFL, O_NONBLOCK);
+  this->fd = fd;
+}
+
+void HttpResponse::openToRead(const std::string& fileName) {
+  int fd;
+
+  if ((fd = open(fileName.c_str(), O_RDONLY)) == -1)
+    throw util::SystemFunctionException();
+  fcntl(fd, F_SETFL, O_NONBLOCK);
+  this->fd = fd;
+}
+
+void HttpResponse::setAutoIndex(bool autoindex) {
+  this->autoindex = autoindex;
+}
+
+bool HttpResponse::isAutoindex() const {
+  return this->autoindex;
+}
+
+void HttpResponse::setMethod(const std::string& method) {
+  this->method = method;
+}
+
+std::string HttpResponse::getMethod(void) const {
+  return this->method;
+}
+
+int HttpResponse::getFd() const {
+  return this->fd;
 }

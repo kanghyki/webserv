@@ -134,7 +134,10 @@ void Server::run(void) {
         // 2
         if (FD_ISSET(i, &writesCpy)) {
           // 3
-          if (isCgiPipe(i))
+          if (isFileFd(i)) {
+
+          }
+          else if (isCgiPipe(i))
             writeCGI(i);
           else {
             HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
@@ -153,7 +156,10 @@ void Server::run(void) {
       }
       // 1 ---
       else if (FD_ISSET(i, &readsCpy)) {
-        if (isCgiPipe(i))
+        if (isFileFd(i)) {
+
+        }
+        else if (isCgiPipe(i))
           readCGI(i);
         else {
           if (FD_ISSET(i, &this->listens))
@@ -349,8 +355,20 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(s, req);
   }
 
-  if (res.get_cgi_status() == HttpResponse::NOT_CGI)
-    postProcessing(fd);
+  if (res.get_cgi_status() == HttpResponse::NOT_CGI) {
+    if (res.isAutoindex() == true || res.getMethod() == request_method::DELETE) {
+      ft_fd_set(fd, this->writes);
+      postProcessing(fd);
+    }
+    else {
+      int io_fd = res.getFd();
+      file_map.insert(std::make_pair(io_fd, fd));
+      if (res.getMethod() == request_method::GET)
+        ft_fd_set(io_fd, this->reads);
+      else
+        ft_fd_set(io_fd, this->writes);
+    }
+  }
   else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
     CGI& cgi = res.getCGI();
     ft_fd_set(cgi.getWriteFD(), this->writes);
@@ -368,7 +386,6 @@ void Server::postProcessing(int fd) {
   }
   addExtraHeader(fd, req, res);
   this->connection.update(fd, Connection::SEND);
-  ft_fd_set(fd, this->writes);
   logger::info << "Response to " << fd
     << " from " << req.getServerConfig().getServerName()
     << ", Status=" << res.getStatusCode()
@@ -460,4 +477,21 @@ void Server::ft_fd_set(int fd, fd_set& set) {
   FD_SET(fd, &set);
   if (this->fdMax < fd)
     this->fdMax = fd;
+}
+
+bool Server::isFileFd(int fd) const {
+  std::map<int, int>::const_iterator it;
+
+  it = this->file_map.find(fd);
+  if (it == this->file_map.end())
+    return false;
+  return it->second;
+}
+
+void Server::writeFile(int fd) {
+
+}
+
+void Server::readFile(int fd) {
+
 }
