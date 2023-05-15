@@ -571,7 +571,7 @@ void Server::readFile(int fd) {
   else if (read_size == 0) {
     ft_fd_clr(fd, this->reads);
     close(fd);
-    fileDone(fd)
+    fileDone(fd);
   }
   else {
     buf[read_size] = 0;
