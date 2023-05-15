@@ -218,6 +218,7 @@ void Server::readCGI(int fd) {
     close(cgi.getReadFD());
 
     cgi_map.erase(fd);
+    this->connection.removeGateway(client_fd);
     Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
     postProcessing(client_fd);
   }
