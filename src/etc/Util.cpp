@@ -213,6 +213,20 @@ namespace util {
     return ret;
   }
 
+  int openToRead(const std::string& file) {
+    int fd = open(file.c_str(), O_RDONLY);
+    if (fd == -1)
+      throw util::SystemFunctionException();
+    return fd;
+  }
+
+  int openToWrite(const std::string& file) {
+    int fd = open(file.c_str(), O_WRONLY | O_CREAT, 0644);
+    if (fd == -1)
+      throw util::SystemFunctionException();
+    return fd;
+  }
+
 
   const char* StringFoundException::what() const throw() {
     return "Target not found";

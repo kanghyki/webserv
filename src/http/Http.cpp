@@ -92,17 +92,22 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
   if (S_ISDIR(_stat.st_mode)) {
     if (req.getLocationConfig().isAutoindex()) {
       res.setAutoIndex(true);
+      res.setStatusCode(OK);
+      res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
       res.setBody(autoindex(req));
     }
     else if (req.getLocationConfig().getIndex() != "")
-      res.openToRead(req.getTargetPath() + req.getLocationConfig().getIndex());
+        res.setFd(openToRead(req.getTargetPath() + req.getLocationConfig().getIndex()));
     else
       throw NOT_FOUND;
   }
   else if (S_ISREG(_stat.st_mode))
-    res.openToRead(req.getTargetPath());
+      res.setFd(openToRead(req.getTargetPath()));
   else
     throw FORBIDDEN;
+
+  res.setStatusCode(OK);
+  res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
 
   return res;
 }
@@ -110,11 +115,12 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
 
-  std::ofstream out(req.getTargetPath().c_str(), std::ofstream::out);
-  if (!out.is_open()) throw FORBIDDEN;
-
-  out.write(req.getBody().c_str(), req.getBody().length());
-  if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
+  try {
+    res.setFd(util::openToWrite(req.getTargetPath()));
+  } catch(util::SystemFunctionException& e) {
+    throw FORBIDDEN;
+  }
+  res.setFileBuffer(req.getBody());
 
   res.setStatusCode(CREATED);
   res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
@@ -123,7 +129,6 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
       + ":"
       + util::itoa(req.getServerConfig().getPort())
       + req.getSubstitutedPath());
-
   res.setBody(req.getBody());
 
   return res;
@@ -155,11 +160,11 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
       throw (FORBIDDEN);
   }
 
-  std::ofstream out(req.getTargetPath().c_str(), std::ofstream::out);
-  if (!out.is_open()) throw NOT_FOUND;
-
-  out.write(req.getBody().c_str(), req.getBody().length());
-  if (out.fail() || out.bad() || out.eof()) throw INTERNAL_SERVER_ERROR;
+  try {
+    res.setFd(util::openToWrite(req.getTargetPath()));
+  } catch(util::SystemFunctionException& e) {
+    throw NOT_FOUND;
+  }
 
   res.setStatusCode(NO_CONTENT);
 
@@ -172,21 +177,35 @@ HttpResponse Http::getErrorPage(HttpStatus status, const HttpRequest& req) {
   const LocationConfig& config = req.getLocationConfig();
 
   std::string errorPagePath = config.getErrorPageTargetPath(status);
-  if (errorPagePath.empty())
-    data = defaultErrorPage(status);
+  if (errorPagePath.empty()) {
+    res.setDefaultError(true);
+    res.setBody(defaultErrorPage(status));
+  }
   else {
     try {
-      data = HttpDataFecther::readFile(errorPagePath);
-    } catch (HttpStatus status) {
-      data = defaultErrorPage(status);
+      res.setFd(util::openToRead(errorPagePath));
+    } catch (util::SystemFunctionException& e) {
+      res.setDefaultError(true);
+      res.setBody(defaultErrorPage(status));
     }
   }
-
+  res.setError(true);
   res.setStatusCode(status);
   res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, "text/html");
-  res.setBody(data);
 
   return res;
+}
+
+int Http::openToRead(const std::string& file) {
+  int fd;
+
+  try {
+    fd = util::openToRead(file);
+  } catch(util::SystemFunctionException& e) {
+    throw NOT_FOUND;
+  }
+
+  return fd;
 }
 
 std::string Http::defaultErrorPage(HttpStatus s) {

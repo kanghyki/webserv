@@ -18,8 +18,11 @@ HttpResponse::HttpResponse():
   cgi_stat(NOT_CGI),
   cgi(),
   status(-1),
-  writeFd(-1),
-  readFd(-1) {
+  fileFd(-1),
+  autoindex(false),
+  fileBuffer(""),
+  error(false),
+  defaultError(false) {
 }
 
 HttpResponse::HttpResponse(const HttpResponse& obj):
@@ -34,11 +37,12 @@ HttpResponse::HttpResponse(const HttpResponse& obj):
   cgi_stat(obj.cgi_stat),
   cgi(obj.cgi),
   status(obj.status),
-  writeFd(obj.writeFd),
-  readFd(obj.readFd),
-  fd(obj.fd),
+  fileFd(obj.fileFd),
   autoindex(obj.autoindex),
-  method(obj.method) {
+  method(obj.method),
+  fileBuffer(obj.fileBuffer),
+  error(obj.error),
+  defaultError(obj.error) {
 }
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
@@ -57,12 +61,15 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
     this->cgi = obj.cgi;
 
     this->status = obj.status;
-    this->writeFd = obj.writeFd;
-    this->readFd = obj.readFd;
-    this->fd = obj.fd;
+    this->fileFd = obj.fileFd;
 
     this->autoindex = obj.autoindex;
     this->method = obj.method;
+
+    this->fileBuffer = obj.fileBuffer;
+
+    this->error = obj.error;
+    this->defaultError = obj.error;
   }
 
   return *this;
@@ -166,31 +173,6 @@ int HttpResponse::getStatus() const {
   return this->status;
 }
 
-int HttpResponse::getWriteFd() const {
-  return this->writeFd;
-}
-int HttpResponse::getReadFd() const {
-  return this->readFd;
-}
-
-void HttpResponse::openToWrite(const std::string& fileName) {
-  int fd;
-
-  if ((fd = open(fileName.c_str(), O_WRONLY)) == -1)
-    throw util::SystemFunctionException();
-  fcntl(fd, F_SETFL, O_NONBLOCK);
-  this->fd = fd;
-}
-
-void HttpResponse::openToRead(const std::string& fileName) {
-  int fd;
-
-  if ((fd = open(fileName.c_str(), O_RDONLY)) == -1)
-    throw util::SystemFunctionException();
-  fcntl(fd, F_SETFL, O_NONBLOCK);
-  this->fd = fd;
-}
-
 void HttpResponse::setAutoIndex(bool autoindex) {
   this->autoindex = autoindex;
 }
@@ -208,5 +190,41 @@ std::string HttpResponse::getMethod(void) const {
 }
 
 int HttpResponse::getFd() const {
-  return this->fd;
+  return this->fileFd;
+}
+
+void HttpResponse::setFd(int fd) {
+  this->fileFd = fd;
+}
+
+void HttpResponse::addFileBuffer(std::string data) {
+  this->fileBuffer += data;
+}
+
+void HttpResponse::setFileBuffer(std::string data) {
+  this->fileBuffer = data;
+}
+
+std::string HttpResponse::getFileBuffer(void) const {
+  return this->fileBuffer;
+}
+
+int HttpResponse::getFileBufferSize(void) const {
+  return this->fileBuffer.size();
+}
+
+void HttpResponse::setError(bool error) {
+  this->error = error;
+}
+
+bool HttpResponse::isError(void) const {
+  return this->error;
+}
+
+void HttpResponse::setDefaultError(bool error) {
+  this->defaultError = error;
+}
+
+bool HttpResponse::isDefaultError(void) const {
+  return this->defaultError;
 }

@@ -33,6 +33,8 @@ class Http {
 
     static std::string  defaultErrorPage(HttpStatus s);
     static std::string  autoindex(const HttpRequest& req);
+
+    static int          openToRead(const std::string& file);
 };
 
 #endif
