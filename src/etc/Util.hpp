@@ -8,6 +8,7 @@
 # include <map>
 # include <iostream>
 # include <unistd.h>
+# include <fcntl.h>
 
 const std::string CRLF = "\r\n";
 
@@ -30,6 +31,8 @@ namespace util {
   void ftDup2(int oldFd, int newFd);
   void ftExecve(const std::string& file, char* const* argv, char* const* envp);
   void ftClose(int fd);
+  int  openToRead(const std::string& file);
+  int  openToWrite(const std::string& file);
 
   std::pair<std::string, std::string> splitHeaderBody(const std::string& str, const std::string& delim);
   std::map<std::string, std::string> parseCGIHeader(const std::string& str);

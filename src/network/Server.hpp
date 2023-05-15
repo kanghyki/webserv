@@ -42,6 +42,7 @@ class Server {
     std::map<int, std::string>  recvs;
 
     std::map<int, int>          cgi_map;
+    std::map<int, int>          file_map;
 
     int                         fdMax;
     fd_set                      listens;
@@ -64,6 +65,7 @@ class Server {
     void        checkReceiveDone(int fd);
     void        receiveHeader(int fd, HttpRequest& req);
     void        receiveDone(int fd);
+    void        fileDone(int fd);
     void        postProcessing(int fd);
     void        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
     void        sendData(int fd);
@@ -75,6 +77,9 @@ class Server {
     void        writeCGI(int fd);
     void        readCGI(int fd);
 
+    bool        isFileFd(int fd) const;
+    void        writeFile(int fd);
+    void        readFile(int fd);
 };
 
 #endif

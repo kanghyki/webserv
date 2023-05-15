@@ -131,7 +131,9 @@ void Server::run(void) {
         // 2
         if (FD_ISSET(i, &writesCpy)) {
           // 3
-          if (isCgiPipe(i))
+          if (isFileFd(i))
+            writeFile(i);
+          else if (isCgiPipe(i))
             writeCGI(i);
           else {
             HttpResponse::SendStatus send_status = this->responses[i].getSendStatus();
@@ -150,7 +152,9 @@ void Server::run(void) {
       }
       // 1 ---
       else if (FD_ISSET(i, &readsCpy)) {
-        if (isCgiPipe(i))
+        if (isFileFd(i))
+          readFile(i);
+        else if (isCgiPipe(i))
           readCGI(i);
         else {
           if (FD_ISSET(i, &this->listens))
@@ -351,14 +355,36 @@ void Server::receiveDone(int fd) {
     res = Http::getErrorPage(s, req);
   }
 
-  if (res.get_cgi_status() == HttpResponse::NOT_CGI)
-    postProcessing(fd);
+  if (res.get_cgi_status() == HttpResponse::NOT_CGI) {
+    if (res.isAutoindex() == true || res.getMethod() == request_method::DELETE || res.isDefaultError())
+      postProcessing(fd);
+    else {
+      int fileFd = res.getFd();
+      fcntl(fileFd, F_SETFL, O_NONBLOCK);
+      file_map.insert(std::make_pair(fileFd, fd));
+      if (res.getMethod() == request_method::GET)
+        ft_fd_set(fileFd, this->reads);
+      else
+        ft_fd_set(fileFd, this->writes);
+    }
+  }
   else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
     this->connection.updateGateway(fd, req.getServerConfig());
     CGI& cgi = res.getCGI();
     ft_fd_set(cgi.getWriteFD(), this->writes);
     cgi_map.insert(std::make_pair(cgi.getWriteFD(), fd));
   }
+}
+
+void Server::fileDone(int fd) {
+  int clientFd = this->file_map[fd];
+  this->file_map.erase(fd);
+  HttpResponse& res = this->responses[clientFd];
+
+  if (res.getMethod() == request_method::GET || res.isError())
+    res.setBody(res.getFileBuffer());
+
+  postProcessing(clientFd);
 }
 
 void Server::postProcessing(int fd) {
@@ -491,6 +517,48 @@ void Server::ft_fd_set(int fd, fd_set& set) {
   FD_SET(fd, &set);
   if (this->fdMax < fd)
     this->fdMax = fd;
+}
+
+bool Server::isFileFd(int fd) const {
+  std::map<int, int>::const_iterator it;
+
+  it = this->file_map.find(fd);
+  if (it == this->file_map.end())
+    return false;
+  return it->second;
+}
+
+void Server::writeFile(int fd) {
+  int clientFd = this->file_map[fd];
+  HttpResponse& res = this->responses[clientFd];
+  int writeSize;
+
+  writeSize = write(fd, res.getFileBuffer().c_str(), res.getFileBufferSize());
+  if (writeSize == res.getFileBufferSize()) {
+    ft_fd_clr(fd, this->writes);
+    close(fd);
+    fileDone(fd);
+  }
+  else
+    logger::error << "write failed" << logger::endl;
+}
+
+void Server::readFile(int fd) {
+  char  buf[BUF_SIZE + 1];
+  int   read_size;
+
+  read_size = read(fd, buf, BUF_SIZE);
+  if (read_size <= 0) {
+    if (read_size < 0) {
+      throw INTERNAL_SERVER_ERROR;
+    }
+    ft_fd_clr(fd, this->reads);
+    close(fd);
+    fileDone(fd);
+  }
+  buf[read_size] = 0;
+  if (read_size > 0)
+    this->responses[this->file_map[fd]].addFileBuffer(std::string(buf, read_size));
 }
 
 void Server::ft_fd_clr(int fd, fd_set& set) {

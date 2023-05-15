@@ -16,7 +16,13 @@ HttpResponse::HttpResponse():
   buffer_size(0),
   sendLength(0),
   cgi_stat(NOT_CGI),
-  cgi() {
+  cgi(),
+  status(-1),
+  fileFd(-1),
+  autoindex(false),
+  fileBuffer(""),
+  error(false),
+  defaultError(false) {
 }
 
 HttpResponse::HttpResponse(const HttpResponse& obj):
@@ -29,7 +35,14 @@ HttpResponse::HttpResponse(const HttpResponse& obj):
   buffer_size(obj.buffer_size),
   sendLength(obj.sendLength),
   cgi_stat(obj.cgi_stat),
-  cgi(obj.cgi) {
+  cgi(obj.cgi),
+  status(obj.status),
+  fileFd(obj.fileFd),
+  autoindex(obj.autoindex),
+  method(obj.method),
+  fileBuffer(obj.fileBuffer),
+  error(obj.error),
+  defaultError(obj.error) {
 }
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
@@ -46,6 +59,17 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
 
     this->cgi_stat = obj.cgi_stat;
     this->cgi = obj.cgi;
+
+    this->status = obj.status;
+    this->fileFd = obj.fileFd;
+
+    this->autoindex = obj.autoindex;
+    this->method = obj.method;
+
+    this->fileBuffer = obj.fileBuffer;
+
+    this->error = obj.error;
+    this->defaultError = obj.error;
   }
 
   return *this;
@@ -143,4 +167,64 @@ HttpResponse::cgi_status HttpResponse::get_cgi_status() const {
 
 CGI& HttpResponse::getCGI() {
   return this->cgi;
+}
+
+int HttpResponse::getStatus() const {
+  return this->status;
+}
+
+void HttpResponse::setAutoIndex(bool autoindex) {
+  this->autoindex = autoindex;
+}
+
+bool HttpResponse::isAutoindex() const {
+  return this->autoindex;
+}
+
+void HttpResponse::setMethod(const std::string& method) {
+  this->method = method;
+}
+
+std::string HttpResponse::getMethod(void) const {
+  return this->method;
+}
+
+int HttpResponse::getFd() const {
+  return this->fileFd;
+}
+
+void HttpResponse::setFd(int fd) {
+  this->fileFd = fd;
+}
+
+void HttpResponse::addFileBuffer(std::string data) {
+  this->fileBuffer += data;
+}
+
+void HttpResponse::setFileBuffer(std::string data) {
+  this->fileBuffer = data;
+}
+
+std::string HttpResponse::getFileBuffer(void) const {
+  return this->fileBuffer;
+}
+
+int HttpResponse::getFileBufferSize(void) const {
+  return this->fileBuffer.size();
+}
+
+void HttpResponse::setError(bool error) {
+  this->error = error;
+}
+
+bool HttpResponse::isError(void) const {
+  return this->error;
+}
+
+void HttpResponse::setDefaultError(bool error) {
+  this->defaultError = error;
+}
+
+bool HttpResponse::isDefaultError(void) const {
+  return this->defaultError;
 }
