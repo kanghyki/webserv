@@ -194,10 +194,8 @@ void Server::writeCGI(int fd) {
       ft_fd_set(cgi.getReadFD(), this->reads);
       cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
     } catch (HttpStatus s) {
-      // FIXME: stdout?
       this->responses[client_fd] = Http::getErrorPage(s, this->requests[client_fd]);
-      this->responses[client_fd].set_cgi_status(HttpResponse::NOT_CGI);
-      postProcessing(client_fd);
+      prepareIO(client_fd);
     }
   }
   else if (write_size == -1) {
@@ -305,7 +303,8 @@ void Server::checkReceiveDone(int fd) {
 
   if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE || req.getRecvStatus() == HttpRequest::ERROR) {
     this->recvs.erase(fd);
-    receiveDone(fd);
+    this->responses[fd] = Http::processing(this->requests[fd], this->sessionManager);
+    prepareIO(fd);
   }
 }
 
@@ -345,23 +344,29 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
   }
 }
 
-void Server::receiveDone(int fd) {
+void Server::prepareIO(int fd) {
   HttpRequest&  req = this->requests[fd];
   HttpResponse& res = this->responses[fd];
 
-  res = Http::processing(req, this->sessionManager);
-
   if (res.get_cgi_status() == HttpResponse::NOT_CGI) {
-    if (res.isAutoindex() == true || res.getMethod() == request_method::DELETE || res.isDefaultError())
+    if (res.isAutoindex() == true
+        || res.getMethod() == request_method::DELETE
+        || res.isDefaultError()) {
       postProcessing(fd);
+    }
     else {
       int fileFd = res.getFd();
       fcntl(fileFd, F_SETFL, O_NONBLOCK);
       file_map.insert(std::make_pair(fileFd, fd));
-      if (res.getMethod() == request_method::GET || res.getMethod() == request_method::HEAD)
+      if (res.isError()
+          || res.getMethod() == request_method::GET
+          || res.getMethod() == request_method::HEAD) {
         ft_fd_set(fileFd, this->reads);
-      else if (res.getMethod() == request_method::POST || res.getMethod() == request_method::PUT)
+      }
+      else if (res.getMethod() == request_method::POST
+          || res.getMethod() == request_method::PUT) {
         ft_fd_set(fileFd, this->writes);
+      }
     }
   }
   else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
@@ -484,13 +489,12 @@ void Server::cleanUpConnection() {
       ft_fd_clr(fd, this->reads);
       res = Http::getErrorPage(REQUEST_TIMEOUT, req);
       req.setConnection(HttpRequestHeader::CLOSE);
-      postProcessing(fd);
+      prepareIO(fd);
     }
     else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
       what = "Gateway ";
       CGI& cgi = res.getCGI();
 
-      // TODO: ERROR
       this->cgi_map.erase(cgi.getReadFD());
       this->cgi_map.erase(cgi.getWriteFD());
       ft_fd_clr(cgi.getReadFD(), this->reads);
@@ -501,7 +505,7 @@ void Server::cleanUpConnection() {
       res = Http::getErrorPage(GATEWAY_TIMEOUT, req);
       req.setConnection(HttpRequestHeader::CLOSE);
       res.set_cgi_status(HttpResponse::NOT_CGI);
-      postProcessing(fd);
+      prepareIO(fd);
     }
     else
       closeConnection(fd);
@@ -525,46 +529,54 @@ bool Server::isFileFd(int fd) const {
 }
 
 void Server::writeFile(int fd) {
-  int clientFd = this->file_map[fd];
-  HttpResponse& res = this->responses[clientFd];
-  int writeSize;
+  int           client_fd = this->file_map[fd];
+  HttpResponse& res = this->responses[client_fd];
+  HttpRequest&  req = this->requests[client_fd];
+  int           writeSize;
 
-  std::string data = res.getFileBuffer();
+  std::string data = res.getFileBufferOffSet();
   writeSize = write(fd, data.c_str(), data.length());
   if (writeSize < 0) {
-    ft_fd_clr(fd, this->writes);
+    logger::error << "write file failed" << logger::endl;
     file_map.erase(fd);
-    closeConnection(clientFd);
+    ft_fd_clr(fd, this->writes);
+    res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
+    prepareIO(client_fd);
   }
-  else {
-    res.addOffSet(writeSize);
-    if (res.getOffSet() == res.getFileBufferSize()) {
-      ft_fd_clr(fd, this->writes);
-      close(fd);
-      fileDone(fd);
-    }
-  }
-}
-
-void Server::readFile(int fd) {
-  char  buf[BUF_SIZE + 1];
-  int   read_size;
-  int   clientFd = this->file_map[fd];
-
-  read_size = read(fd, buf, BUF_SIZE);
-  if (read_size <= 0) {
-    if (read_size < 0) {
-      ft_fd_clr(fd, this->reads);
-      file_map.erase(fd);
-      closeConnection(clientFd);
-    }
-    ft_fd_clr(fd, this->reads);
+  else if (writeSize == 0) {
+    ft_fd_clr(fd, this->writes);
     close(fd);
     fileDone(fd);
   }
-  buf[read_size] = 0;
-  if (read_size > 0)
-    this->responses[clientFd].addFileBuffer(std::string(buf, read_size));
+  else
+    res.addOffSet(writeSize);
+}
+
+void Server::readFile(int fd) {
+  char          buf[BUF_SIZE + 1];
+  int           read_size;
+  int           client_fd = this->file_map[fd];
+  HttpResponse& res = this->responses[client_fd];
+  HttpRequest&  req = this->requests[client_fd];
+
+
+  read_size = read(fd, buf, BUF_SIZE);
+  if (read_size < 0) {
+    logger::error << "read file failed" << logger::endl;
+    file_map.erase(fd);
+    ft_fd_clr(fd, this->reads);
+    res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
+    prepareIO(client_fd);
+  }
+  else if (read_size == 0) {
+    ft_fd_clr(fd, this->reads);
+    close(fd);
+    fileDone(fd)
+  }
+  else {
+    buf[read_size] = 0;
+    res.addFileBuffer(std::string(buf, read_size));
+  }
 }
 
 void Server::ft_fd_clr(int fd, fd_set& set) {

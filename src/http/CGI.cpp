@@ -147,14 +147,16 @@ void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
 }
 
 void CGI::forkCGI() {
-  int     p[2];
+  int     read_pipe[2];
 
-  if (pipe(p) == -1) {
+  if (pipe(read_pipe) == -1) {
     withdrawResource();
     throw INTERNAL_SERVER_ERROR;
   }
-  else
+  else {
     this->resource_flag |= this->f_pipe;
+    this->read_fd = read_pipe[READ];
+  }
 
   this->pid = fork();
   if (this->pid == -1) {
@@ -173,16 +175,15 @@ void CGI::forkCGI() {
     env = this->envMapToEnv(this->env_map);
     target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
-    close(p[READ]);
-    dup2(p[WRITE], STDOUT_FILENO);
+    close(read_pipe[READ]);
+    dup2(read_pipe[WRITE], STDOUT_FILENO);
     dup2(this->write_fd, STDIN_FILENO);
     chdir(target.c_str());
     execve(this->cgiPath.c_str(), argv, env);
     exit(EXIT_FAILURE);
   }
 
-  close(p[WRITE]);
-  this->read_fd = p[READ];
+  close(read_pipe[WRITE]);
   if (fcntl(this->read_fd, F_SETFL, O_NONBLOCK) == -1) {
     withdrawResource();
     throw INTERNAL_SERVER_ERROR;

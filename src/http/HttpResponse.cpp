@@ -44,7 +44,7 @@ HttpResponse::HttpResponse(const HttpResponse& obj):
   fileBuffer(obj.fileBuffer),
   offset(obj.offset),
   error(obj.error),
-  defaultError(obj.error) {
+  defaultError(obj.defaultError) {
 }
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
@@ -70,10 +70,9 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
 
     this->fileBuffer = obj.fileBuffer;
 
-    this->error = obj.error;
-    this->defaultError = obj.error;
-
     this->offset = obj.offset;
+    this->error = obj.error;
+    this->defaultError = obj.defaultError;
   }
 
   return *this;
