@@ -186,6 +186,7 @@ void Server::writeCGI(int fd) {
     FD_CLR(fd, &this->writes);
     lseek(fd, 0, SEEK_SET);
 
+    // TODO: ERROR
     cgi.forkCGI();
 
     cgi_map.erase(fd);
@@ -193,7 +194,7 @@ void Server::writeCGI(int fd) {
     ft_fd_set(cgi.getReadFD(), this->reads);
   }
   else if (write_size == -1) {
-    // withdraw
+    // TODO: ERROR
     closeConnection(client_fd);
     logger::error << "oh cgi write error" << logger::endl;
   }
@@ -207,12 +208,12 @@ void Server::readCGI(int fd) {
   int read_size = cgi.readCGI();
   if (read_size == 0) {
     FD_CLR(fd, &this->reads);
+    close(cgi.getReadFD());
 
     // withdraw
     int status;
     waitpid(cgi.getPid(), &status, 0);
     fclose(cgi.getTmpFile());
-    close(cgi.getReadFD());
 
     cgi_map.erase(fd);
     this->connection.removeGateway(client_fd);
@@ -220,7 +221,7 @@ void Server::readCGI(int fd) {
     postProcessing(client_fd);
   }
   else if (read_size == -1) {
-    // withdraw
+    // TODO: ERROR
     closeConnection(client_fd);
     logger::error << "oh cgi read error" << logger::endl;
   }
@@ -354,7 +355,7 @@ void Server::receiveDone(int fd) {
   if (res.get_cgi_status() == HttpResponse::NOT_CGI)
     postProcessing(fd);
   else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
-    this->connection.updateGateway(fd);
+    this->connection.updateGateway(fd, req.getServerConfig());
     CGI& cgi = res.getCGI();
     ft_fd_set(cgi.getWriteFD(), this->writes);
     cgi_map.insert(std::make_pair(cgi.getWriteFD(), fd));

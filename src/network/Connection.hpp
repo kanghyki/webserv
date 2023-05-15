@@ -25,7 +25,7 @@ class Connection {
 
     void                      update(int fd, enum WHAT timeout);
     void                      updateKeepAlive(int fd, const ServerConfig& conf);
-    void                      updateGateway(int fd);
+    void                      updateGateway(int fd, const ServerConfig& conf);
     int                       updateRequests(int fd, const ServerConfig& conf);
 
     void                      remove(int fd);
