@@ -14,6 +14,7 @@ const std::string Token::LOCATION                 = "location";
 const std::string Token::LISTEN                   = "listen";
 const std::string Token::SERVER_NAME              = "server_name";
 const std::string Token::ROOT                     = "root";
+const std::string Token::ALIAS                    = "alias";
 const std::string Token::ERROR_PAGE               = "error_page";
 const std::string Token::CLIENT_MAX_BODY_SIZE     = "client_max_body_size";
 const std::string Token::INDEX                    = "index";
@@ -39,6 +40,7 @@ const std::string Token::keyword[Token::KEYWORD_SIZE][2] = {
   {"listen",                                     Token::LISTEN},
   {"server_name",                                Token::SERVER_NAME},
   {"root",                                       Token::ROOT},
+  {"alias",                                      Token::ALIAS},
   {"error_page",                                 Token::ERROR_PAGE},
   {"client_max_body_size",                       Token::CLIENT_MAX_BODY_SIZE},
   {"index",                                      Token::INDEX},

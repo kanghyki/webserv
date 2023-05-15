@@ -101,4 +101,9 @@ example) autoindex on;
 return [HTTP status code(int)] [URI(ident)]
 default value) NONE
 example) return 301 http://localhost/index.html;
+
+5.
+alias [path(ident)]
+default value) ""
+example) alias /alias_path;
 ```

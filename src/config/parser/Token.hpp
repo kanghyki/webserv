@@ -39,6 +39,7 @@ class Token {
     static const std::string  LISTEN;
     static const std::string  SERVER_NAME;
     static const std::string  ROOT;
+    static const std::string  ALIAS;
     static const std::string  ERROR_PAGE;
     static const std::string  CLIENT_MAX_BODY_SIZE;
     static const std::string  INDEX;
@@ -54,7 +55,7 @@ class Token {
     static const std::string  KEEPALIVE_REQUESTS;
     static const std::string  GATEWAY_TIMEOUT;
 
-    enum { KEYWORD_SIZE = 20 };
+    enum { KEYWORD_SIZE = 21 };
     static const int          IDENT_IDX;
     static const int          TYPE_IDX;
     static const std::string  keyword[KEYWORD_SIZE][2];

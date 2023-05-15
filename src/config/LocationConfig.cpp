@@ -2,10 +2,12 @@
 #include "./ServerConfig.hpp"
 
 const bool        LocationConfig::DEFAULT_AUTOINDEX = false;
+const std::string LocationConfig::DEFAULT_ALIAS = "";
 const std::string LocationConfig::DEFAULT_PATH = "/";
 
 LocationConfig::LocationConfig():
   CommonConfig(),
+  alias(DEFAULT_ALIAS),
   path(DEFAULT_PATH),
   returnRes(std::make_pair(-1, "")),
   autoindex(DEFAULT_AUTOINDEX) {
@@ -19,12 +21,14 @@ LocationConfig::LocationConfig():
 
 LocationConfig::LocationConfig(const ServerConfig& config):
   CommonConfig(config),
+  alias(DEFAULT_ALIAS),
   path(DEFAULT_PATH),
   returnRes(std::make_pair(-1, "")),
   autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const LocationConfig& obj):
   CommonConfig(obj),
+  alias(obj.getAlias()),
   path(obj.getPath()),
   limitExcept(obj.getLimitExcept()),
   returnRes(obj.getReturnRes()), 
@@ -40,6 +44,7 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
     this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
 
+    this->alias = obj.getAlias();
     this->path = obj.getPath();
     this->limitExcept = obj.getLimitExcept();
     this->returnRes = obj.getReturnRes();
@@ -51,6 +56,8 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
 }
 
 // getter
+
+std::string LocationConfig::getAlias() const { return this->alias; }
 
 std::string LocationConfig::getPath() const { return this->path; }
 
@@ -85,6 +92,8 @@ const std::vector<LocationConfig>& LocationConfig::getLocationConfig() const {
 }
 
 // setter
+
+void LocationConfig::setAlias(std::string alias) { this->alias = alias; }
 
 void LocationConfig::setPath(std::string path) { this->path = path; }
 
