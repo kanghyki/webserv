@@ -177,19 +177,24 @@ bool Server::isCgiPipe(int fd) const {
 }
 
 void Server::writeCGI(int fd) {
-  int client_fd;
+  int   client_fd  = cgi_map[fd];
+  CGI&  cgi = this->responses[client_fd].getCGI();
 
-  client_fd = cgi_map[fd];
-  CGI& cgi = this->responses[client_fd].getCGI();
   int write_size = cgi.writeCGI();
   if (write_size == 0) {
     ft_fd_clr(fd, this->writes);
     lseek(fd, 0, SEEK_SET);
-    // TODO:
-    cgi.forkCGI();
     cgi_map.erase(fd);
-    cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
-    ft_fd_set(cgi.getReadFD(), this->reads);
+    try {
+      cgi.forkCGI();
+      ft_fd_set(cgi.getReadFD(), this->reads);
+      cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
+    } catch (HttpStatus s) {
+      // FIXME: stdout?
+      this->responses[client_fd] = Http::getErrorPage(s, this->requests[client_fd]);
+      this->responses[client_fd].set_cgi_status(HttpResponse::NOT_CGI);
+      postProcessing(client_fd);
+    }
   }
   else if (write_size == -1) {
     logger::error << "cgi write error" << logger::endl;
@@ -201,16 +206,14 @@ void Server::writeCGI(int fd) {
 }
 
 void Server::readCGI(int fd) {
-  int client_fd;
+  int   client_fd = cgi_map[fd];
+  CGI&  cgi = this->responses[client_fd].getCGI();
 
-  client_fd = cgi_map[fd];
-  CGI& cgi = this->responses[client_fd].getCGI();
   int read_size = cgi.readCGI();
   if (read_size == 0) {
     ft_fd_clr(fd, this->reads);
     cgi.withdrawResource();
     cgi_map.erase(fd);
-    // TODO:
     Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
     postProcessing(client_fd);
   }

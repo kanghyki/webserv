@@ -9,6 +9,7 @@
 # include <signal.h>
 
 # include "./HttpRequest.hpp"
+# include "./HttpStatus.hpp"
 # include "../etc/Util.hpp"
 
 static const std::string CGI_VERSION = "CGI/1.1";
@@ -64,8 +65,6 @@ class CGI {
     const std::map<std::string, std::string>  getEnvMap(const HttpRequest& req) const;
     char**                                    getArgv() const;
     char**                                    envMapToEnv(const std::map<std::string, std::string>& envMap) const;
-
-    int                                       changeWorkingDirectory(void);
 
     const std::string                         getScriptPath(void) const;
     const std::string                         getCgiPath(void) const;

@@ -27,6 +27,7 @@ CGI::CGI(const CGI& obj):
 
 CGI& CGI::operator=(const CGI& obj) {
   if (this != &obj) {
+    resource_flag = obj.resource_flag;
     env_map = obj.env_map;
     tmp_file = obj.tmp_file;
     pid = obj.pid;
@@ -119,9 +120,9 @@ void CGI::addBodyOffset(size_t s) {
 void CGI::withdrawResource() {
   if (this->resource_flag & this->f_tmpfile)
     fclose(this->tmp_file);
-  if (this->resource_flag & f_pipe)
+  if (this->resource_flag & this->f_pipe)
     close(this->read_fd);
-  if (this->resource_flag & f_fork) {
+  if (this->resource_flag & this->f_fork) {
     kill(this->pid, SIGKILL);
     waitpid(this->pid, 0, 0);
   }
@@ -132,51 +133,60 @@ void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
 
   this->env_map = getEnvMap(req);
   this->tmp_file = tmpfile();
-  if (this->tmp_file == NULL) {
-    // TODO: ERROR
-  }
+  if (this->tmp_file == NULL)
+    throw INTERNAL_SERVER_ERROR;
   else
     this->resource_flag |= this->f_tmpfile;
 
   this->write_fd = fileno(this->tmp_file);
 
-  if (fcntl(this->write_fd, F_SETFL, O_NONBLOCK) == -1)
+  if (fcntl(this->write_fd, F_SETFL, O_NONBLOCK) == -1) {
     withdrawResource();
+    throw INTERNAL_SERVER_ERROR;
+  }
 }
 
 void CGI::forkCGI() {
   int     p[2];
 
-  if (pipe(p) == -1)
+  if (pipe(p) == -1) {
     withdrawResource();
+    throw INTERNAL_SERVER_ERROR;
+  }
   else
     this->resource_flag |= this->f_pipe;
 
-  if ((this->pid = fork()) == -1)
+  this->pid = fork();
+  if (this->pid == -1) {
     withdrawResource();
+    throw INTERNAL_SERVER_ERROR;
+  }
   else
     this->resource_flag |= this->f_fork;
 
   if (this->pid == 0) {
-    char**  argv;
-    char**  env;
+    char**      argv;
+    char**      env;
+    std::string target;
 
     argv = this->getArgv();
     env = this->envMapToEnv(this->env_map);
+    target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
     close(p[READ]);
     dup2(p[WRITE], STDOUT_FILENO);
     dup2(this->write_fd, STDIN_FILENO);
-
-    changeWorkingDirectory();
+    chdir(target.c_str());
     execve(this->cgiPath.c_str(), argv, env);
     exit(EXIT_FAILURE);
   }
 
   close(p[WRITE]);
   this->read_fd = p[READ];
-  if (fcntl(this->read_fd, F_SETFL, O_NONBLOCK) == -1)
+  if (fcntl(this->read_fd, F_SETFL, O_NONBLOCK) == -1) {
     withdrawResource();
+    throw INTERNAL_SERVER_ERROR;
+  }
 }
 
 int CGI::writeCGI() {
@@ -269,12 +279,6 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
   ret[i] = NULL;
 
   return ret;
-}
-
-int CGI::changeWorkingDirectory(void) {
-  std::string target = getScriptPath().substr(0, getScriptPath().rfind("/"));
-
-  return chdir(target.c_str());
 }
 
 const std::string CGI::getCurrentPath(void) const {

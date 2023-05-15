@@ -22,7 +22,9 @@ logger::Error& logger::Error::operator<<(std::string s) {
     std::cout << timestamp()
       << std::string(RED) + "[ERROR] " + std::string(RESET)
       << std::string(BOLD_RED) << this->buf << std::string(RESET) << std::endl;
-    this->buf.clear();
+    this->buf = "";
+    this->buf.reserve();
+
   }
   else
     this->buf += s;
@@ -65,7 +67,8 @@ logger::Warning& logger::Warning::operator<<(std::string s) {
     std::cout << timestamp()
       << std::string(YELLOW) + "[WARNING] " + std::string(RESET)
       << std::string(BOLD_YELLOW) << this->buf << std::string(RESET) << std::endl;
-    this->buf.clear();
+    this->buf = "";
+    this->buf.reserve();
   }
   else
     this->buf += s;
@@ -102,7 +105,8 @@ logger::Info& logger::Info::operator<<(std::string s) {
     std::cout << timestamp()
       << std::string(GREEN) + "[INFO] " + std::string(RESET)
       << std::string(BOLD_GREEN) << this->buf << std::string(RESET) << std::endl;
-    this->buf.clear();
+    this->buf = "";
+    this->buf.reserve();
   }
   else
     this->buf += s;
@@ -145,7 +149,8 @@ logger::Debug& logger::Debug::operator<<(std::string s) {
     std::cout << timestamp()
       << std::string(WHITE) + "[DEBUG] " + std::string(RESET)
       << std::string(BOLD_WHITE) << this->buf << std::string(RESET) << std::endl;
-    this->buf.clear();
+    this->buf = "";
+    this->buf.reserve();
   }
   else
     this->buf += s;
