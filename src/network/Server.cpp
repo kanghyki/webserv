@@ -534,22 +534,22 @@ void Server::writeFile(int fd) {
   HttpRequest&  req = this->requests[client_fd];
   int           writeSize;
 
-  writeSize = write(fd, res.getFileBuffer().c_str(), res.getFileBufferSize());
-  if (writeSize == -1) {
-      // TODO:
+  std::string data = res.getFileBufferOffSet();
+  writeSize = write(fd, data.c_str(), data.length());
+  if (writeSize < 0) {
     logger::error << "write file failed" << logger::endl;
     file_map.erase(fd);
     ft_fd_clr(fd, this->writes);
     res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
     prepareIO(client_fd);
-//    postProcessing(client_fd);
-    return;
   }
-  if (writeSize == res.getFileBufferSize()) {
+  else if (writeSize == 0) {
     ft_fd_clr(fd, this->writes);
     close(fd);
     fileDone(fd);
   }
+  else
+    res.addOffSet(writeSize);
 }
 
 void Server::readFile(int fd) {
@@ -559,24 +559,24 @@ void Server::readFile(int fd) {
   HttpResponse& res = this->responses[client_fd];
   HttpRequest&  req = this->requests[client_fd];
 
+
   read_size = read(fd, buf, BUF_SIZE);
-  if (read_size <= 0) {
-    if (read_size < 0) {
-      // TODO:
-      logger::error << "read file failed" << logger::endl;
-      file_map.erase(fd);
-      ft_fd_clr(fd, this->reads);
-      res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
-      prepareIO(client_fd);
-      return;
-    }
+  if (read_size < 0) {
+    logger::error << "read file failed" << logger::endl;
+    file_map.erase(fd);
+    ft_fd_clr(fd, this->reads);
+    res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
+    prepareIO(client_fd);
+  }
+  else if (read_size == 0) {
     ft_fd_clr(fd, this->reads);
     close(fd);
-    fileDone(fd);
+    fileDone(fd)
   }
-  buf[read_size] = 0;
-  if (read_size > 0)
+  else {
+    buf[read_size] = 0;
     res.addFileBuffer(std::string(buf, read_size));
+  }
 }
 
 void Server::ft_fd_clr(int fd, fd_set& set) {

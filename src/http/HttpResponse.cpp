@@ -21,6 +21,7 @@ HttpResponse::HttpResponse():
   fileFd(-1),
   autoindex(false),
   fileBuffer(""),
+  offset(0),
   error(false),
   defaultError(false) {
 }
@@ -41,6 +42,7 @@ HttpResponse::HttpResponse(const HttpResponse& obj):
   autoindex(obj.autoindex),
   method(obj.method),
   fileBuffer(obj.fileBuffer),
+  offset(obj.offset),
   error(obj.error),
   defaultError(obj.defaultError) {
 }
@@ -68,6 +70,7 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
 
     this->fileBuffer = obj.fileBuffer;
 
+    this->offset = obj.offset;
     this->error = obj.error;
     this->defaultError = obj.defaultError;
   }
@@ -209,6 +212,10 @@ std::string HttpResponse::getFileBuffer(void) const {
   return this->fileBuffer;
 }
 
+std::string HttpResponse::getFileBufferOffSet(void) const {
+  return this->fileBuffer.substr(this->offset);
+}
+
 int HttpResponse::getFileBufferSize(void) const {
   return this->fileBuffer.size();
 }
@@ -227,4 +234,12 @@ void HttpResponse::setDefaultError(bool error) {
 
 bool HttpResponse::isDefaultError(void) const {
   return this->defaultError;
+}
+
+void HttpResponse::addOffSet(int offset) {
+  this->offset += offset;
+}
+
+int HttpResponse::getOffSet(void) const {
+  return this->offset;
 }
