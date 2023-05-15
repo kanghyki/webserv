@@ -55,14 +55,13 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& obj) {
 void HttpRequest::parse(const std::string& req, const Config& conf) {
   size_t pos;
 
-    // Request line
-    if ((pos = req.find("\r\n")) != std::string::npos)
+    // Request line & header
+    if ((pos = req.find("\r\n")) != std::string::npos) {
       parseStatusLine(req.substr(0, pos));
+      this->header.parse(req.substr(pos + 2));
+    }
     else
-      throw BAD_REQUEST;
-
-    // Request header
-    this->header.parse(req.substr(pos + 2));
+      parseStatusLine(req);
 
     // Set config
     std::string host = this->header.get(HttpRequestHeader::HOST);
