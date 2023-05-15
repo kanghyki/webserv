@@ -49,6 +49,7 @@ void HttpRequestHeader::parseConnection() {
 
 void HttpRequestHeader::parseTransferEncoding() {
   std::string s = util::toLowerStr(get(TRANSFER_ENCODING));
+
   if (s == "chunked")
     setTransferEncoding(CHUNKED);
 }
