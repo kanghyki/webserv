@@ -349,11 +349,7 @@ void Server::receiveDone(int fd) {
   HttpRequest&  req = this->requests[fd];
   HttpResponse& res = this->responses[fd];
 
-  try {
-    res = Http::processing(req, this->sessionManager);
-  } catch (HttpStatus s) {
-    res = Http::getErrorPage(s, req);
-  }
+  res = Http::processing(req, this->sessionManager);
 
   if (res.get_cgi_status() == HttpResponse::NOT_CGI) {
     if (res.isAutoindex() == true || res.getMethod() == request_method::DELETE || res.isDefaultError())
@@ -364,7 +360,7 @@ void Server::receiveDone(int fd) {
       file_map.insert(std::make_pair(fileFd, fd));
       if (res.getMethod() == request_method::GET)
         ft_fd_set(fileFd, this->reads);
-      else
+      else if (res.getMethod() == request_method::POST || res.getMethod() == request_method::PUT)
         ft_fd_set(fileFd, this->writes);
     }
   }

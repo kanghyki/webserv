@@ -8,15 +8,14 @@ Http::~Http() {}
 HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
   HttpResponse res;
 
-  checkAndThrowError(req);
-
-  if (req.getLocationConfig().isSetReturn()) {
-    res.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
-    res.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturnRes().second);
-    return res;
-  }
-
   try {
+    checkAndThrowError(req);
+
+    if (req.getLocationConfig().isSetReturn()) {
+      res.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
+      res.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturnRes().second);
+      return res;
+    }
     if (req.isCGI()) res = executeCGI(req, manager);
     else if (req.getMethod() == request_method::GET || req.getMethod() == request_method::HEAD) res = getMethod(req);
     else if (req.getMethod() == request_method::POST) res = postMethod(req);
