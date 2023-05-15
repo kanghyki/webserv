@@ -529,24 +529,34 @@ void Server::writeFile(int fd) {
   HttpResponse& res = this->responses[clientFd];
   int writeSize;
 
-  writeSize = write(fd, res.getFileBuffer().c_str(), res.getFileBufferSize());
-  if (writeSize == res.getFileBufferSize()) {
+  std::string data = res.getFileBuffer();
+  writeSize = write(fd, data.c_str(), data.length());
+  if (writeSize < 0) {
     ft_fd_clr(fd, this->writes);
-    close(fd);
-    fileDone(fd);
+    file_map.erase(fd);
+    closeConnection(clientFd);
   }
-  else
-    logger::error << "write failed" << logger::endl;
+  else {
+    res.addOffSet(writeSize);
+    if (res.getOffSet() == res.getFileBufferSize()) {
+      ft_fd_clr(fd, this->writes);
+      close(fd);
+      fileDone(fd);
+    }
+  }
 }
 
 void Server::readFile(int fd) {
   char  buf[BUF_SIZE + 1];
   int   read_size;
+  int   clientFd = this->file_map[fd];
 
   read_size = read(fd, buf, BUF_SIZE);
   if (read_size <= 0) {
     if (read_size < 0) {
-      throw INTERNAL_SERVER_ERROR;
+      ft_fd_clr(fd, this->reads);
+      file_map.erase(fd);
+      closeConnection(clientFd);
     }
     ft_fd_clr(fd, this->reads);
     close(fd);
@@ -554,7 +564,7 @@ void Server::readFile(int fd) {
   }
   buf[read_size] = 0;
   if (read_size > 0)
-    this->responses[this->file_map[fd]].addFileBuffer(std::string(buf, read_size));
+    this->responses[clientFd].addFileBuffer(std::string(buf, read_size));
 }
 
 void Server::ft_fd_clr(int fd, fd_set& set) {

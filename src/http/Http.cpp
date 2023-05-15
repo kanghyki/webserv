@@ -116,6 +116,7 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
 
   try {
     res.setFd(util::openToWrite(req.getTargetPath()));
+    res.setFileBuffer(req.getBody());
   } catch(util::SystemFunctionException& e) {
     throw FORBIDDEN;
   }
@@ -161,6 +162,7 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
 
   try {
     res.setFd(util::openToWrite(req.getTargetPath()));
+    res.setFileBuffer(req.getBody());
   } catch(util::SystemFunctionException& e) {
     throw NOT_FOUND;
   }

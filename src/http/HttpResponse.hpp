@@ -55,12 +55,16 @@ class HttpResponse {
     void                                addFileBuffer(std::string data);
     void                                setFileBuffer(std::string data);
     std::string                         getFileBuffer(void) const;
+    std::string                         getFileBufferOffSet(void) const;
     int                                 getFileBufferSize(void) const;
 
     void                                setError(bool error);
     bool                                isError(void) const;
     void                                setDefaultError(bool error);
     bool                                isDefaultError(void) const;
+
+    void                                addOffSet(int offset);
+    int                                 getOffSet(void) const;
  
     std::string                         toString() throw();
 
@@ -87,6 +91,7 @@ class HttpResponse {
     std::string                         method;
 
     std::string                         fileBuffer;
+    int                                 offset;
 
     bool                                error;
     bool                                defaultError;
