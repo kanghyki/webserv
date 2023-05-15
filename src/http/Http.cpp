@@ -66,21 +66,20 @@ void Http::finishCGI(HttpResponse& res, const HttpRequest& req, SessionManager& 
   for (std::map<std::string, std::string>::iterator it = header.begin(); it != header.end(); ++it)
     res.getHeader().set(it->first, it->second);
 
-  const std::string CGI_STATUS = "status";
+  res.setBody(body);
 
+  std::string setCookieVal = res.getHeader().get(HttpResponseHeader::SET_COOKIE);
+  if (setCookieVal != "")
+    sm.addSession(setCookieVal, req.getServerConfig().getSessionTimeout());
+
+  const std::string CGI_STATUS = "status";
   std::string statusVal = res.getHeader().get(CGI_STATUS);
   if (statusVal != "") {
     res.setStatusCode(static_cast<HttpStatus>(util::atoi(statusVal)));
     res.getHeader().remove(CGI_STATUS);
   }
   else
-    res.setStatusCode(BAD_GATEWAY);
-
-  std::string setCookieVal = res.getHeader().get(HttpResponseHeader::SET_COOKIE);
-  if (setCookieVal != "")
-    sm.addSession(setCookieVal, req.getServerConfig().getSessionTimeout());
-
-  res.setBody(body);
+    res = Http::getErrorPage(BAD_GATEWAY, req);
 }
 
 HttpResponse Http::getMethod(const HttpRequest& req) {

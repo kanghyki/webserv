@@ -5,10 +5,12 @@
  */
 
 CGI::CGI():
+  resource_flag(0),
   body_offset(0) {
 }
 
 CGI::CGI(const CGI& obj):
+  resource_flag(obj.resource_flag),
   env_map(obj.env_map),
   tmp_file(obj.tmp_file),
   pid(obj.pid),
@@ -114,6 +116,17 @@ void CGI::addBodyOffset(size_t s) {
  * ----------------------- Member Function -------------------------
  */
 
+void CGI::withdrawResource() {
+  if (this->resource_flag & this->f_tmpfile)
+    fclose(this->tmp_file);
+  if (this->resource_flag & f_pipe)
+    close(this->read_fd);
+  if (this->resource_flag & f_fork) {
+    kill(this->pid, SIGKILL);
+    waitpid(this->pid, 0, 0);
+  }
+}
+
 void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
   prepareCGI(req, sessionAvailable);
 
@@ -122,21 +135,28 @@ void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
   if (this->tmp_file == NULL) {
     // TODO: ERROR
   }
+  else
+    this->resource_flag |= this->f_tmpfile;
+
   this->write_fd = fileno(this->tmp_file);
 
-  if (fcntl(this->write_fd, F_SETFL, O_NONBLOCK) == -1) {
-    // TODO: ERROR
-  }
+  if (fcntl(this->write_fd, F_SETFL, O_NONBLOCK) == -1)
+    withdrawResource();
 }
 
 void CGI::forkCGI() {
   int     p[2];
 
-  pipe(p);
-  this->pid = fork();
-  if (this->pid == -1) {
-    // TODO: ERROR
-  }
+  if (pipe(p) == -1)
+    withdrawResource();
+  else
+    this->resource_flag |= this->f_pipe;
+
+  if ((this->pid = fork()) == -1)
+    withdrawResource();
+  else
+    this->resource_flag |= this->f_fork;
+
   if (this->pid == 0) {
     char**  argv;
     char**  env;
@@ -155,9 +175,8 @@ void CGI::forkCGI() {
 
   close(p[WRITE]);
   this->read_fd = p[READ];
-  if (fcntl(this->read_fd, F_SETFL, O_NONBLOCK) == -1) {
-    // TODO: ERROR
-  }
+  if (fcntl(this->read_fd, F_SETFL, O_NONBLOCK) == -1)
+    withdrawResource();
 }
 
 int CGI::writeCGI() {

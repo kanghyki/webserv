@@ -185,18 +185,18 @@ void Server::writeCGI(int fd) {
   if (write_size == 0) {
     ft_fd_clr(fd, this->writes);
     lseek(fd, 0, SEEK_SET);
-
-    // TODO: ERROR
+    // TODO:
     cgi.forkCGI();
-
     cgi_map.erase(fd);
     cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
     ft_fd_set(cgi.getReadFD(), this->reads);
   }
   else if (write_size == -1) {
-    // TODO: ERROR
+    logger::error << "cgi write error" << logger::endl;
+    ft_fd_clr(fd, this->writes);
+    cgi_map.erase(fd);
+    cgi.withdrawResource();
     closeConnection(client_fd);
-    logger::error << "oh cgi write error" << logger::endl;
   }
 }
 
@@ -208,22 +208,18 @@ void Server::readCGI(int fd) {
   int read_size = cgi.readCGI();
   if (read_size == 0) {
     ft_fd_clr(fd, this->reads);
-    close(cgi.getReadFD());
-
-    // withdraw
-    // TODO:
-    int status;
-    waitpid(cgi.getPid(), &status, 0);
-    fclose(cgi.getTmpFile());
-
+    cgi.withdrawResource();
     cgi_map.erase(fd);
+    // TODO:
     Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
     postProcessing(client_fd);
   }
   else if (read_size == -1) {
-    // TODO: ERROR
+    logger::error << "cgi read error" << logger::endl;
+    ft_fd_clr(fd, this->reads);
+    cgi_map.erase(fd);
+    cgi.withdrawResource();
     closeConnection(client_fd);
-    logger::error << "oh cgi read error" << logger::endl;
   }
 }
 
@@ -475,8 +471,7 @@ void Server::cleanUpConnection() {
       ft_fd_clr(cgi.getReadFD(), this->reads);
       ft_fd_clr(cgi.getWriteFD(), this->writes);
 
-      kill(cgi.getPid(), SIGKILL);
-      waitpid(cgi.getPid(), 0, 0);
+      cgi.withdrawResource();
 
       res = Http::getErrorPage(GATEWAY_TIMEOUT, req);
       req.setConnection(HttpRequestHeader::CLOSE);

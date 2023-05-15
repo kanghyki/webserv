@@ -6,6 +6,7 @@
 # include <cstring>
 # include <fcntl.h>
 # include <sys/wait.h>
+# include <signal.h>
 
 # include "./HttpRequest.hpp"
 # include "../etc/Util.hpp"
@@ -24,6 +25,7 @@ class CGI {
     void              forkCGI();
     int               writeCGI();
     int               readCGI();
+    void              withdrawResource();
 
     FILE*             getTmpFile() const;
     int               getReadFD() const;
@@ -34,8 +36,13 @@ class CGI {
 
   private:
     static const int                    READ_BUF_SIZE = 1024 * 5;
-    static const int                    READ = 0;
-    static const int                    WRITE = 1;
+    static const int                    READ          = 0;
+    static const int                    WRITE         = 1;
+
+    static const int                    f_tmpfile     = 1 << 0;
+    static const int                    f_pipe        = 1 << 1;
+    static const int                    f_fork        = 1 << 2;
+    int                                 resource_flag;
 
     std::map<std::string, std::string>  env_map;
     FILE*                               tmp_file;
