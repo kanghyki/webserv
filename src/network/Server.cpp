@@ -13,9 +13,6 @@ const std::string   Server::CHUNKED_DELIMETER = "0\r\n\r\n";
  */
 
 Server::Server(Config& config) :
-  requests(MANAGE_FD_MAX),
-  responses(MANAGE_FD_MAX),
-  recvs(MANAGE_FD_MAX),
   fdMax(-1),
   config(config),
   connection(config),
@@ -240,6 +237,10 @@ void Server::acceptConnect(int server_fd) {
     return ;
   }
 
+  this->requests.insert(std::make_pair(client_fd, HttpRequest()));
+  this->responses.insert(std::make_pair(client_fd, HttpResponse()));
+  this->recvs.insert(std::make_pair(client_fd, std::string()));
+
   ft_fd_set(client_fd, this->reads);
 
   logger::info << "Accept, client(" << client_fd << ", " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << ") into (" << server_fd << ")" << logger::endl;
@@ -260,9 +261,9 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
-//  logger::debug << "recv_size: " << recv_size << logger::endl;
+  logger::debug << "recv_size: " << recv_size << logger::endl;
   this->recvs[fd] += std::string(buf, recv_size);
-//  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
+  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
   checkReceiveDone(fd);
 }
 
@@ -299,7 +300,7 @@ void Server::checkReceiveDone(int fd) {
   }
 
   if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE || req.getRecvStatus() == HttpRequest::ERROR) {
-    this->recvs[fd] = "";
+    this->recvs.erase(fd);
     receiveDone(fd);
   }
 }
@@ -434,9 +435,9 @@ void Server::closeConnection(int fd) {
   this->connection.remove(fd);
   this->connection.removeRequests(fd);
 
-  this->requests[fd] = HttpRequest();
-  this->responses[fd] = HttpResponse();
-  this->recvs[fd] = "";
+  this->requests.erase(fd);
+  this->responses.erase(fd);
+  this->recvs.erase(fd);
 }
 
 void Server::keepAliveConnection(int fd) {
@@ -444,8 +445,8 @@ void Server::keepAliveConnection(int fd) {
 
   this->connection.updateKeepAlive(fd, this->requests[fd].getServerConfig());
 
-  this->requests[fd] = HttpRequest();
-  this->responses[fd] = HttpResponse();
+  this->requests.erase(fd);
+  this->responses.erase(fd);
 }
 
 void Server::cleanUpConnection() {
