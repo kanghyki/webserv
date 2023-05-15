@@ -64,7 +64,7 @@ class Server {
     void        receiveData(int fd);
     void        checkReceiveDone(int fd);
     void        receiveHeader(int fd, HttpRequest& req);
-    void        receiveDone(int fd);
+    void        prepareIO(int fd);
     void        fileDone(int fd);
     void        postProcessing(int fd);
     void        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
