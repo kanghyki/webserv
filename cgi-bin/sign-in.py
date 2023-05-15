@@ -11,7 +11,9 @@ def generate_session_id():
 def return_ret(ret):
     if ret == True:
         print("Set-Cookie: _webserv_session=" + generate_session_id() + "; Path=/\r")
-    print("status: 200 OK\r")
+        print("status: 200 OK\r")
+    else:
+        print("status: 401 Unauthorized\r")
     print("Content-Type: text/html\r\n\r")
 
     print("<html>")

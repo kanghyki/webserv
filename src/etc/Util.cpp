@@ -172,7 +172,7 @@ namespace util {
   }
 
   std::map<std::string, std::string> parseCGIHeader(const std::string& str) {
-    std::map<std::string, std::string> ret;
+    std::map<std::string, std::string>  ret;
     std::vector<std::string>            vs;
     std::vector<std::string>::iterator  it;
 
@@ -191,9 +191,9 @@ namespace util {
   std::pair<std::string, std::string> splitField(const std::string& line) {
     std::string field = "";
     std::string value = "";
-    int pos;
+    size_t      pos;
 
-    if ((pos = line.find(":")) != -1) {
+    if ((pos = line.find(":")) != std::string::npos) {
       field = util::toLowerStr(util::trimSpace(line.substr(0, pos)));
       value = util::trimSpace(line.substr(pos + 1));
     }

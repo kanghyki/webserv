@@ -119,9 +119,14 @@ void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
 
   this->env_map = getEnvMap(req);
   this->tmp_file = tmpfile();
+  if (this->tmp_file == NULL) {
+    // TODO: ERROR
+  }
   this->write_fd = fileno(this->tmp_file);
 
-  fcntl(this->write_fd, F_SETFL, O_NONBLOCK);
+  if (fcntl(this->write_fd, F_SETFL, O_NONBLOCK) == -1) {
+    // TODO: ERROR
+  }
 }
 
 void CGI::forkCGI() {
@@ -129,6 +134,9 @@ void CGI::forkCGI() {
 
   pipe(p);
   this->pid = fork();
+  if (this->pid == -1) {
+    // TODO: ERROR
+  }
   if (this->pid == 0) {
     char**  argv;
     char**  env;
@@ -147,7 +155,9 @@ void CGI::forkCGI() {
 
   close(p[WRITE]);
   this->read_fd = p[READ];
-  fcntl(this->read_fd, F_SETFL, O_NONBLOCK);
+  if (fcntl(this->read_fd, F_SETFL, O_NONBLOCK) == -1) {
+    // TODO: ERROR
+  }
 }
 
 int CGI::writeCGI() {
