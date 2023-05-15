@@ -28,7 +28,7 @@ class CGI {
     CGI(const CGI& obj);
     ~CGI(void);
     
-    void execute(fd_set& reads, fd_set& writes, int& fdMax);
+    void initCGI(fd_set& reads, fd_set& writes, int& fdMax);
 
     pid_t getChildPid() const;
     int   getReadFd() const;
@@ -38,7 +38,7 @@ class CGI {
     const std::string getBody(void) const;
     const std::string getBody(int offset) const;
 
-    void writeCGI(fd_set& writes, fd_set& reads);
+    void writeCGI(fd_set& writes, fd_set& reads, int& fdMax);
     void readCGI(fd_set& reads);
 
   private:
@@ -60,6 +60,7 @@ class CGI {
     int         writeFd;
     int         reqFd;
     enum Status status;
+    FILE*       in;
 
     const std::map<std::string, std::string> getEnvMap(const HttpRequest& req) const;
     char** getArgv() const;
@@ -74,6 +75,7 @@ class CGI {
     const std::string getSessionAvailable(void) const;
     const std::string convertHeaderKey(const std::string& key) const;
 
+    void  executeCGI(int& fdMax, fd_set& reads);
 };
 
 namespace cgi_env {

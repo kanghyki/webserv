@@ -26,7 +26,8 @@ CGI::CGI(const CGI& obj) :
   readFd(obj.readFd),
   writeFd(obj.writeFd),
   reqFd(obj.reqFd),
-  status(obj.status) {
+  status(obj.status),
+  in(obj.in) {
 }
 
 /*
@@ -145,60 +146,26 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
   return ret;
 }
 
-void CGI::execute(fd_set& reads, fd_set& writes, int& fdMax) {
-  std::string ret;
-  pid_t       pid = -1;
-  int         fd1[2];
-  int         fd2[2];
+void CGI::initCGI(fd_set& reads, fd_set& writes, int& fdMax) {
+  int         fdIn;
 
   if (access(this->cgiPath.c_str(), X_OK) == -1) throw INTERNAL_SERVER_ERROR;
 
+
   try {
-    util::ftPipe(fd1);
-    util::ftPipe(fd2);
-    pid = util::ftFork();
+    this->in = tmpfile();
+    fdIn = fileno(this->in);
+    this->writeFd = fdIn;
+    fcntl(fdIn, F_SETFL, O_NONBLOCK);
+
+    FD_SET(fdIn, &writes);
+    fdMax = fdIn;
+
+    this->status = WRITING;
+    writeCGI(writes, reads, fdMax);
   } catch (util::SystemFunctionException& e) {
     throw INTERNAL_SERVER_ERROR;
   }
-
-  if (pid == 0) {
-    try {
-      close(fd1[WRITE]);
-      close(fd2[READ]);
-      util::ftDup2(fd1[READ], STDIN_FILENO);
-      util::ftDup2(fd2[WRITE], STDOUT_FILENO);
-      close(fd1[READ]);
-      close(fd2[WRITE]);
-      changeWorkingDirectory();
-      util::ftExecve(this->cgiPath, this->argv, this->env);
-    } catch (util::SystemFunctionException& e) {
-      exit(-1);
-    }
-  }
-  this->childPid = pid;
-  this->readFd = fd2[READ];
-  this->writeFd = fd1[WRITE];
-
-  close(fd1[READ]);
-  close(fd2[WRITE]);
-  fcntl(fd1[WRITE], F_SETFL, O_NONBLOCK);
-
-  FD_SET(fd1[WRITE], &writes);
-//  fcntl(fd2[READ], F_SETFL, O_NONBLOCK);
-//  FD_SET(fd2[READ], &reads);
-  fdMax = fd2[READ];
-
-  this->status = WRITING;
-  writeCGI(writes, reads);
-//  if (write(fd1[WRITE], getBody().c_str(), getBody().length()) == -1)
-//    throw INTERNAL_SERVER_ERROR;
-
-//  waitpid(pid, &status, 0);
-//  if (status == -1)
-//    throw INTERNAL_SERVER_ERROR;
-//
-//  if ((ret = util::readFd(fd_out)).empty())
-//    throw INTERNAL_SERVER_ERROR;
 }
 
 void CGI::changeWorkingDirectory(void) {
@@ -251,7 +218,7 @@ CGI::Status CGI::getStatus() const {
   return this->status;
 }
 
-void CGI::writeCGI(fd_set& writes, fd_set& reads) {
+void CGI::writeCGI(fd_set& writes, fd_set& reads, int& fdMax) {
   logger::error << "write cgi" << logger::endl;
   int writeSize;
   if ((writeSize = write(this->writeFd, getBody(this->offset).c_str(), getBody(this->offset).length())) == -1)
@@ -261,12 +228,11 @@ void CGI::writeCGI(fd_set& writes, fd_set& reads) {
   this->offset += writeSize;
   if (this->offset == this->bodySize) {
     logger::error << "write Done" << logger::endl;
+    lseek(this->writeFd, 0, SEEK_SET);
+    executeCGI(fdMax, reads);
     this->body = "";
     this->bodySize = 0;
     FD_CLR(this->writeFd, &writes);
-    close(this->writeFd);
-    fcntl(this->readFd, F_SETFL, O_NONBLOCK);
-    FD_SET(this->readFd, &reads);
     this->status = READING;
   }
 }
@@ -275,26 +241,55 @@ void CGI::readCGI(fd_set& reads) {
   char buf[BUF_SIZE + 1];
   int read_size;
 
+  logger::error << "read before" << logger::endl;
   read_size = read(this->readFd, buf, BUF_SIZE);
+  logger::error << "read after" << logger::endl;
   if (read_size <= 0) {
     if (read_size < 0)
       throw INTERNAL_SERVER_ERROR;
     FD_CLR(this->readFd, &reads);
     close(this->readFd);
     this->status = DONE;
-    logger::error << "body : " << this->body << logger::endl;
     return ;
   }
   buf[read_size] = 0;
   this->body += std::string(buf, read_size);
   this->bodySize += read_size;
   this->offset += read_size;
-  logger::error << "read : " << buf << logger::endl;
   logger::error << "read_size : " << read_size << logger::endl;
 }
 
 int CGI::getReqFd() const {
   return this->reqFd;
+}
+
+void CGI::executeCGI(int& fdMax, fd_set& reads) {
+  int fd[2];
+
+  try {
+    util::ftPipe(fd);
+    fdMax = fd[READ];
+    this->readFd = fd[READ];
+    this->childPid= util::ftFork();
+  } catch (util::SystemFunctionException& e) {
+    throw INTERNAL_SERVER_ERROR;
+  }
+
+  if (this->childPid == 0) {
+    try {
+      close(fd[READ]);
+      util::ftDup2(this->writeFd, STDIN_FILENO);
+      util::ftDup2(fd[WRITE], STDOUT_FILENO);
+      close(fd[WRITE]);
+      changeWorkingDirectory();
+      util::ftExecve(this->cgiPath, this->argv, this->env);
+    } catch (util::SystemFunctionException& e) {
+      exit(-1);
+    }
+  }
+  close(fd[WRITE]);
+  fcntl(this->readFd, F_SETFL, O_NONBLOCK);
+  FD_SET(this->readFd, &reads);
 }
 
 /*

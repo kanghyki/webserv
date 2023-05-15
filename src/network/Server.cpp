@@ -47,10 +47,6 @@ Server::Server(Config& config) :
 Server::~Server(void) {}
 
 /*
- * -------------------------- Operator -----------------------------
- */
-
-/*
  * ----------------------- Member Function -------------------------
  */
 
@@ -59,10 +55,8 @@ inline int Server::socketInit(void) {
   if (fd == -1)
     throw std::runtime_error("Server initialization failed");
 
-  // for develop
   int option = 1;
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-  // -----------
 
   return fd;
 }
@@ -142,7 +136,7 @@ void Server::run(void) {
           CGI* cgi = getCGI(i);
           if (cgi != NULL) {
             if (cgi->getStatus() == CGI::WRITING) {
-              cgi->writeCGI(this->writes, this->reads);
+              cgi->writeCGI(this->writes, this->reads, this->fdMax);
             }
           }
           else {
@@ -331,7 +325,7 @@ void Server::cgiDone(CGI* cgi) {
   int fd = cgi->getReqFd();
   HttpRequest&  req = this->requests[fd];
   HttpResponse& res = this->responses[fd];
-  logger::error << "cgi body : " << cgi->getBody() << logger::endl;
+//  logger::error << "cgi body : " << cgi->getBody() << logger::endl;
   try {
     res = Http::processing(req, this->sessionManager, cgi->getBody());
     waitpid(cgi->getChildPid(), &status, 0);
@@ -450,7 +444,7 @@ void Server::executeCGI(const HttpRequest& req, SessionManager& sm, int reqFd) {
   try {
     std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
     CGI cgi(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]), reqFd);
-    cgi.execute(this->reads, this->writes, this->fdMax);
+    cgi.initCGI(this->reads, this->writes, this->fdMax);
     this->cgis.push_back(cgi);
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
