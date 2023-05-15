@@ -183,7 +183,7 @@ void Server::writeCGI(int fd) {
   CGI& cgi = this->responses[client_fd].getCGI();
   int write_size = cgi.writeCGI();
   if (write_size == 0) {
-    FD_CLR(fd, &this->writes);
+    ft_fd_clr(fd, this->writes);
     lseek(fd, 0, SEEK_SET);
 
     // TODO: ERROR
@@ -207,16 +207,16 @@ void Server::readCGI(int fd) {
   CGI& cgi = this->responses[client_fd].getCGI();
   int read_size = cgi.readCGI();
   if (read_size == 0) {
-    FD_CLR(fd, &this->reads);
+    ft_fd_clr(fd, this->reads);
     close(cgi.getReadFD());
 
     // withdraw
+    // TODO:
     int status;
     waitpid(cgi.getPid(), &status, 0);
     fclose(cgi.getTmpFile());
 
     cgi_map.erase(fd);
-    this->connection.removeGateway(client_fd);
     Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
     postProcessing(client_fd);
   }
@@ -395,20 +395,18 @@ void Server::sendData(int fd) {
 
 void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
   // connection
-  HttpRequestHeader::connection connection = req.getHeader().getConnection();
-  if (connection == HttpRequestHeader::KEEP_ALIVE) {
+  if (req.getHeader().getConnection() == HttpRequestHeader::KEEP_ALIVE) {
     int timeout = req.getServerConfig().getKeepAliveTimeout();
     int req_max = this->connection.updateRequests(fd, req.getServerConfig());
     if (req_max > 0) {
       res.getHeader().set(HttpResponseHeader::CONNECTION, "keep-alive");
       res.getHeader().set(HttpResponseHeader::KEEP_ALIVE, "timeout=" + util::itoa(timeout) + ", max=" + util::itoa(req_max));
     }
-    else {
-      req.setConnection(HttpRequestHeader::CLOSE); // for closeConnection
-      res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
-    }
+    else
+      req.setConnection(HttpRequestHeader::CLOSE);
   }
-  else if (connection == HttpRequestHeader::CLOSE)
+
+  if (req.getHeader().getConnection() == HttpRequestHeader::CLOSE)
     res.getHeader().set(HttpResponseHeader::CONNECTION, "close");
 
   // allow
@@ -420,10 +418,8 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
 }
 
 void Server::closeConnection(int fd) {
-  if (FD_ISSET(fd, &this->writes))
-    FD_CLR(fd, &this->writes);
-  if (FD_ISSET(fd, &this->reads))
-    FD_CLR(fd, &this->reads);
+  ft_fd_clr(fd, this->writes);
+  ft_fd_clr(fd, this->reads);
 
   if (fd == this->fdMax)
     --this->fdMax;
@@ -442,12 +438,13 @@ void Server::closeConnection(int fd) {
 }
 
 void Server::keepAliveConnection(int fd) {
-  FD_CLR(fd, &this->writes);
+  ft_fd_clr(fd, this->writes);
 
   this->connection.updateKeepAlive(fd, this->requests[fd].getServerConfig());
 
   this->requests.erase(fd);
   this->responses.erase(fd);
+  this->recvs.erase(fd);
 }
 
 void Server::cleanUpConnection() {
@@ -455,45 +452,40 @@ void Server::cleanUpConnection() {
 
   fd_list = this->connection.getTimeoutList();
   for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
-    int fd = *it;
-    HttpRequest& req = this->requests[fd];
+    int           fd = *it;
+    HttpRequest&  req = this->requests[fd];
     HttpResponse& res = this->responses[fd];
+    std::string   what;
 
     if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE
         || req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
-      FD_CLR(fd, &this->reads);
+      what = "Request ";
+      ft_fd_clr(fd, this->reads);
       res = Http::getErrorPage(REQUEST_TIMEOUT, req);
-      ft_fd_set(fd, this->writes);
-      this->connection.update(fd, Connection::SEND);
+      req.setConnection(HttpRequestHeader::CLOSE);
+      postProcessing(fd);
+    }
+    else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
+      what = "Gateway ";
+      CGI& cgi = res.getCGI();
+
+      // TODO: ERROR
+      this->cgi_map.erase(cgi.getReadFD());
+      this->cgi_map.erase(cgi.getWriteFD());
+      ft_fd_clr(cgi.getReadFD(), this->reads);
+      ft_fd_clr(cgi.getWriteFD(), this->writes);
+
+      kill(cgi.getPid(), SIGKILL);
+      waitpid(cgi.getPid(), 0, 0);
+
+      res = Http::getErrorPage(GATEWAY_TIMEOUT, req);
+      req.setConnection(HttpRequestHeader::CLOSE);
+      res.set_cgi_status(HttpResponse::NOT_CGI);
+      postProcessing(fd);
     }
     else
-      closeConnection(*it);
-
-    logger::info << "Timeout, client(" << *it << ")" << logger::endl;
-  }
-
-  fd_list = this->connection.getGatewayTimeoutList();
-  for (std::set<int>::iterator it = fd_list.begin(); it != fd_list.end(); ++it) {
-    int fd = *it;
-    HttpRequest& req = this->requests[fd];
-    HttpResponse& res = this->responses[fd];
-    CGI& cgi = res.getCGI();
-
-    this->cgi_map.erase(cgi.getReadFD());
-    this->cgi_map.erase(cgi.getWriteFD());
-    FD_CLR(cgi.getReadFD(), &this->reads);
-    FD_CLR(cgi.getWriteFD(), &this->writes);
-
-    kill(cgi.getPid(), SIGKILL);
-    waitpid(cgi.getPid(), 0, 0);
-
-    res = Http::getErrorPage(GATEWAY_TIMEOUT, req);
-    ft_fd_set(fd, this->writes);
-
-    logger::info << "Gateway Timeout, client(" << *it << ")" << logger::endl;
-    this->connection.update(fd, Connection::SEND);
-    this->connection.removeGateway(fd);
-//    closeConnection(*it);
+      closeConnection(fd);
+    logger::debug << what << "Timeout, client(" << fd << ")" << logger::endl;
   }
 }
 
@@ -501,4 +493,9 @@ void Server::ft_fd_set(int fd, fd_set& set) {
   FD_SET(fd, &set);
   if (this->fdMax < fd)
     this->fdMax = fd;
+}
+
+void Server::ft_fd_clr(int fd, fd_set& set) {
+  if (FD_ISSET(fd, &set))
+    FD_CLR(fd, &set);
 }

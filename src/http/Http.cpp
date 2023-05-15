@@ -46,8 +46,8 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
 
   try {
     std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
-    res.set_cgi_status(HttpResponse::IS_CGI);
     res.getCGI().initCGI(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
+    res.set_cgi_status(HttpResponse::IS_CGI);
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
   }
