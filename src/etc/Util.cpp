@@ -252,6 +252,9 @@ namespace util {
     if (ts2.size() > 0)
       ret += "/" + ts2;
 
+    if (ret == "")
+      ret = "/";
+
     return ret;
   }
 

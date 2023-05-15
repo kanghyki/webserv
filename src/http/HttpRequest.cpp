@@ -193,7 +193,7 @@ std::string HttpRequest::getSubstitutedPath() const {
 
   if (req_path.find(loc_path) != std::string::npos) {
 
-    if (req_path != "/" && (req_path.length() == loc_path_len || req_path[loc_path_len] == '/')) {
+    if (alias_path != "" && req_path != "/" && (req_path.length() == loc_path_len || req_path[loc_path_len] == '/')) {
       if (loc_path != req_path && alias_path == "/")
         alias_path = "";
       req_path.replace(req_path.find(loc_path), loc_path_len, alias_path);
