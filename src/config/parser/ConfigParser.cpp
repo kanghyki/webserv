@@ -339,5 +339,8 @@ int ConfigParser::atoi(const std::string& s) const {
 
   ret = util::atoi(s.c_str());
 
+  if (ret <= 0)
+    throwError("Allow only nonzero positive numbers");
+
   return ret;
 }

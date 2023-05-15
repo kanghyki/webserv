@@ -3,7 +3,7 @@
 const std::string Token::ILLEGAL                  = "ILLEGAL";
 const std::string Token::END_OF_FILE              = "EOF";
 const std::string Token::IDENT                    = "IDENT";
-const std::string Token::INT                      = "int";
+const std::string Token::INT                      = "UNSIGNED INT";
 const std::string Token::SEMICOLON                = ";";
 const std::string Token::LBRACE                   = "{";
 const std::string Token::RBRACE                   = "}";
