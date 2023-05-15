@@ -1,6 +1,7 @@
 #include "./ServerConfig.hpp"
 #include "./HttpConfig.hpp"
 
+const int         ServerConfig::DEFAULT_GATEWAY_TIMEOUT = 60;
 const int         ServerConfig::DEFAULT_SESSION_TIMEOUT = 600;
 const int         ServerConfig::DEFAULT_KEEPALIVE_TIMEOUT = 60;
 const int         ServerConfig::DEFAULT_KEEPALIVE_REQUESTS = 1000;
@@ -9,6 +10,7 @@ const std::string ServerConfig::DEFAULT_HOST = "127.0.0.1";
 
 ServerConfig::ServerConfig():
   CommonConfig(),
+  gateway_timeout(DEFAULT_GATEWAY_TIMEOUT),
   session_timeout(DEFAULT_SESSION_TIMEOUT),
   keepalive_timeout(DEFAULT_KEEPALIVE_TIMEOUT),
   keepalive_requests(DEFAULT_KEEPALIVE_REQUESTS),
@@ -19,6 +21,7 @@ ServerConfig::~ServerConfig() {}
 
 ServerConfig::ServerConfig(const HttpConfig& config):
   CommonConfig(config),
+  gateway_timeout(DEFAULT_GATEWAY_TIMEOUT),
   session_timeout(DEFAULT_SESSION_TIMEOUT),
   keepalive_timeout(DEFAULT_KEEPALIVE_TIMEOUT),
   keepalive_requests(DEFAULT_KEEPALIVE_REQUESTS),
@@ -28,6 +31,7 @@ ServerConfig::ServerConfig(const HttpConfig& config):
 
 ServerConfig::ServerConfig(const ServerConfig& obj):
   CommonConfig(obj),
+  gateway_timeout(obj.getGatewayTimeout()),
   session_timeout(obj.getSessionTimeout()),
   keepalive_timeout(obj.getKeepAliveTimeout()),
   keepalive_requests(obj.getKeepAliveRequests()),
@@ -44,6 +48,7 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& obj) {
     this->errorPage = obj.getErrorPage();
     this->index = obj.getIndex();
 
+    this->gateway_timeout = obj.getGatewayTimeout();
     this->session_timeout = obj.getSessionTimeout();
     this->keepalive_timeout = obj.getKeepAliveTimeout();
     this->keepalive_requests = obj.getKeepAliveRequests();
@@ -106,6 +111,8 @@ const LocationConfig& ServerConfig::findLocationConfigRoop(const LocationConfig&
 
 // getter
 
+int ServerConfig::getGatewayTimeout() const { return this->gateway_timeout; }
+
 int ServerConfig::getSessionTimeout() const { return this->session_timeout; }
 
 int ServerConfig::getKeepAliveTimeout() const { return this->keepalive_timeout; }
@@ -123,6 +130,8 @@ const std::map<std::string, std::string>& ServerConfig::getCGI() const { return 
 const std::vector<LocationConfig>& ServerConfig::getLocationConfig() const { return this->locations; }
 
 // setter
+
+void ServerConfig::setGatewayTimeout(int n) { this->gateway_timeout = n; }
 
 void ServerConfig::setSessionTimeout(int n) { this->session_timeout = n; }
 

@@ -36,6 +36,7 @@ class ConfigParser {
     void                      parseSendTimeout(HttpConfig& conf);
 
     // server
+    void                      parseGatewayTimeout(ServerConfig& conf);
     void                      parseSessionTimeout(ServerConfig& conf);
     void                      parseKeepAliveTimeout(ServerConfig& conf);
     void                      parseKeepAliveRequests(ServerConfig& conf);
