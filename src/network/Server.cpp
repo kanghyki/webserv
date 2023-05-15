@@ -536,7 +536,9 @@ void Server::writeFile(int fd) {
   std::string data = res.getFileBuffer();
   writeSize = write(fd, data.c_str(), data.length());
   if (writeSize < 0) {
-    // error 처리
+    ft_fd_clr(fd, this->writes);
+    file_map.erase(fd);
+    closeConnection(clientFd);
   }
   else {
     res.addOffSet(writeSize);
@@ -551,11 +553,14 @@ void Server::writeFile(int fd) {
 void Server::readFile(int fd) {
   char  buf[BUF_SIZE + 1];
   int   read_size;
+  int   clientFd = this->file_map[fd];
 
   read_size = read(fd, buf, BUF_SIZE);
   if (read_size <= 0) {
     if (read_size < 0) {
-      throw INTERNAL_SERVER_ERROR;
+      ft_fd_clr(fd, this->reads);
+      file_map.erase(fd);
+      closeConnection(clientFd);
     }
     ft_fd_clr(fd, this->reads);
     close(fd);
@@ -563,7 +568,7 @@ void Server::readFile(int fd) {
   }
   buf[read_size] = 0;
   if (read_size > 0)
-    this->responses[this->file_map[fd]].addFileBuffer(std::string(buf, read_size));
+    this->responses[clientFd].addFileBuffer(std::string(buf, read_size));
 }
 
 void Server::ft_fd_clr(int fd, fd_set& set) {
