@@ -108,52 +108,61 @@ void CGI::addBodyOffset(size_t s) {
  */
 
 void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
-  char**  argv;
-  char**  env;
   int     pipe1[2];
   int     pipe2[2];
 
   prepareCGI(req, sessionAvailable);
-  argv = this->getArgv();
-  env = this->envMapToEnv(this->getEnvMap(req));
 
-  try {
-    util::ftPipe(pipe1);
-    util::ftPipe(pipe2);
-    this->pid = util::ftFork();
-  } catch (util::SystemFunctionException& e) {
+  if (pipe(pipe1) == -1) {
+    throw INTERNAL_SERVER_ERROR;
+  }
+  if (pipe(pipe2) == -1) {
+    close(pipe1[0]);
+    close(pipe1[1]);
+    throw INTERNAL_SERVER_ERROR;
+  }
+  if ((this->pid = fork()) == -1) {
+    close(pipe1[0]);
+    close(pipe1[1]);
+    close(pipe2[0]);
+    close(pipe2[1]);
     throw INTERNAL_SERVER_ERROR;
   }
 
   if (this->pid == 0) {
-    try {
-      util::ftClose(pipe1[READ]);
-      util::ftClose(pipe2[WRITE]);
-      util::ftDup2(pipe1[WRITE], STDOUT_FILENO);
-      util::ftDup2(pipe2[READ], STDIN_FILENO);
-      changeWorkingDirectory();
-      util::ftExecve(this->cgiPath.c_str(), argv, env);
-    } catch (util::SystemFunctionException& e) {
-      exit(-1);
-    }
+    char**  argv;
+    char**  env;
+
+    argv = this->getArgv();
+    env = this->envMapToEnv(this->getEnvMap(req));
+
+    close(pipe1[READ]);
+    dup2(pipe1[WRITE], STDOUT_FILENO);
+    close(pipe1[WRITE]);
+
+    close(pipe2[WRITE]);
+    dup2(pipe2[READ], STDIN_FILENO);
+    close(pipe2[READ]);
+    changeWorkingDirectory();
+    execve(this->cgiPath.c_str(), argv, env);
+    exit(EXIT_FAILURE);
   }
+
+  close(pipe1[WRITE]);
+  close(pipe2[READ]);
 
   this->read_fd = pipe1[READ];
   this->write_fd = pipe2[WRITE];
 
-  std::cout << close(pipe1[WRITE]) << std::endl;
-  std::cout << close(pipe2[READ]) << std::endl;
-  std::cout << fcntl(this->write_fd, F_SETFL, O_NONBLOCK) << std::endl;
-  std::cout << fcntl(this->read_fd, F_SETFL, O_NONBLOCK) << std::endl;
-
-  util::ftFree(argv);
-  util::ftFree(env);
+  fcntl(this->write_fd, F_SETFL, O_NONBLOCK);
+  fcntl(this->read_fd, F_SETFL, O_NONBLOCK);
 }
 
 int CGI::writeCGI() {
   std::string body;
   int         write_size;
 
+  logger::debug << "body size: " << getBody().length() << logger::endl;
   body = getBody().substr(this->body_offset);
   write_size = write(this->write_fd, body.c_str(), body.length());
   if (write_size > 0)
@@ -216,6 +225,7 @@ char** CGI::getArgv() const {
   char** ret;
 
   ret = (char**)malloc(sizeof(char*) * 3);
+  // FIXME: throw
   if (ret == NULL) throw INTERNAL_SERVER_ERROR;
 
   ret[0] = strdup(getCgiPath().c_str());
@@ -244,6 +254,7 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
 void CGI::changeWorkingDirectory(void) {
   std::string target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
+  // FIXME: throw
   if (chdir(target.c_str()) == -1) throw util::SystemFunctionException();
 }
 
