@@ -533,14 +533,19 @@ void Server::writeFile(int fd) {
   HttpResponse& res = this->responses[clientFd];
   int writeSize;
 
-  writeSize = write(fd, res.getFileBuffer().c_str(), res.getFileBufferSize());
-  if (writeSize == res.getFileBufferSize()) {
-    ft_fd_clr(fd, this->writes);
-    close(fd);
-    fileDone(fd);
+  std::string data = res.getFileBuffer();
+  writeSize = write(fd, data.c_str(), data.length());
+  if (writeSize < 0) {
+    // error 처리
   }
-  else
-    logger::error << "write failed" << logger::endl;
+  else {
+    res.addOffSet(writeSize);
+    if (res.getOffSet() == res.getFileBufferSize()) {
+      ft_fd_clr(fd, this->writes);
+      close(fd);
+      fileDone(fd);
+    }
+  }
 }
 
 void Server::readFile(int fd) {
