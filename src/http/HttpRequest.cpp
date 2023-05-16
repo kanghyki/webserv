@@ -223,13 +223,22 @@ std::string HttpRequest::getBody() const {
 
 const std::string HttpRequest::getContentType(void) const {
   std::string content_type;
+  std::string path;
+  MimeType    mt;
+  struct stat _stat;
 
   content_type = getHeader().get(HttpRequestHeader::CONTENT_TYPE);
   if (content_type != "")
     return content_type;
 
-  MimeType mt;
-  return mt.getMimeType(getPath());
+  if (stat(this->getTargetPath().c_str(), &_stat) == -1)
+    path = this->getTargetPath();
+  else if (S_ISDIR(_stat.st_mode) && this->getLocationConfig().getIndex() != "")
+    path = this->getTargetPath() + this->getLocationConfig().getIndex();
+  else
+    path = this->getTargetPath();
+
+  return mt.getMimeType(path);
 }
 
 const LocationConfig& HttpRequest::getLocationConfig() const {

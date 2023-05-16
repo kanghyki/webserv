@@ -9,6 +9,7 @@
 # include "../etc/Logger.hpp"
 
 # include <cstring>
+# include <sys/stat.h>
 # include <sstream>
 # include <stdexcept>
 # include <string>

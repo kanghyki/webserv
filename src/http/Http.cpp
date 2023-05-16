@@ -92,7 +92,7 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
     if (req.getLocationConfig().isAutoindex()) {
       res.setAutoIndex(true);
       res.setStatusCode(OK);
-      res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
+      res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, "text/html");
       res.setBody(autoindex(req));
     }
     else if (req.getLocationConfig().getIndex() != "")
