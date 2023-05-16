@@ -175,16 +175,15 @@ void CGI::forkCGI() {
     env = this->envMapToEnv(this->env_map);
     target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
-    close(read_pipe[READ]);
-    dup2(read_pipe[WRITE], STDOUT_FILENO);
-    dup2(this->write_fd, STDIN_FILENO);
-    chdir(target.c_str());
-    execve(this->cgiPath.c_str(), argv, env);
-    exit(EXIT_FAILURE);
+    if (close(read_pipe[READ]) == -1 ||
+        dup2(read_pipe[WRITE], STDOUT_FILENO) == -1 ||
+        dup2(this->write_fd, STDIN_FILENO) == -1 ||
+        chdir(target.c_str()) == -1 ||
+        execve(this->cgiPath.c_str(), argv, env) == -1)
+      exit(EXIT_FAILURE);
   }
 
-  close(read_pipe[WRITE]);
-  if (fcntl(this->read_fd, F_SETFL, O_NONBLOCK) == -1) {
+  if (close(read_pipe[WRITE]) == -1 || fcntl(this->read_fd, F_SETFL, O_NONBLOCK) == -1) {
     withdrawResource();
     throw INTERNAL_SERVER_ERROR;
   }
