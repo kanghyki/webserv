@@ -49,63 +49,6 @@ Server::~Server(void) {}
  * ----------------------- Member Function -------------------------
  */
 
-inline int Server::socketInit(void) {
-  int fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (fd == -1)
-    throw std::runtime_error("Server initialization failed");
-
-  // for develop
-  int option = 1;
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-  // -----------
-
-  return fd;
-}
-
-inline void Server::socketaddrInit(const std::string& host, int port, sockaddr_in& in) {
-  if (!memset(&in, 0, sizeof(in)))
-    throw std::runtime_error("Server initialization failed");
-
-  in.sin_family = AF_INET;
-  inet_pton(AF_INET, host.c_str(), &(in.sin_addr));
-  in.sin_port = htons(port);
-
-  logger::info << "Preparing... Host=[" << inet_ntoa(in.sin_addr) << "] Port=[" << ntohs(in.sin_port) << "]" << logger::endl;
-}
-
-inline void Server::socketOpen(int servFd, sockaddr_in& in) {
-  bool  bind_success = false;
-  bool  listen_success = false;
-
-  for (size_t i = 0; i < BIND_MAX_TRIES; ++i) {
-    if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
-      logger::warning << "Bind failed... retry... " << i + 1 << logger::endl;
-    else {
-      bind_success = true;
-      break;
-    }
-    sleep(TRY_SLEEP_TIME);
-  }
-
-  if (bind_success == false)
-    throw std::runtime_error("Server bind failed");
-
-  for (size_t i = 0; i < LISTEN_MAX_TRIES; ++i) {
-    if (listen(servFd, MANAGE_FD_MAX) == -1)
-      logger::warning << "Listen failed... retry... " << i + 1 << logger::endl;
-    else {
-      listen_success = true;
-      break;
-    }
-    sleep(TRY_SLEEP_TIME);
-  }
-
-  if (listen_success == false)
-    throw std::runtime_error("Server listen failed");
-
-  logger::info << "Listening... (" << servFd << ") \n\n\"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n" << logger::endl;
-}
-
 void Server::run(void) {
   struct timeval t;
 
@@ -169,65 +112,6 @@ void Server::run(void) {
   for (size_t i = 0; i < this->listens_fd.size(); ++i)
     if (close(this->listens_fd[i]) == -1)
       logger::warning << "Closed, listen fd(" << i << ") with -1" << logger::endl;
-}
-
-bool Server::isCgiPipe(int fd) const {
-  std::map<int, int>::const_iterator it;
-
-  it = this->cgi_map.find(fd);
-  if (it == this->cgi_map.end())
-    return false;
-  return it->second;
-}
-
-void Server::writeCGI(int fd) {
-  int   client_fd  = cgi_map[fd];
-  CGI&  cgi = this->responses[client_fd].getCGI();
-
-  int write_size = cgi.writeCGI();
-  if (write_size == 0) {
-    ft_fd_clr(fd, this->writes);
-    lseek(fd, 0, SEEK_SET);
-    cgi_map.erase(fd);
-    try {
-      cgi.forkCGI();
-      ft_fd_set(cgi.getReadFD(), this->reads);
-      cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
-    } catch (HttpStatus s) {
-      this->responses[client_fd] = Http::getErrorPage(s, this->requests[client_fd]);
-      prepareIO(client_fd);
-    }
-  }
-  else if (write_size == -1) {
-    logger::error << "cgi write error" << logger::endl;
-    ft_fd_clr(fd, this->writes);
-    cgi_map.erase(fd);
-    cgi.withdrawResource();
-    this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
-    prepareIO(client_fd);
-  }
-}
-
-void Server::readCGI(int fd) {
-  int   client_fd = cgi_map[fd];
-  CGI&  cgi = this->responses[client_fd].getCGI();
-
-  int read_size = cgi.readCGI();
-  if (read_size == 0) {
-    ft_fd_clr(fd, this->reads);
-    cgi.withdrawResource();
-    cgi_map.erase(fd);
-    Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
-    postProcessing(client_fd);
-  }
-  else if (read_size == -1) {
-    logger::error << "cgi read error" << logger::endl;
-    ft_fd_clr(fd, this->reads);
-    cgi_map.erase(fd);
-    cgi.withdrawResource();
-    this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
-    prepareIO(client_fd);
-  }
 }
 
 void Server::acceptConnect(int server_fd) {
@@ -533,10 +417,63 @@ void Server::cleanUpConnection() {
   }
 }
 
-void Server::ft_fd_set(int fd, fd_set& set) {
-  FD_SET(fd, &set);
-  if (this->fdMax < fd)
-    this->fdMax = fd;
+bool Server::isCgiPipe(int fd) const {
+  std::map<int, int>::const_iterator it;
+
+  it = this->cgi_map.find(fd);
+  if (it == this->cgi_map.end())
+    return false;
+  return it->second;
+}
+
+void Server::writeCGI(int fd) {
+  int   client_fd  = cgi_map[fd];
+  CGI&  cgi = this->responses[client_fd].getCGI();
+
+  int write_size = cgi.writeCGI();
+  if (write_size == 0) {
+    ft_fd_clr(fd, this->writes);
+    lseek(fd, 0, SEEK_SET);
+    cgi_map.erase(fd);
+    try {
+      cgi.forkCGI();
+      ft_fd_set(cgi.getReadFD(), this->reads);
+      cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
+    } catch (HttpStatus s) {
+      this->responses[client_fd] = Http::getErrorPage(s, this->requests[client_fd]);
+      prepareIO(client_fd);
+    }
+  }
+  else if (write_size == -1) {
+    logger::error << "cgi write error" << logger::endl;
+    ft_fd_clr(fd, this->writes);
+    cgi_map.erase(fd);
+    cgi.withdrawResource();
+    this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
+    prepareIO(client_fd);
+  }
+}
+
+void Server::readCGI(int fd) {
+  int   client_fd = cgi_map[fd];
+  CGI&  cgi = this->responses[client_fd].getCGI();
+
+  int read_size = cgi.readCGI();
+  if (read_size == 0) {
+    ft_fd_clr(fd, this->reads);
+    cgi.withdrawResource();
+    cgi_map.erase(fd);
+    Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
+    postProcessing(client_fd);
+  }
+  else if (read_size == -1) {
+    logger::error << "cgi read error" << logger::endl;
+    ft_fd_clr(fd, this->reads);
+    cgi_map.erase(fd);
+    cgi.withdrawResource();
+    this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
+    prepareIO(client_fd);
+  }
 }
 
 bool Server::isFileFd(int fd) const {
@@ -599,7 +536,70 @@ void Server::readFile(int fd) {
   }
 }
 
+void Server::ft_fd_set(int fd, fd_set& set) {
+  FD_SET(fd, &set);
+  if (this->fdMax < fd)
+    this->fdMax = fd;
+}
+
 void Server::ft_fd_clr(int fd, fd_set& set) {
   if (FD_ISSET(fd, &set))
     FD_CLR(fd, &set);
+}
+
+inline int Server::socketInit(void) {
+  int fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (fd == -1)
+    throw std::runtime_error("Server initialization failed");
+
+  // for develop
+  int option = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+  // -----------
+
+  return fd;
+}
+
+inline void Server::socketaddrInit(const std::string& host, int port, sockaddr_in& in) {
+  if (!memset(&in, 0, sizeof(in)))
+    throw std::runtime_error("Server initialization failed");
+
+  in.sin_family = AF_INET;
+  inet_pton(AF_INET, host.c_str(), &(in.sin_addr));
+  in.sin_port = htons(port);
+
+  logger::info << "Preparing... Host=[" << inet_ntoa(in.sin_addr) << "] Port=[" << ntohs(in.sin_port) << "]" << logger::endl;
+}
+
+inline void Server::socketOpen(int servFd, sockaddr_in& in) {
+  bool  bind_success = false;
+  bool  listen_success = false;
+
+  for (size_t i = 0; i < BIND_MAX_TRIES; ++i) {
+    if (bind(servFd, (struct sockaddr*)&in, sizeof(in)) == -1)
+      logger::warning << "Bind failed... retry... " << i + 1 << logger::endl;
+    else {
+      bind_success = true;
+      break;
+    }
+    sleep(TRY_SLEEP_TIME);
+  }
+
+  if (bind_success == false)
+    throw std::runtime_error("Server bind failed");
+
+  for (size_t i = 0; i < LISTEN_MAX_TRIES; ++i) {
+    if (listen(servFd, MANAGE_FD_MAX) == -1)
+      logger::warning << "Listen failed... retry... " << i + 1 << logger::endl;
+    else {
+      listen_success = true;
+      break;
+    }
+    sleep(TRY_SLEEP_TIME);
+  }
+
+  if (listen_success == false)
+    throw std::runtime_error("Server listen failed");
+
+  logger::info << "Listening... (" << servFd << ") \n\n\"http://" << inet_ntoa(in.sin_addr) << ":" << ntohs(in.sin_port) << "\"\n" << logger::endl;
 }

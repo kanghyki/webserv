@@ -53,13 +53,6 @@ class Server {
     Connection                  connection;
     SessionManager              sessionManager;
 
-    inline int  socketInit(void);
-    inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
-    inline void socketOpen(int servFd, sockaddr_in& in);
-
-    void        ft_fd_set(int fd, fd_set& set);
-    void        ft_fd_clr(int fd, fd_set& set);
-
     void        acceptConnect(int server_fd);
     void        receiveData(int fd);
     void        checkReceiveDone(int fd);
@@ -80,6 +73,13 @@ class Server {
     bool        isFileFd(int fd) const;
     void        writeFile(int fd);
     void        readFile(int fd);
+
+    void        ft_fd_set(int fd, fd_set& set);
+    void        ft_fd_clr(int fd, fd_set& set);
+
+    inline int  socketInit(void);
+    inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
+    inline void socketOpen(int servFd, sockaddr_in& in);
 };
 
 #endif
