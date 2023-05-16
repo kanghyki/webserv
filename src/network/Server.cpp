@@ -149,9 +149,9 @@ void Server::receiveData(int fd) {
     return ;
   }
   buf[recv_size] = 0;
-  logger::debug << "recv_size: " << recv_size << logger::endl;
+//  logger::debug << "recv_size: " << recv_size << logger::endl;
   this->recvs[fd] += std::string(buf, recv_size);
-  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
+//  logger::debug << "total: " << this->recvs[fd].length() << logger::endl;
   checkReceiveDone(fd);
 }
 
@@ -559,8 +559,8 @@ inline int Server::socketInit(void) {
     throw std::runtime_error("Server initialization failed");
 
   // for develop
-  int option = 1;
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+//  int option = 1;
+//  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
   // -----------
 
   return fd;
