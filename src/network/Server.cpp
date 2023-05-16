@@ -242,7 +242,13 @@ void Server::prepareIO(int fd) {
     }
     else {
       int fileFd = res.getFd();
-      fcntl(fileFd, F_SETFL, O_NONBLOCK);
+      if (fcntl(fileFd, F_SETFL, O_NONBLOCK) == -1) {
+        logger::error << "fcntl failed" << logger::endl;
+        file_map.erase(fileFd);
+        ft_fd_clr(fileFd, this->reads);
+        res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
+        prepareIO(fd);
+      }
       file_map.insert(std::make_pair(fileFd, fd));
       if (res.isError()
           || res.getMethod() == request_method::GET
