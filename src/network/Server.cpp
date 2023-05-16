@@ -559,8 +559,8 @@ inline int Server::socketInit(void) {
     throw std::runtime_error("Server initialization failed");
 
   // for develop
-  int option = 1;
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+//  int option = 1;
+//  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
   // -----------
 
   return fd;
