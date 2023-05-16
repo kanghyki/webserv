@@ -24,13 +24,8 @@ namespace util {
   int atoi(std::string s);
   const std::string getMimeType(const std::string& filename);
   void writeFile(const std::string& filename, const std::string& data);
-  int ftFork(void);
-  void ftPipe(int* fd);
   std::string readFd(int fd);
   void ftFree(char** data);
-  void ftDup2(int oldFd, int newFd);
-  void ftExecve(const std::string& file, char* const* argv, char* const* envp);
-  void ftClose(int fd);
   int  openToRead(const std::string& file);
   int  openToWrite(const std::string& file);
 

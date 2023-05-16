@@ -33,7 +33,7 @@ namespace util {
 
     if (n == std::string::npos)
       throw util::StringFoundException();
-    
+
     return n;
   }
 
@@ -105,14 +105,6 @@ namespace util {
     if (out.fail() || out.bad() || out.eof()) throw util::IOException();
   }
 
-  int ftFork(void) {
-    int pid = fork();
-
-    if (pid == -1) throw util::SystemFunctionException();
-
-    return pid;
-  }
-
   std::string readFd(int fd) {
     std::string ret;
     int         readSize;
@@ -129,10 +121,6 @@ namespace util {
     return ret;
   }
 
-  void ftPipe(int* fd) {
-    if (pipe(fd) == -1)  throw util::SystemFunctionException();
-  }
-
   void ftFree(char** data) {
     int i = 0;
 
@@ -143,20 +131,6 @@ namespace util {
       i++;
     }
     free(data);
-  }
-  
-  void ftDup2(int oldFd, int newFd) {
-    if (dup2(oldFd, newFd) == -1)
-      throw util::SystemFunctionException();
-  }
-
-  void ftClose(int fd) {
-    if (close(fd) == -1)
-      throw util::SystemFunctionException();
-  }
-
-  void ftExecve(const std::string& file, char* const* argv, char* const* envp) {
-    if (execve(file.c_str(), argv, envp) == -1) throw util::SystemFunctionException();
   }
 
   std::pair<std::string, std::string> splitHeaderBody(const std::string& str, const std::string& delim) {
