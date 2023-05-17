@@ -195,7 +195,7 @@ namespace util {
   }
 
   int openToWrite(const std::string& file) {
-    int fd = open(file.c_str(), O_WRONLY | O_CREAT, 0644);
+    int fd = open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd == -1)
       throw util::SystemFunctionException();
     return fd;

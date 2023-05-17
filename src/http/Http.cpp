@@ -129,7 +129,6 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
       + ":"
       + util::itoa(req.getServerConfig().getPort())
       + req.getSubstitutedPath());
-  res.setBody(req.getBody());
 
   return res;
 }
