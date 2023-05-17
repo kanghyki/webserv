@@ -10,9 +10,9 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
 
   try {
     checkAndThrowError(req);
-    if (req.getLocationConfig().isSetReturn()) {
-      res.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturnRes().first));
-      res.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturnRes().second);
+    if (req.getLocationConfig().hasReturn()) {
+      res.setStatusCode(static_cast<HttpStatus>(req.getLocationConfig().getReturn().first));
+      res.getHeader().set(HttpResponseHeader::LOCATION, req.getLocationConfig().getReturn().second);
       return res;
     }
     if (req.isCGI()) res = executeCGI(req, manager);

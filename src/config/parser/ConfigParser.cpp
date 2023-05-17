@@ -233,7 +233,7 @@ void ConfigParser::parseReturn(LocationConfig& conf) {
   if (status_code != 301  && status_code != 307)
     throwError("A value other than 301 or 307 is not supported by the return field");
   expectNextToken(Token::IDENT);
-  conf.setReturnRes(status_code, curToken().getLiteral());
+  conf.setReturn(status_code, curToken().getLiteral());
   expectNextToken(Token::SEMICOLON);
 }
 

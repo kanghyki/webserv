@@ -9,7 +9,7 @@ LocationConfig::LocationConfig():
   CommonConfig(),
   alias(DEFAULT_ALIAS),
   path(DEFAULT_PATH),
-  returnRes(std::make_pair(-1, "")),
+  _return(std::make_pair(-1, "")),
   autoindex(DEFAULT_AUTOINDEX) {
     // support method
     this->limitExcept.push_back("GET");
@@ -23,7 +23,7 @@ LocationConfig::LocationConfig(const ServerConfig& config):
   CommonConfig(config),
   alias(DEFAULT_ALIAS),
   path(DEFAULT_PATH),
-  returnRes(std::make_pair(-1, "")),
+  _return(std::make_pair(-1, "")),
   autoindex(DEFAULT_AUTOINDEX) {}
 
 LocationConfig::LocationConfig(const LocationConfig& obj):
@@ -31,7 +31,7 @@ LocationConfig::LocationConfig(const LocationConfig& obj):
   alias(obj.getAlias()),
   path(obj.getPath()),
   limitExcept(obj.getLimitExcept()),
-  returnRes(obj.getReturnRes()), 
+  _return(obj.getReturn()),
   autoindex(obj.isAutoindex()),
   locations(obj.getLocationConfig()) {}
 
@@ -47,7 +47,7 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& obj) {
     this->alias = obj.getAlias();
     this->path = obj.getPath();
     this->limitExcept = obj.getLimitExcept();
-    this->returnRes = obj.getReturnRes();
+    this->_return = obj.getReturn();
     this->autoindex = obj.isAutoindex();
     this->locations = obj.getLocationConfig();
   }
@@ -77,13 +77,13 @@ bool LocationConfig::isMethodAllowed(std::string method) const {
   return false;
 }
 
-bool LocationConfig::isSetReturn() const {
-  if (this->returnRes.first == -1)
+bool LocationConfig::hasReturn() const {
+  if (this->_return.first == -1)
     return false;
   return true;
 }
 
-std::pair<int, std::string> LocationConfig::getReturnRes() const { return this->returnRes; }
+std::pair<int, std::string> LocationConfig::getReturn() const { return this->_return; }
 
 bool LocationConfig::isAutoindex() const { return this->autoindex; }
 
@@ -99,8 +99,8 @@ void LocationConfig::setPath(std::string path) { this->path = path; }
 
 void LocationConfig::setLimitExcept(std::vector<std::string> methods) { this->limitExcept = methods; }
 
-void LocationConfig::setReturnRes(int status, std::string path) {
-  this->returnRes = std::make_pair(status, path);
+void LocationConfig::setReturn(int status, std::string path) {
+  this->_return = std::make_pair(status, path);
 }
 
 void LocationConfig::setAutoindex(bool autoIndex) { this->autoindex = autoIndex; }
