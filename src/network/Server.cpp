@@ -171,7 +171,7 @@ void Server::checkReceiveDone(int fd) {
         try {
           req.unchunkBody();
         } catch (HttpStatus s) {
-          logger::warning << "Chunked message is wrong" << logger::endl;
+          logger::debug << "Chunked message is wrong" << logger::endl;
           req.setError(s);
         }
       }
