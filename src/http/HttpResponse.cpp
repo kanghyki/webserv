@@ -17,7 +17,6 @@ HttpResponse::HttpResponse():
   sendLength(0),
   cgi_stat(NOT_CGI),
   cgi(),
-  status(-1),
   fileFd(-1),
   autoindex(false),
   fileBuffer(""),
@@ -37,7 +36,6 @@ HttpResponse::HttpResponse(const HttpResponse& obj):
   sendLength(obj.sendLength),
   cgi_stat(obj.cgi_stat),
   cgi(obj.cgi),
-  status(obj.status),
   fileFd(obj.fileFd),
   autoindex(obj.autoindex),
   method(obj.method),
@@ -62,7 +60,6 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
     this->cgi_stat = obj.cgi_stat;
     this->cgi = obj.cgi;
 
-    this->status = obj.status;
     this->fileFd = obj.fileFd;
 
     this->autoindex = obj.autoindex;
@@ -170,10 +167,6 @@ HttpResponse::cgi_status HttpResponse::get_cgi_status() const {
 
 CGI& HttpResponse::getCGI() {
   return this->cgi;
-}
-
-int HttpResponse::getStatus() const {
-  return this->status;
 }
 
 void HttpResponse::setAutoIndex(bool autoindex) {

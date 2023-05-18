@@ -42,7 +42,6 @@ class HttpResponse {
 
     CGI&                                getCGI();
 
-    int                                 getStatus() const;
     int                                 getFd() const;
     void                                setFd(int fd);
 
@@ -84,7 +83,6 @@ class HttpResponse {
     cgi_status                          cgi_stat;
     CGI                                 cgi;
 
-    int                                 status;
     int                                 fileFd;
 
     bool                                autoindex;
