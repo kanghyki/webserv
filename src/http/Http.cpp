@@ -16,10 +16,14 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
       return res;
     }
     if (req.isCGI()) res = executeCGI(req, manager);
-    else if (req.getMethod() == request_method::GET || req.getMethod() == request_method::HEAD) res = getMethod(req);
-    else if (req.getMethod() == request_method::POST) res = postMethod(req);
-    else if (req.getMethod() == request_method::DELETE) res = deleteMethod(req);
-    else if (req.getMethod() == request_method::PUT) res = putMethod(req);
+    else if (req.isMethod(request_method::GET) || req.isMethod(request_method::HEAD))
+      res = getMethod(req);
+    else if (req.isMethod(request_method::POST))
+      res = postMethod(req);
+    else if (req.isMethod(request_method::DELETE))
+      res = deleteMethod(req);
+    else if (req.isMethod(request_method::PUT))
+      res = putMethod(req);
     res.setMethod(req.getMethod());
   } catch (HttpStatus status) {
     res = getErrorPage(status, req);

@@ -182,6 +182,12 @@ unsigned int HttpRequest::strToHex(std::string s) {
 
 std::string HttpRequest::getMethod() const { return this->method; }
 
+bool HttpRequest::isMethod(std::string method) const {
+  if (this->method == method)
+    return true;
+  return false;
+}
+
 std::string HttpRequest::getPath() const { return this->path; }
 
 std::string HttpRequest::getSubstitutedPath() const {

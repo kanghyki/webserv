@@ -43,6 +43,7 @@ class HttpRequest {
     void                                  unchunkBody();
 
     std::string                           getMethod() const;
+    bool                                  isMethod(std::string method) const;
     std::string                           getPath() const;
     std::string                           getSubstitutedPath() const;
     std::string                           getTargetPath() const;
