@@ -229,9 +229,9 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
 void Server::prepareIO(int client_fd) {
   HttpRequest&  req = this->requests[client_fd];
   HttpResponse& res = this->responses[client_fd];
-  CGI&          cgi = res.getCGI();
 
   if (res.getCgiStatus() == HttpResponse::IS_CGI) {
+    CGI& cgi = res.getCGI();
     this->connection.updateGateway(client_fd, req.getServerConfig());
     ft_fd_set(cgi.getWriteFD(), this->writes);
     cgi_map.insert(std::make_pair(cgi.getWriteFD(), client_fd));
@@ -335,7 +335,6 @@ void Server::closeConnection(int fd) {
   this->connection.removeRequests(fd);
 
   if (res.isSetFd()) {
-    logger::debug << "!?" << logger::endl;
     close(res.getFd());
     ft_fd_clr(res.getFd(), this->reads);
     ft_fd_clr(res.getFd(), this->writes);
