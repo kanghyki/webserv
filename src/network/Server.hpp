@@ -53,33 +53,34 @@ class Server {
     Connection                  connection;
     SessionManager              sessionManager;
 
-    void        acceptConnect(int server_fd);
-    void        receiveData(int fd);
-    void        checkReceiveDone(int fd);
-    void        receiveHeader(int fd, HttpRequest& req);
-    void        prepareIO(int fd);
-    void        fileDone(int fd);
-    void        postProcessing(int fd);
-    void        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
-    void        sendData(int fd);
-    void        closeConnection(int fd);
-    void        keepAliveConnection(int fd);
-    void        cleanUpConnection();
+    void                        acceptConnect(int server_fd);
+    void                        receiveData(int fd);
+    void                        checkReceiveDone(int fd);
+    void                        receiveHeader(int fd, HttpRequest& req);
+    void                        prepareIO(int client_fd);
+    bool                        isReadFd(const HttpRequest& req, const HttpResponse& res);
+    void                        fileDone(int file_fd);
+    void                        postProcessing(int client_fd);
+    void                        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
+    void                        sendData(int fd);
+    void                        closeConnection(int fd);
+    void                        keepAliveConnection(int fd);
+    void                        cleanUpConnection();
 
-    bool        isCgiPipe(int fd) const;
-    void        writeCGI(int fd);
-    void        readCGI(int fd);
+    bool                        isCgiPipe(int fd) const;
+    void                        writeCGI(int fd);
+    void                        readCGI(int fd);
 
-    bool        isFileFd(int fd) const;
-    void        writeFile(int fd);
-    void        readFile(int fd);
+    bool                        isFileFd(int fd) const;
+    void                        writeFile(int fd);
+    void                        readFile(int fd);
 
-    void        ft_fd_set(int fd, fd_set& set);
-    void        ft_fd_clr(int fd, fd_set& set);
+    void                        ft_fd_set(int fd, fd_set& set);
+    void                        ft_fd_clr(int fd, fd_set& set);
 
-    inline int  socketInit(void);
-    inline void socketaddrInit(const std::string& host, int port, sockaddr_in& in);
-    inline void socketOpen(int servFd, sockaddr_in& in);
+    inline int                  socketInit(void);
+    inline void                 socketaddrInit(const std::string& host, int port, sockaddr_in& in);
+    inline void                 socketOpen(int servFd, sockaddr_in& in);
 };
 
 #endif

@@ -204,11 +204,7 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
 
     try {
       req.parse(header, this->config);
-      logger::info << "Request from " << fd
-        << " to " << req.getServerConfig().getServerName()
-        << ", Method=\"" << req.getMethod()
-        << "\" URI=\"" << req.getPath() << "\""
-        << logger::endl;
+      logger::info << "Request from " << fd << " to " << req.getServerConfig().getServerName() << ", Method=\"" << req.getMethod() << "\" URI=\"" << req.getPath() << "\"" << logger::endl;
       this->connection.update(fd, Connection::BODY);
     } catch (HttpStatus s) {
       logger::debug << "Request header message is wrong" << logger::endl;
@@ -230,72 +226,60 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
   }
 }
 
-void Server::prepareIO(int fd) {
-  HttpRequest&  req = this->requests[fd];
-  HttpResponse& res = this->responses[fd];
+void Server::prepareIO(int client_fd) {
+  HttpRequest&  req = this->requests[client_fd];
+  HttpResponse& res = this->responses[client_fd];
+  CGI&          cgi = res.getCGI();
 
-  if (res.get_cgi_status() == HttpResponse::NOT_CGI) {
-    if ((res.isError() == false && req.getLocationConfig().hasReturn())
-        || res.isAutoindex() == true
-        || res.getMethod() == request_method::DELETE
-        || res.isDefaultError()) {
-      postProcessing(fd);
-    }
-    else {
-      int fileFd = res.getFd();
-      if (fcntl(fileFd, F_SETFL, O_NONBLOCK) == -1) {
-        logger::error << "fcntl failed" << logger::endl;
-        file_map.erase(fileFd);
-        ft_fd_clr(fileFd, this->reads);
-        res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
-        prepareIO(fd);
-      }
-      file_map.insert(std::make_pair(fileFd, fd));
-      if (res.isError()
-          || res.getMethod() == request_method::GET
-          || res.getMethod() == request_method::HEAD) {
-        ft_fd_set(fileFd, this->reads);
-      }
-      else if (res.getMethod() == request_method::POST
-          || res.getMethod() == request_method::PUT) {
-        ft_fd_set(fileFd, this->writes);
-      }
-    }
-  }
-  else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
-    this->connection.updateGateway(fd, req.getServerConfig());
-    CGI& cgi = res.getCGI();
+  if (res.getCgiStatus() == HttpResponse::IS_CGI) {
+    this->connection.updateGateway(client_fd, req.getServerConfig());
     ft_fd_set(cgi.getWriteFD(), this->writes);
-    cgi_map.insert(std::make_pair(cgi.getWriteFD(), fd));
+    cgi_map.insert(std::make_pair(cgi.getWriteFD(), client_fd));
+  }
+  else if (res.getCgiStatus() == HttpResponse::NOT_CGI) {
+    this->connection.update(client_fd, Connection::SEND);
+    if (res.isSetFd()) {
+      int fileFd = res.getFd();
+      file_map.insert(std::make_pair(fileFd, client_fd));
+      if (isReadFd(req, res))
+        ft_fd_set(fileFd, this->reads);
+      else
+        ft_fd_set(fileFd, this->writes);
+    }
+    else
+      postProcessing(client_fd);
   }
 }
 
-void Server::fileDone(int fd) {
-  int clientFd = this->file_map[fd];
-  this->file_map.erase(fd);
+bool Server::isReadFd(const HttpRequest& req, const HttpResponse& res) {
+  if (res.isError() ||
+      req.isMethod(request_method::GET) ||
+      req.isMethod(request_method::HEAD))
+    return true;
+  return false;
+}
+
+void Server::fileDone(int file_fd) {
+  int           clientFd = this->file_map[file_fd];
   HttpResponse& res = this->responses[clientFd];
 
-  if (res.getMethod() == request_method::GET || res.isError())
-    res.setBody(res.getFileBuffer());
+  this->file_map.erase(file_fd);
+  res.setBody(res.getFileBuffer());
 
   postProcessing(clientFd);
 }
 
-void Server::postProcessing(int fd) {
-  HttpRequest&  req = this->requests[fd];
-  HttpResponse& res = this->responses[fd];
+void Server::postProcessing(int client_fd) {
+  HttpRequest&  req = this->requests[client_fd];
+  HttpResponse& res = this->responses[client_fd];
 
   if (req.getMethod() == request_method::HEAD) {
     res.getHeader().remove(HttpRequestHeader::CONTENT_TYPE);
     res.removeBody();
   }
-  addExtraHeader(fd, req, res);
-  this->connection.update(fd, Connection::SEND);
-  ft_fd_set(fd, this->writes);
-  logger::info << "Response to " << fd
-    << " from " << req.getServerConfig().getServerName()
-    << ", Status=" << res.getStatusCode()
-    << logger::endl;
+  addExtraHeader(client_fd, req, res);
+  ft_fd_set(client_fd, this->writes);
+  logger::info << "Response to " << client_fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << logger::endl;
 }
 
 void Server::sendData(int fd) {
@@ -341,19 +325,24 @@ void Server::closeConnection(int fd) {
 
   ft_fd_clr(fd, this->writes);
   ft_fd_clr(fd, this->reads);
-
   if (fd == this->fdMax)
     --this->fdMax;
-
   if (close(fd) == -1)
     logger::warning << "Closed, client(" << fd << ") with -1" << logger::endl;
   else
     logger::info << "Closed, client(" << fd << ")" << logger::endl;
-
   this->connection.remove(fd);
   this->connection.removeRequests(fd);
 
-  if (res.get_cgi_status() == HttpResponse::IS_CGI) {
+  if (res.isSetFd()) {
+    logger::debug << "!?" << logger::endl;
+    close(res.getFd());
+    ft_fd_clr(res.getFd(), this->reads);
+    ft_fd_clr(res.getFd(), this->writes);
+    file_map.erase(res.getFd());
+  }
+
+  if (res.getCgiStatus() == HttpResponse::IS_CGI) {
     CGI& cgi = res.getCGI();
 
     cgi.withdrawResource();
@@ -361,12 +350,6 @@ void Server::closeConnection(int fd) {
     ft_fd_clr(cgi.getWriteFD(), this->writes);
     cgi_map.erase(cgi.getReadFD());
     cgi_map.erase(cgi.getWriteFD());
-  }
-  else {
-    close(res.getFd());
-    ft_fd_clr(res.getFd(), this->reads);
-    ft_fd_clr(res.getFd(), this->writes);
-    file_map.erase(res.getFd());
   }
 
   this->requests.erase(fd);
@@ -397,12 +380,13 @@ void Server::cleanUpConnection() {
     if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE
         || req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
       what = "Request ";
+
       ft_fd_clr(fd, this->reads);
       res = Http::getErrorPage(REQUEST_TIMEOUT, req);
       req.setConnection(HttpRequestHeader::CLOSE);
       prepareIO(fd);
     }
-    else if (res.get_cgi_status() == HttpResponse::IS_CGI) {
+    else if (res.getCgiStatus() == HttpResponse::IS_CGI) {
       what = "Gateway ";
       CGI& cgi = res.getCGI();
 
@@ -415,7 +399,7 @@ void Server::cleanUpConnection() {
 
       res = Http::getErrorPage(GATEWAY_TIMEOUT, req);
       req.setConnection(HttpRequestHeader::CLOSE);
-      res.set_cgi_status(HttpResponse::NOT_CGI);
+      res.setCgiStatus(HttpResponse::NOT_CGI);
       prepareIO(fd);
     }
     else
@@ -560,8 +544,8 @@ inline int Server::socketInit(void) {
     throw std::runtime_error("Server initialization failed");
 
   // for develop
-//  int option = 1;
-//  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+  int option = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
   // -----------
 
   return fd;

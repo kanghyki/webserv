@@ -13,7 +13,7 @@
 class HttpResponse {
 
   public:
-    enum cgi_status {
+    enum CgiStatus {
       NOT_CGI,
       IS_CGI
     };
@@ -37,19 +37,15 @@ class HttpResponse {
     SendStatus                          getSendStatus() const;
     HttpResponseHeader&                 getHeader();
 
-    cgi_status                          get_cgi_status() const;
-    void                                set_cgi_status(cgi_status s);
+    CgiStatus                           getCgiStatus() const;
+    void                                setCgiStatus(CgiStatus s);
 
     CGI&                                getCGI();
 
     int                                 getFd() const;
     void                                setFd(int fd);
-
-    void                                setAutoIndex(bool autoindex);
-    bool                                isAutoindex() const;
-
-    void                                setMethod(const std::string& method);
-    std::string                         getMethod(void) const;
+    void                                unsetFd();
+    bool                                isSetFd();
 
     void                                addFileBuffer(std::string data);
     void                                setFileBuffer(std::string data);
@@ -59,12 +55,10 @@ class HttpResponse {
 
     void                                setError(bool error);
     bool                                isError(void) const;
-    void                                setDefaultError(bool error);
-    bool                                isDefaultError(void) const;
 
     void                                addOffSet(int offset);
     int                                 getOffSet(void) const;
- 
+
     std::string                         toString() throw();
 
   private:
@@ -80,19 +74,17 @@ class HttpResponse {
     unsigned int                        buffer_size;
     unsigned int                        sendLength;
 
-    cgi_status                          cgi_stat;
+    CgiStatus                           cgi_stat;
     CGI                                 cgi;
 
     int                                 fileFd;
 
-    bool                                autoindex;
-    std::string                         method;
+//    std::string                         method;
 
     std::string                         fileBuffer;
     int                                 offset;
 
     bool                                error;
-    bool                                defaultError;
 
     std::string                         makeStatusLine() const;
     std::string                         getCurrentTimeStr() const;

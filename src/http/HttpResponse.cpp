@@ -18,11 +18,9 @@ HttpResponse::HttpResponse():
   cgi_stat(NOT_CGI),
   cgi(),
   fileFd(-1),
-  autoindex(false),
   fileBuffer(""),
   offset(0),
-  error(false),
-  defaultError(false) {
+  error(false) {
 }
 
 HttpResponse::HttpResponse(const HttpResponse& obj):
@@ -37,12 +35,9 @@ HttpResponse::HttpResponse(const HttpResponse& obj):
   cgi_stat(obj.cgi_stat),
   cgi(obj.cgi),
   fileFd(obj.fileFd),
-  autoindex(obj.autoindex),
-  method(obj.method),
   fileBuffer(obj.fileBuffer),
   offset(obj.offset),
-  error(obj.error),
-  defaultError(obj.defaultError) {
+  error(obj.error) {
 }
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
@@ -62,14 +57,10 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& obj) {
 
     this->fileFd = obj.fileFd;
 
-    this->autoindex = obj.autoindex;
-    this->method = obj.method;
-
     this->fileBuffer = obj.fileBuffer;
 
     this->offset = obj.offset;
     this->error = obj.error;
-    this->defaultError = obj.defaultError;
   }
 
   return *this;
@@ -158,32 +149,16 @@ std::string HttpResponse::getCurrentTimeStr() const {
   return buf;
 }
 
-void HttpResponse::set_cgi_status(HttpResponse::cgi_status s) {
+void HttpResponse::setCgiStatus(HttpResponse::CgiStatus s) {
   this->cgi_stat = s;
 }
 
-HttpResponse::cgi_status HttpResponse::get_cgi_status() const {
+HttpResponse::CgiStatus HttpResponse::getCgiStatus() const {
   return this->cgi_stat;
 }
 
 CGI& HttpResponse::getCGI() {
   return this->cgi;
-}
-
-void HttpResponse::setAutoIndex(bool autoindex) {
-  this->autoindex = autoindex;
-}
-
-bool HttpResponse::isAutoindex() const {
-  return this->autoindex;
-}
-
-void HttpResponse::setMethod(const std::string& method) {
-  this->method = method;
-}
-
-std::string HttpResponse::getMethod(void) const {
-  return this->method;
 }
 
 int HttpResponse::getFd() const {
@@ -192,6 +167,16 @@ int HttpResponse::getFd() const {
 
 void HttpResponse::setFd(int fd) {
   this->fileFd = fd;
+}
+
+void HttpResponse::unsetFd() {
+  this->fileFd = -1;
+}
+
+bool HttpResponse::isSetFd() {
+  if (this->fileFd == -1)
+    return false;
+  return true;
 }
 
 void HttpResponse::addFileBuffer(std::string data) {
@@ -220,14 +205,6 @@ void HttpResponse::setError(bool error) {
 
 bool HttpResponse::isError(void) const {
   return this->error;
-}
-
-void HttpResponse::setDefaultError(bool error) {
-  this->defaultError = error;
-}
-
-bool HttpResponse::isDefaultError(void) const {
-  return this->defaultError;
 }
 
 void HttpResponse::addOffSet(int offset) {

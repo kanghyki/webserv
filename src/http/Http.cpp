@@ -24,7 +24,13 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
       res = deleteMethod(req);
     else if (req.isMethod(request_method::PUT))
       res = putMethod(req);
-    res.setMethod(req.getMethod());
+
+    if (res.isSetFd() && fcntl(res.getFd(), F_SETFL, O_NONBLOCK) == -1) {
+      logger::error << "method's file fcntl failed" << logger::endl;
+      close(res.getFd());
+      res.unsetFd();
+      throw (INTERNAL_SERVER_ERROR);
+    }
   } catch (HttpStatus status) {
     res = getErrorPage(status, req);
   }
@@ -50,7 +56,7 @@ HttpResponse Http::executeCGI(const HttpRequest& req, SessionManager& sm) {
   try {
     std::map<std::string, std::string> c = util::splitHeaderField(req.getHeader().get(HttpRequestHeader::COOKIE));
     res.getCGI().initCGI(req, sm.isSessionAvailable(c[SessionManager::SESSION_KEY]));
-    res.set_cgi_status(HttpResponse::IS_CGI);
+    res.setCgiStatus(HttpResponse::IS_CGI);
   } catch (std::exception& e) {
     throw INTERNAL_SERVER_ERROR;
   }
@@ -94,7 +100,6 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 
   if (S_ISDIR(_stat.st_mode)) {
     if (req.getLocationConfig().isAutoindex()) {
-      res.setAutoIndex(true);
       res.setStatusCode(OK);
       res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, "text/html");
       res.setBody(generateAutoindex(req));
@@ -131,7 +136,8 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
 
   try {
-    res.setFd(util::openToWrite(req.getTargetPath()));
+    int fd = util::openToWrite(req.getTargetPath());
+    res.setFd(fd);
     res.setFileBuffer(req.getBody());
   } catch (util::SystemFunctionException& e) {
     throw (FORBIDDEN);
@@ -176,7 +182,8 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
   }
 
   try {
-    res.setFd(util::openToWrite(req.getTargetPath()));
+    int fd = util::openToWrite(req.getTargetPath());
+    res.setFd(fd);
     res.setFileBuffer(req.getBody());
   } catch(util::SystemFunctionException& e) {
     throw (NOT_FOUND);
@@ -188,20 +195,24 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
 }
 
 HttpResponse Http::getErrorPage(HttpStatus status, const HttpRequest& req) {
-  HttpResponse          res;
+  HttpResponse          res = HttpResponse();
   std::string           data;
   const LocationConfig& config = req.getLocationConfig();
 
   std::string errorPagePath = config.getErrorPageTargetPath(status);
-  if (errorPagePath.empty()) {
-    res.setDefaultError(true);
+  if (errorPagePath.empty())
     res.setBody(generateDefaultErrorPage(status));
-  }
   else {
     try {
-      res.setFd(util::openToRead(errorPagePath));
+      int fd = util::openToRead(errorPagePath);
+      res.setFd(fd);
+      if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+        logger::error << "error page file's fcntl failed" << logger::endl;
+        close(fd);
+        throw (util::SystemFunctionException());
+      }
     } catch (util::SystemFunctionException& e) {
-      res.setDefaultError(true);
+      res.unsetFd();
       res.setBody(generateDefaultErrorPage(status));
     }
   }
