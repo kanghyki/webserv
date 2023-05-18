@@ -235,7 +235,8 @@ void Server::prepareIO(int fd) {
   HttpResponse& res = this->responses[fd];
 
   if (res.get_cgi_status() == HttpResponse::NOT_CGI) {
-    if (res.isAutoindex() == true
+    if ((res.isError() == false && req.getLocationConfig().hasReturn())
+        || res.isAutoindex() == true
         || res.getMethod() == request_method::DELETE
         || res.isDefaultError()) {
       postProcessing(fd);
