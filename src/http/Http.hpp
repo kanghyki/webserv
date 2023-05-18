@@ -31,10 +31,8 @@ class Http {
     static HttpResponse deleteMethod(const HttpRequest& req);
     static HttpResponse putMethod(const HttpRequest& req);
 
-    static std::string  defaultErrorPage(HttpStatus s);
-    static std::string  autoindex(const HttpRequest& req);
-
-    static int          openToRead(const std::string& file);
+    static std::string  generateDefaultErrorPage(HttpStatus s);
+    static std::string  generateAutoindex(const HttpRequest& req);
 };
 
 #endif

@@ -30,7 +30,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
 
 void Http::checkAndThrowError(const HttpRequest& req) {
   if (req.getRecvStatus() == HttpRequest::ERROR)
-    throw req.getErrorStatusCode();
+    throw (req.getErrorStatusCode());
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
     throw (PAYLOAD_TOO_LARGE);
   if (req.getLocationConfig().isMethodAllowed(req.getMethod()) == false)
@@ -93,17 +93,29 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
       res.setAutoIndex(true);
       res.setStatusCode(OK);
       res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, "text/html");
-      res.setBody(autoindex(req));
+      res.setBody(generateAutoindex(req));
     }
-    else if (req.getLocationConfig().getIndex() != "")
-        res.setFd(openToRead(req.getTargetPath() + req.getLocationConfig().getIndex()));
+    else if (req.getLocationConfig().getIndex() != "") {
+      try {
+        int fd = util::openToRead(req.getTargetPath() + req.getLocationConfig().getIndex());
+        res.setFd(fd);
+      } catch(util::SystemFunctionException& e) {
+        throw (NOT_FOUND);
+      }
+    }
     else
-      throw NOT_FOUND;
+      throw (NOT_FOUND);
   }
-  else if (S_ISREG(_stat.st_mode))
-      res.setFd(openToRead(req.getTargetPath()));
+  else if (S_ISREG(_stat.st_mode)) {
+    try {
+      int fd = util::openToRead(req.getTargetPath());
+      res.setFd(fd);
+    } catch(util::SystemFunctionException& e) {
+      throw (NOT_FOUND);
+    }
+  }
   else
-    throw FORBIDDEN;
+    throw (FORBIDDEN);
 
   res.setStatusCode(OK);
   res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
@@ -117,8 +129,8 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
   try {
     res.setFd(util::openToWrite(req.getTargetPath()));
     res.setFileBuffer(req.getBody());
-  } catch(util::SystemFunctionException& e) {
-    throw FORBIDDEN;
+  } catch (util::SystemFunctionException& e) {
+    throw (FORBIDDEN);
   }
   res.setFileBuffer(req.getBody());
 
@@ -143,7 +155,7 @@ HttpResponse Http::deleteMethod(const HttpRequest& req) {
   }
 
   if (std::remove(req.getTargetPath().c_str()) == -1)
-    throw NOT_FOUND;
+    throw (NOT_FOUND);
 
   res.setStatusCode(OK);
 
@@ -163,7 +175,7 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
     res.setFd(util::openToWrite(req.getTargetPath()));
     res.setFileBuffer(req.getBody());
   } catch(util::SystemFunctionException& e) {
-    throw NOT_FOUND;
+    throw (NOT_FOUND);
   }
 
   res.setStatusCode(NO_CONTENT);
@@ -179,14 +191,14 @@ HttpResponse Http::getErrorPage(HttpStatus status, const HttpRequest& req) {
   std::string errorPagePath = config.getErrorPageTargetPath(status);
   if (errorPagePath.empty()) {
     res.setDefaultError(true);
-    res.setBody(defaultErrorPage(status));
+    res.setBody(generateDefaultErrorPage(status));
   }
   else {
     try {
       res.setFd(util::openToRead(errorPagePath));
     } catch (util::SystemFunctionException& e) {
       res.setDefaultError(true);
-      res.setBody(defaultErrorPage(status));
+      res.setBody(generateDefaultErrorPage(status));
     }
   }
   res.setError(true);
@@ -196,19 +208,7 @@ HttpResponse Http::getErrorPage(HttpStatus status, const HttpRequest& req) {
   return res;
 }
 
-int Http::openToRead(const std::string& file) {
-  int fd;
-
-  try {
-    fd = util::openToRead(file);
-  } catch(util::SystemFunctionException& e) {
-    throw NOT_FOUND;
-  }
-
-  return fd;
-}
-
-std::string Http::defaultErrorPage(HttpStatus s) {
+std::string Http::generateDefaultErrorPage(HttpStatus s) {
   std::string ret = "<html><head><title>"\
 + util::itoa(s) + " " + getStatusText(s)\
 + "</title></head>\
@@ -223,7 +223,7 @@ std::string Http::defaultErrorPage(HttpStatus s) {
   return ret;
 }
 
-std::string Http::autoindex(const HttpRequest& req) {
+std::string Http::generateAutoindex(const HttpRequest& req) {
   std::string     ret;
   DIR*            dir;
   struct dirent*  ent;
