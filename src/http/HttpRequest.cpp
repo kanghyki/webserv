@@ -68,8 +68,8 @@ void HttpRequest::parse(const std::string& req, const Config& conf) {
     this->sc = conf.getHttpConfig().findServerConfig(host);
     this->lc = this->sc.findLocationConfig(this->getPath());
 
-    // Check CGI
-    checkCGI();
+    // setup CGI
+    setupCGI();
 }
 
 void HttpRequest::parseStatusLine(const std::string& line) {
@@ -118,24 +118,26 @@ void HttpRequest::validateVersion(const std::string &version) {
   if (v < 1.1)                            throw UPGRADE_REQUIRED;
 }
 
-void HttpRequest::checkCGI() {
-  size_t pos;
-  std::string path = getPath();
-  std::map<std::string, std::string>::iterator it;
-  std::map<std::string, std::string> cgi = this->sc.getCGI();
+void HttpRequest::setupCGI() {
+  size_t                                        reqPathPos;
+  std::string                                   reqPath = getPath();
+  std::map<std::string, std::string>::iterator  it;
+  std::map<std::string, std::string>            cgi = this->sc.getCGI();
 
   for (it = cgi.begin(); it != cgi.end(); ++it) {
-    if ((pos = path.find(it->first)) != std::string::npos) {
+    std::string targetPath = getTargetPath();
+    std::string ext = it->first;
+    std::string cgiPath = it->second;
+    size_t      targetPathPos;
+
+    if ((reqPathPos = reqPath.find(ext)) != std::string::npos) {
       this->cgi = true;
-      // FIXME: temp
-      std::string relativePath = getTargetPath();
-      size_t rpos = relativePath.find(it->first);
-      if (rpos != std::string::npos)
-        this->scriptPath = relativePath.substr(0, rpos + it->first.length());
+      if ((targetPathPos = targetPath.find(ext)) != std::string::npos)
+        this->scriptPath = targetPath.substr(0, targetPathPos + ext.length());
       else
         throw BAD_REQUEST;
-      this->pathInfo = getPath().substr(pos + it->first.length());
-      this->cgiPath = it->second;
+      this->pathInfo = getPath().substr(reqPathPos + ext.length());
+      this->cgiPath = cgiPath;
       break;
     }
   }

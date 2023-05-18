@@ -92,7 +92,7 @@ class HttpRequest {
     HttpStatus                            errorStatusCode;
 
     void                                  parseStatusLine(const std::string &line);
-    void                                  checkCGI();
+    void                                  setupCGI();
 
     void                                  setURI(const std::string& URI);
     void                                  setMethod(const std::string& method);
