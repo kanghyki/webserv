@@ -120,9 +120,14 @@ void Server::acceptConnect(int server_fd) {
 
   size = sizeof(client_addr);
   int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &size);
-  if (client_fd == -1 || fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1) {
-    logger::warning << "Someone failed to accept request" << logger::endl;
-    return ;
+  if (client_fd == -1) {
+    logger::warning << "accept failed" << logger::endl;
+    return;
+  }
+  if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1) {
+    close(client_fd);
+    logger::warning << "accept fcntl failed" << logger::endl;
+    return;
   }
 
   this->requests.insert(std::make_pair(client_fd, HttpRequest()));
