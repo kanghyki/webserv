@@ -273,8 +273,10 @@ const std::string HttpRequest::getPathInfo() const {
   return this->pathInfo;
 }
 
-HttpRequest::recvStatus HttpRequest::getRecvStatus() const {
-  return this->recv_status;
+bool HttpRequest::isRecvStatus(HttpRequest::recvStatus rs) const {
+  if (this->recv_status == rs)
+    return true;
+  return false;
 }
 
 int HttpRequest::getContentLength() const {
@@ -321,7 +323,7 @@ void HttpRequest::setContentLength(int len) {
 
 void HttpRequest::setError(HttpStatus status) {
   this->errorStatusCode = status;
-  this->recv_status = ERROR;
+  this->recv_status = RECEIVE_ERROR;
 }
 
 void HttpRequest::setConnection(HttpRequestHeader::connection c) {

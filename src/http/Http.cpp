@@ -39,7 +39,7 @@ HttpResponse Http::processing(const HttpRequest& req, SessionManager& manager) {
 }
 
 void Http::checkAndThrowError(const HttpRequest& req) {
-  if (req.getRecvStatus() == HttpRequest::ERROR)
+  if (req.isRecvStatus(HttpRequest::RECEIVE_ERROR))
     throw (req.getErrorStatusCode());
   if (req.getBody().size() > static_cast<size_t>(req.getLocationConfig().getClientMaxBodySize()))
     throw (PAYLOAD_TOO_LARGE);

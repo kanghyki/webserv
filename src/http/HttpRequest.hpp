@@ -31,7 +31,7 @@ class HttpRequest {
       HEADER_RECEIVE,
       BODY_RECEIVE,
       RECEIVE_DONE,
-      ERROR
+      RECEIVE_ERROR
     };
 
     HttpRequest();
@@ -59,7 +59,7 @@ class HttpRequest {
     const std::string                     getCGIPath() const;
     const std::string                     getPathInfo() const;
 
-    recvStatus                            getRecvStatus() const;
+    bool                                  isRecvStatus(recvStatus rs) const;
     int                                   getContentLength() const;
     HttpStatus                            getErrorStatusCode() const;
 

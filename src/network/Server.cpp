@@ -163,10 +163,10 @@ void Server::receiveData(int fd) {
 void Server::checkReceiveDone(int fd) {
   HttpRequest& req = this->requests[fd];
 
-  if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE)
+  if (req.isRecvStatus(HttpRequest::HEADER_RECEIVE))
     receiveHeader(fd, req);
 
-  if (req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
+  if (req.isRecvStatus(HttpRequest::BODY_RECEIVE)) {
     if (req.getHeader().getTransferEncoding() == HttpRequestHeader::CHUNKED) {
 
       size_t pos = this->recvs[fd].find(CHUNKED_DELIMETER);
@@ -192,7 +192,8 @@ void Server::checkReceiveDone(int fd) {
     }
   }
 
-  if (req.getRecvStatus() == HttpRequest::RECEIVE_DONE || req.getRecvStatus() == HttpRequest::ERROR) {
+  if (req.isRecvStatus(HttpRequest::RECEIVE_DONE) ||
+      req.isRecvStatus(HttpRequest::RECEIVE_ERROR)) {
     this->recvs.erase(fd);
     this->responses[fd] = Http::processing(this->requests[fd], this->sessionManager);
     prepareIO(fd);
@@ -381,8 +382,8 @@ void Server::cleanUpConnection() {
     HttpResponse& res = this->responses[fd];
     std::string   what;
 
-    if (req.getRecvStatus() == HttpRequest::HEADER_RECEIVE
-        || req.getRecvStatus() == HttpRequest::BODY_RECEIVE) {
+    if (req.isRecvStatus(HttpRequest::HEADER_RECEIVE)
+        || req.isRecvStatus(HttpRequest::BODY_RECEIVE)) {
       what = "Request ";
 
       ft_fd_clr(fd, this->reads);
