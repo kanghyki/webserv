@@ -90,7 +90,4 @@ class HttpResponse {
     std::string                         getCurrentTimeStr() const;
 };
 
-// TODO: move
-std::string getNowStr();
-
 #endif
