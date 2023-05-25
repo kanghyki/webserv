@@ -138,7 +138,6 @@ std::string HttpResponse::makeStatusLine() const {
 }
 
 std::string HttpResponse::getCurrentTimeStr() const {
-  // example: "Date: Sat, 9 Jul 2023 13:12:42 UTC"
   time_t curr_time;
   char buf[100];
 
