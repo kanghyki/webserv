@@ -173,7 +173,13 @@ void CGI::forkCGI() {
     std::string target;
 
     argv = this->getArgv();
+    if (argv == NULL)
+      exit(EXIT_FAILURE);
     env = this->envMapToEnv(this->env_map);
+    if (env == NULL) {
+      util::ftFree(argv);
+      exit(EXIT_FAILURE);
+    }
     target = getScriptPath().substr(0, getScriptPath().rfind("/"));
 
     if (close(read_pipe[READ]) == -1 ||
@@ -232,7 +238,14 @@ const std::map<std::string, std::string> CGI::getEnvMap(const HttpRequest& req) 
   ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_INFO, req.getPath()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_URI, req.getPath()));
 
-  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, getCurrentPath() + req.getSubstitutedPath()));
+  std::string currentPath;
+  char* cur = getcwd(NULL, 0);
+  if (cur == NULL)
+    throw INTERNAL_SERVER_ERROR;
+  currentPath = cur;
+  free(cur);
+  ret.insert(std::pair<std::string, std::string>(cgi_env::PATH_TRANSLATED, currentPath + req.getSubstitutedPath()));
+
   ret.insert(std::pair<std::string, std::string>(cgi_env::QUERY_STRING, req.getQueryString()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::REQUEST_METHOD, req.getMethod()));
   ret.insert(std::pair<std::string, std::string>(cgi_env::SCRIPT_NAME, req.getPath()));
@@ -256,8 +269,8 @@ char** CGI::getArgv() const {
   char** ret;
 
   ret = (char**)malloc(sizeof(char*) * 3);
-  // FIXME: throw
-  if (ret == NULL) throw INTERNAL_SERVER_ERROR;
+  if (ret == NULL)
+    return NULL;
 
   ret[0] = strdup(getCgiPath().c_str());
   ret[1] = strdup(("./" + getScriptPath().substr(getScriptPath().rfind("/") + 1)).c_str());
@@ -270,24 +283,19 @@ char** CGI::envMapToEnv(const std::map<std::string, std::string>& envMap) const 
   char** ret;
 
   ret = (char**)malloc(sizeof(char*) * (envMap.size() + 1));
-  if (ret == NULL) throw INTERNAL_SERVER_ERROR;
+  if (ret == NULL)
+    return NULL;
 
   int i = 0;
   for (std::map<std::string, std::string>::const_iterator it = envMap.begin(); it != envMap.end(); ++it) {
-    if (!(ret[i] = strdup((it->first + "=" + it->second).c_str()))) throw INTERNAL_SERVER_ERROR;
+    ret[i] = strdup((it->first + "=" + it->second).c_str());
+    if (ret[i] == NULL) {
+      util::ftFree(ret);
+      return NULL;
+    }
     i++;
   }
   ret[i] = NULL;
-
-  return ret;
-}
-
-const std::string CGI::getCurrentPath(void) const {
-  char* cur = getcwd(NULL, 0);
-  if (!cur) throw INTERNAL_SERVER_ERROR;
-
-  std::string ret = cur;
-  free(cur);
 
   return ret;
 }

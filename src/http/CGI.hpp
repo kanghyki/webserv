@@ -69,7 +69,6 @@ class CGI {
     const std::map<std::string, std::string>  getEnvMap(const HttpRequest& req) const;
     char**                                    getArgv() const;
     char**                                    envMapToEnv(const std::map<std::string, std::string>& envMap) const;
-    const std::string                         getCurrentPath(void) const;
     const std::string                         getSessionAvailable(void) const;
     const std::string                         convertHeaderKey(const std::string& key) const;
 };
