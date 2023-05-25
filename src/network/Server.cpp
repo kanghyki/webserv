@@ -31,9 +31,12 @@ Server::Server(Config& config) :
  */
 
 Server::~Server(void) {
-  for (size_t i = 0; i < this->listens_fd.size(); ++i)
+  for (size_t i = 0; i < this->listens_fd.size(); ++i) {
     if (close(this->listens_fd[i]) == -1)
-      logger::warning << "Closed, listen fd(" << i << ") with -1" << logger::endl;
+      logger::warning << "Closed, server(" << i << ") with -1" << logger::endl;
+    else
+      logger::info << "Closed, server(" << i << ")" << logger::endl;
+  }
 
   logger::info << "Server closed" << logger::endl;
 }
