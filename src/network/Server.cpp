@@ -9,7 +9,9 @@ const std::string   Server::HEADER_DELIMETER = "\r\n\r\n";
 const std::string   Server::CHUNKED_DELIMETER = "0\r\n\r\n";
 
 /*
- * -------------------------- Constructor --------------------------
+ * ==============================================
+ *                 Constructor
+ * ==============================================
  */
 
 Server::Server(Config& config) :
@@ -23,7 +25,9 @@ Server::Server(Config& config) :
 }
 
 /*
- * -------------------------- Destructor ---------------------------
+ * ==============================================
+ *                 Destructor
+ * ==============================================
  */
 
 Server::~Server(void) {
@@ -35,11 +39,9 @@ Server::~Server(void) {
 }
 
 /*
- * -------------------------- Operator -----------------------------
- */
-
-/*
- * ----------------------- Member Function -------------------------
+ * ==============================================
+ *                   Public
+ * ==============================================
  */
 
 void Server::run(void) {
@@ -47,6 +49,29 @@ void Server::run(void) {
   logger::info << "Server setup done" << logger::endl;
   logger::info << "Server is running..." << logger::endl;
   loop();
+}
+
+/*
+ * ==============================================
+ *                 Server core
+ * ==============================================
+ */
+
+void Server::setup_server() {
+  std::vector<ServerConfig> servers = this->config.getHttpConfig().getServerConfig();
+  for (std::vector<ServerConfig>::iterator sit = servers.begin(); sit != servers.end(); ++sit) {
+    sockaddr_in sock;
+    int         fd;
+
+    fd = init_socket();
+    this->listens_fd.push_back(fd);
+
+    init_sockaddr_in(sit->getHost(), sit->getPort(), sock);
+    open_socket(fd, sock);
+
+    ft_fd_set(fd, this->reads);
+    ft_fd_set(fd, this->listens);
+  }
 }
 
 void Server::loop() {
@@ -99,6 +124,14 @@ void Server::loop() {
     }
   }
 }
+
+/*
+ * ==============================================
+ *             Interact with client
+ * ==============================================
+ */
+
+// Receive
 
 void Server::acceptConnect(int server_fd) {
   struct sockaddr_in  client_addr;
@@ -218,6 +251,8 @@ void Server::receiveHeader(int fd, HttpRequest& req) {
   }
 }
 
+// I/O
+
 void Server::prepareIO(int client_fd) {
   HttpRequest&  req = this->requests[client_fd];
   HttpResponse& res = this->responses[client_fd];
@@ -251,6 +286,8 @@ bool Server::isReadFd(const HttpRequest& req, const HttpResponse& res) {
   return false;
 }
 
+// Send
+
 void Server::postProcessing(int client_fd) {
   HttpRequest&  req = this->requests[client_fd];
   HttpResponse& res = this->responses[client_fd];
@@ -262,20 +299,6 @@ void Server::postProcessing(int client_fd) {
   addExtraHeader(client_fd, req, res);
   ft_fd_set(client_fd, this->writes);
   logger::info << "Response to " << client_fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << logger::endl;
-}
-
-void Server::sendData(int fd) {
-  HttpResponse& res = this->responses[fd];
-  std::string   data = res.toString();
-  int           send_size;
-
-  if ((send_size = send(fd, data.c_str(), data.length(), 0)) <= 0) {
-    if (send_size == -1)
-      logger::warning << "send_size < 0 with client(" << fd  << ")" << logger::endl;
-    closeConnection(fd);
-  }
-  else
-    res.addSendLength(send_size);
 }
 
 void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
@@ -302,6 +325,26 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
   if (res.getStatusCode() == UPGRADE_REQUIRED)
     res.getHeader().set(HttpResponseHeader::UPGRADE, "HTTP/1.1");
 }
+
+void Server::sendData(int fd) {
+  HttpResponse& res = this->responses[fd];
+  std::string   data = res.toString();
+  int           send_size;
+
+  if ((send_size = send(fd, data.c_str(), data.length(), 0)) <= 0) {
+    if (send_size == -1)
+      logger::warning << "send_size < 0 with client(" << fd  << ")" << logger::endl;
+    closeConnection(fd);
+  }
+  else
+    res.addSendLength(send_size);
+}
+
+/*
+ * ==============================================
+ *                   Connection
+ * ==============================================
+ */
 
 void Server::closeConnection(int fd) {
   HttpResponse& res = this->responses[fd];
@@ -349,6 +392,12 @@ void Server::keepAliveConnection(int fd) {
   this->recvs.erase(fd);
 }
 
+/*
+ * ==============================================
+ *                     Timeout
+ * ==============================================
+ */
+
 void Server::cleanUpConnection() {
   std::set<int> fd_list;
 
@@ -389,6 +438,12 @@ void Server::cleanUpConnection() {
     logger::debug << what << "Timeout, client(" << fd << ")" << logger::endl;
   }
 }
+
+/*
+ * ==============================================
+ *                   CGI I/O
+ * ==============================================
+ */
 
 bool Server::isCgiPipe(int fd) const {
   std::map<int, int>::const_iterator it;
@@ -448,6 +503,12 @@ void Server::readCGI(int fd) {
     prepareIO(client_fd);
   }
 }
+
+/*
+ * ==============================================
+ *                   File I/O
+ * ==============================================
+ */
 
 bool Server::isFileFd(int fd) const {
   std::map<int, int>::const_iterator it;
@@ -510,6 +571,12 @@ void Server::readFile(int fd) {
   }
 }
 
+/*
+ * ==============================================
+ *                Select Utility
+ * ==============================================
+ */
+
 void Server::ft_fd_set(int fd, fd_set& set) {
   FD_SET(fd, &set);
   if (this->fdMax < fd)
@@ -521,32 +588,19 @@ void Server::ft_fd_clr(int fd, fd_set& set) {
     FD_CLR(fd, &set);
 }
 
-void Server::setup_server() {
-  std::vector<ServerConfig> servers = this->config.getHttpConfig().getServerConfig();
-  for (std::vector<ServerConfig>::iterator sit = servers.begin(); sit != servers.end(); ++sit) {
-    sockaddr_in sock;
-    int         fd;
-
-    fd = init_socket();
-    this->listens_fd.push_back(fd);
-
-    init_sockaddr_in(sit->getHost(), sit->getPort(), sock);
-    open_socket(fd, sock);
-
-    ft_fd_set(fd, this->reads);
-    ft_fd_set(fd, this->listens);
-  }
-}
+/*
+ * ==============================================
+ *                Server Utility
+ * ==============================================
+ */
 
 int Server::init_socket(void) {
   int fd = socket(AF_INET, SOCK_STREAM, 0);
   if (fd == -1)
     throw std::runtime_error("Server initialization failed");
 
-  // for develop
   int option = 1;
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-  // -----------
 
   return fd;
 }

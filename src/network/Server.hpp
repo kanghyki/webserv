@@ -53,38 +53,83 @@ class Server {
     Connection                  connection;
     SessionManager              sessionManager;
 
-    void                        acceptConnect(int server_fd);
-    void                        receiveData(int fd);
-    void                        checkReceiveDone(int fd);
-    void                        receiveHeader(int fd, HttpRequest& req);
-    void                        prepareIO(int client_fd);
-    bool                        isReadFd(const HttpRequest& req, const HttpResponse& res);
-    void                        postProcessing(int client_fd);
-    void                        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
-    void                        sendData(int fd);
+    /*
+     * ==============================================
+     *                 Server core
+     * ==============================================
+     */
+    void  setup_server();
+    void  loop();
 
-    void                        closeConnection(int fd);
-    void                        keepAliveConnection(int fd);
+    /*
+     * ==============================================
+     *             Interact with client
+     * ==============================================
+     */
+    // Receive
+    void  acceptConnect(int server_fd);
+    void  receiveData(int fd);
+    void  checkReceiveDone(int fd);
+    void  receiveHeader(int fd, HttpRequest& req);
 
-    void                        cleanUpConnection();
+    // I/O
+    void  prepareIO(int client_fd);
+    bool  isReadFd(const HttpRequest& req, const HttpResponse& res);
 
-    bool                        isCgiPipe(int fd) const;
-    void                        writeCGI(int fd);
-    void                        readCGI(int fd);
+    // Send
+    void  postProcessing(int client_fd);
+    void  addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
+    void  sendData(int fd);
 
-    bool                        isFileFd(int fd) const;
-    void                        writeFile(int fd);
-    void                        readFile(int fd);
+    /*
+     * ==============================================
+     *                   Connection
+     * ==============================================
+     */
+    void  closeConnection(int fd);
+    void  keepAliveConnection(int fd);
 
-    void                        ft_fd_set(int fd, fd_set& set);
-    void                        ft_fd_clr(int fd, fd_set& set);
+    /*
+     * ==============================================
+     *                     Timeout
+     * ==============================================
+     */
+    void  cleanUpConnection();
 
-    int                         init_socket(void);
-    void                        init_sockaddr_in(const std::string& host, int port, sockaddr_in& in);
-    void                        open_socket(int servFd, sockaddr_in& in);
+    /*
+     * ==============================================
+     *                   CGI I/O
+     * ==============================================
+     */
+    bool  isCgiPipe(int fd) const;
+    void  writeCGI(int fd);
+    void  readCGI(int fd);
 
-    void                        setup_server();
-    void                        loop();
+    /*
+     * ==============================================
+     *                   File I/O
+     * ==============================================
+     */
+    bool  isFileFd(int fd) const;
+    void  writeFile(int fd);
+    void  readFile(int fd);
+
+    /*
+     * ==============================================
+     *                Select Utility
+     * ==============================================
+     */
+    void  ft_fd_set(int fd, fd_set& set);
+    void  ft_fd_clr(int fd, fd_set& set);
+
+    /*
+     * ==============================================
+     *                Server Utility
+     * ==============================================
+     */
+    int   init_socket(void);
+    void  init_sockaddr_in(const std::string& host, int port, sockaddr_in& in);
+    void  open_socket(int servFd, sockaddr_in& in);
 };
 
 #endif
