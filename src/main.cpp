@@ -23,8 +23,7 @@ int main(int argc, char **argv) {
     logger::info << "Config parsing ok" << logger::endl;
 
     Server server(conf);
-    logger::info << "Server setup done" << logger::endl;
-
+    server.setup_server();
     server.run();
   } catch (std::exception &e) {
     logger::error << e.what() << logger::endl;

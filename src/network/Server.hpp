@@ -24,6 +24,7 @@ class Server {
     Server(Config& config);
     ~Server(void);
 
+    void setup_server();
     void run();
 
   private:
@@ -63,8 +64,10 @@ class Server {
     void                        postProcessing(int client_fd);
     void                        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
     void                        sendData(int fd);
+
     void                        closeConnection(int fd);
     void                        keepAliveConnection(int fd);
+
     void                        cleanUpConnection();
 
     bool                        isCgiPipe(int fd) const;
@@ -78,9 +81,9 @@ class Server {
     void                        ft_fd_set(int fd, fd_set& set);
     void                        ft_fd_clr(int fd, fd_set& set);
 
-    inline int                  socketInit(void);
-    inline void                 socketaddrInit(const std::string& host, int port, sockaddr_in& in);
-    inline void                 socketOpen(int servFd, sockaddr_in& in);
+    int                         init_socket(void);
+    void                        init_sockaddr_in(const std::string& host, int port, sockaddr_in& in);
+    void                        open_socket(int servFd, sockaddr_in& in);
 };
 
 #endif

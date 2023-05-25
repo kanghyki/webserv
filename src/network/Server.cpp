@@ -20,26 +20,19 @@ Server::Server(Config& config) :
     FD_ZERO(&this->reads);
     FD_ZERO(&this->writes);
     FD_ZERO(&this->listens);
-
-    std::vector<ServerConfig> servers = this->config.getHttpConfig().getServerConfig();
-    for (std::vector<ServerConfig>::iterator sit = servers.begin(); sit != servers.end(); ++sit) {
-      sockaddr_in sock;
-      int fd = socketInit();
-
-      socketaddrInit(sit->getHost(), sit->getPort(), sock);
-      socketOpen(fd, sock);
-
-      ft_fd_set(fd, this->reads);
-      ft_fd_set(fd, this->listens);
-      this->listens_fd.push_back(fd);
-    }
 }
 
 /*
  * -------------------------- Destructor ---------------------------
  */
 
-Server::~Server(void) {}
+Server::~Server(void) {
+  for (size_t i = 0; i < this->listens_fd.size(); ++i)
+    if (close(this->listens_fd[i]) == -1)
+      logger::warning << "Closed, listen fd(" << i << ") with -1" << logger::endl;
+
+  logger::info << "Server closed" << logger::endl;
+}
 
 /*
  * -------------------------- Operator -----------------------------
@@ -68,12 +61,8 @@ void Server::run(void) {
     cleanUpConnection();
 
     for (int i = 0; i < this->fdMax + 1; i++) {
-
-      // 1
       if (FD_ISSET(i, &this->writes)) {
-        // 2
         if (FD_ISSET(i, &writesCpy)) {
-          // 3
           if (isFileFd(i))
             writeFile(i);
           else if (isCgiPipe(i))
@@ -89,11 +78,8 @@ void Server::run(void) {
                 keepAliveConnection(i);
             }
           }
-          // 3 ---
         }
-        // 2 ---
       }
-      // 1 ---
       else if (FD_ISSET(i, &readsCpy)) {
         if (isFileFd(i))
           readFile(i);
@@ -108,10 +94,6 @@ void Server::run(void) {
       }
     }
   }
-
-  for (size_t i = 0; i < this->listens_fd.size(); ++i)
-    if (close(this->listens_fd[i]) == -1)
-      logger::warning << "Closed, listen fd(" << i << ") with -1" << logger::endl;
 }
 
 void Server::acceptConnect(int server_fd) {
@@ -322,6 +304,7 @@ void Server::addExtraHeader(int fd, HttpRequest& req, HttpResponse& res) {
   if (res.getStatusCode() == METHOD_NOT_ALLOWED)
     res.getHeader().set(HttpResponseHeader::ALLOW, req.getLocationConfig().toStringLimitExcept());
 
+  // upgrade
   if (res.getStatusCode() == UPGRADE_REQUIRED)
     res.getHeader().set(HttpResponseHeader::UPGRADE, "HTTP/1.1");
 }
@@ -543,7 +526,26 @@ void Server::ft_fd_clr(int fd, fd_set& set) {
     FD_CLR(fd, &set);
 }
 
-inline int Server::socketInit(void) {
+void Server::setup_server() {
+  std::vector<ServerConfig> servers = this->config.getHttpConfig().getServerConfig();
+  for (std::vector<ServerConfig>::iterator sit = servers.begin(); sit != servers.end(); ++sit) {
+    sockaddr_in sock;
+    int         fd;
+
+    fd = init_socket();
+    this->listens_fd.push_back(fd);
+
+    init_sockaddr_in(sit->getHost(), sit->getPort(), sock);
+    open_socket(fd, sock);
+
+    ft_fd_set(fd, this->reads);
+    ft_fd_set(fd, this->listens);
+  }
+
+  logger::info << "Server setup done" << logger::endl;
+}
+
+int Server::init_socket(void) {
   int fd = socket(AF_INET, SOCK_STREAM, 0);
   if (fd == -1)
     throw std::runtime_error("Server initialization failed");
@@ -556,7 +558,7 @@ inline int Server::socketInit(void) {
   return fd;
 }
 
-inline void Server::socketaddrInit(const std::string& host, int port, sockaddr_in& in) {
+void Server::init_sockaddr_in(const std::string& host, int port, sockaddr_in& in) {
   if (!memset(&in, 0, sizeof(in)))
     throw std::runtime_error("Server initialization failed");
 
@@ -567,7 +569,7 @@ inline void Server::socketaddrInit(const std::string& host, int port, sockaddr_i
   logger::info << "Preparing... Host=[" << inet_ntoa(in.sin_addr) << "] Port=[" << ntohs(in.sin_port) << "]" << logger::endl;
 }
 
-inline void Server::socketOpen(int servFd, sockaddr_in& in) {
+void Server::open_socket(int servFd, sockaddr_in& in) {
   bool  bind_success = false;
   bool  listen_success = false;
 
