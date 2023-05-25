@@ -134,6 +134,12 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
 
 HttpResponse Http::postMethod(const HttpRequest& req) {
   HttpResponse res;
+  struct stat _stat;
+
+  if (stat(req.getTargetPath().c_str(), &_stat) == 0) {
+    if (S_ISDIR(_stat.st_mode))
+      throw (FORBIDDEN);
+  }
 
   try {
     int fd = util::openToWrite(req.getTargetPath());
@@ -162,9 +168,11 @@ HttpResponse Http::deleteMethod(const HttpRequest& req) {
     if (S_ISDIR(_stat.st_mode))
       throw (FORBIDDEN);
   }
+  else
+    throw (NOT_FOUND);
 
   if (std::remove(req.getTargetPath().c_str()) == -1)
-    throw (NOT_FOUND);
+    throw (INTERNAL_SERVER_ERROR);
 
   res.setStatusCode(OK);
 
@@ -185,7 +193,7 @@ HttpResponse Http::putMethod(const HttpRequest& req) {
     res.setFd(fd);
     res.setFileBuffer(req.getBody());
   } catch(util::SystemFunctionException& e) {
-    throw (NOT_FOUND);
+    throw (FORBIDDEN);
   }
 
   res.setStatusCode(NO_CONTENT);
