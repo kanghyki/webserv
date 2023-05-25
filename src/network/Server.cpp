@@ -480,6 +480,7 @@ void Server::writeFile(int fd) {
     logger::error << "write file failed" << logger::endl;
     file_map.erase(fd);
     ft_fd_clr(fd, this->writes);
+    close(fd);
     res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
     prepareIO(client_fd);
   }
@@ -505,6 +506,7 @@ void Server::readFile(int fd) {
     logger::error << "read file failed" << logger::endl;
     file_map.erase(fd);
     ft_fd_clr(fd, this->reads);
+    close(fd);
     res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
     prepareIO(client_fd);
   }
