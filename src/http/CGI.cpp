@@ -6,7 +6,18 @@
 
 CGI::CGI():
   resource_flag(0),
-  body_offset(0) {
+  env_map(),
+  tmp_file(NULL),
+  pid(-1),
+  read_fd(-1),
+  write_fd(-1),
+  cgi_result(""),
+  body_offset(0),
+  scriptPath(""),
+  cgiPath(""),
+  pathInfo(""),
+  body(""),
+  sessionAvailable(false) {
 }
 
 CGI::CGI(const CGI& obj):
@@ -43,19 +54,6 @@ CGI& CGI::operator=(const CGI& obj) {
   }
 
   return *this;
-}
-
-void CGI::prepareCGI(const HttpRequest& req, const bool sessionAvailable) {
-  this->scriptPath = req.getScriptPath();
-  this->cgiPath = req.getCGIPath();
-  this->pathInfo = req.getPathInfo();
-  this->sessionAvailable = sessionAvailable;
-  if (!req.getBody().empty())
-    this->body = req.getBody();
-}
-
-FILE* CGI::getTmpFile() const {
-  return this->tmp_file;
 }
 
 int CGI::getReadFD() const {
@@ -104,14 +102,13 @@ const std::string CGI::getBody(void) const {
   return this->body;
 }
 
-void CGI::addBodyOffset(size_t s) {
-  this->body_offset += s;
-}
-
-
 /*
  * -------------------------- Setter -------------------------------
  */
+
+void CGI::addBodyOffset(size_t s) {
+  this->body_offset += s;
+}
 
 /*
  * ----------------------- Member Function -------------------------
@@ -129,8 +126,12 @@ void CGI::withdrawResource() {
 }
 
 void CGI::initCGI(const HttpRequest& req, const bool sessionAvailable) {
-  prepareCGI(req, sessionAvailable);
-
+  this->scriptPath = req.getScriptPath();
+  this->cgiPath = req.getCGIPath();
+  this->pathInfo = req.getPathInfo();
+  this->sessionAvailable = sessionAvailable;
+  if (!req.getBody().empty())
+    this->body = req.getBody();
   this->env_map = getEnvMap(req);
   this->tmp_file = tmpfile();
   if (this->tmp_file == NULL)
@@ -296,7 +297,6 @@ const std::string CGI::getSessionAvailable(void) const {
     return "true";
   return "false";
 }
-
 
 const std::string CGI::convertHeaderKey(const std::string& key) const {
   std::string ret = util::toUpperStr(key);
