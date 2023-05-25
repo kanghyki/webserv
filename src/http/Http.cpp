@@ -142,7 +142,6 @@ HttpResponse Http::postMethod(const HttpRequest& req) {
   } catch (util::SystemFunctionException& e) {
     throw (FORBIDDEN);
   }
-  res.setFileBuffer(req.getBody());
 
   res.setStatusCode(CREATED);
   res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, req.getContentType());
