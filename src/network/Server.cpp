@@ -211,8 +211,7 @@ void Server::checkReceiveDone(int fd) {
     }
   }
 
-  if (req.isRecvStatus(HttpRequest::RECEIVE_DONE) ||
-      req.isRecvStatus(HttpRequest::RECEIVE_ERROR)) {
+  if (req.isRecvStatus(HttpRequest::RECEIVE_DONE) || req.isRecvStatus(HttpRequest::RECEIVE_ERROR)) {
     this->recvs.erase(fd);
     this->responses[fd] = Http::processing(this->requests[fd], this->sessionManager);
     prepareIO(fd);
@@ -279,9 +278,7 @@ void Server::prepareIO(int client_fd) {
 }
 
 bool Server::isReadFd(const HttpRequest& req, const HttpResponse& res) {
-  if (res.isError() ||
-      req.isMethod(request_method::GET) ||
-      req.isMethod(request_method::HEAD))
+  if (res.isError() || req.isMethod(request_method::GET) || req.isMethod(request_method::HEAD))
     return true;
   return false;
 }
@@ -408,8 +405,7 @@ void Server::cleanUpConnection() {
     HttpResponse& res = this->responses[fd];
     std::string   what;
 
-    if (req.isRecvStatus(HttpRequest::HEADER_RECEIVE)
-        || req.isRecvStatus(HttpRequest::BODY_RECEIVE)) {
+    if (req.isRecvStatus(HttpRequest::HEADER_RECEIVE) || req.isRecvStatus(HttpRequest::BODY_RECEIVE)) {
       what = "Request ";
 
       ft_fd_clr(fd, this->reads);
