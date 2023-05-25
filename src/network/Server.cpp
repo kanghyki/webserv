@@ -459,26 +459,26 @@ void Server::writeCGI(int fd) {
   CGI&  cgi = this->responses[client_fd].getCGI();
 
   int write_size = cgi.writeCGI();
-  if (write_size == 0) {
+  if (write_size <= 0) {
     ft_fd_clr(fd, this->writes);
-    lseek(fd, 0, SEEK_SET);
     cgi_map.erase(fd);
-    try {
-      cgi.forkCGI();
-      ft_fd_set(cgi.getReadFD(), this->reads);
-      cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
-    } catch (HttpStatus s) {
-      this->responses[client_fd] = Http::getErrorPage(s, this->requests[client_fd]);
+    if (write_size < 0) {
+      logger::error << "cgi write error" << logger::endl;
+      cgi.withdrawResource();
+      this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
       prepareIO(client_fd);
     }
-  }
-  else if (write_size == -1) {
-    logger::error << "cgi write error" << logger::endl;
-    ft_fd_clr(fd, this->writes);
-    cgi_map.erase(fd);
-    cgi.withdrawResource();
-    this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
-    prepareIO(client_fd);
+    else {
+      lseek(fd, 0, SEEK_SET);
+      try {
+        cgi.forkCGI();
+        ft_fd_set(cgi.getReadFD(), this->reads);
+        cgi_map.insert(std::make_pair(cgi.getReadFD(), client_fd));
+      } catch (HttpStatus s) {
+        this->responses[client_fd] = Http::getErrorPage(s, this->requests[client_fd]);
+        prepareIO(client_fd);
+      }
+    }
   }
 }
 
@@ -487,20 +487,19 @@ void Server::readCGI(int fd) {
   CGI&  cgi = this->responses[client_fd].getCGI();
 
   int read_size = cgi.readCGI();
-  if (read_size == 0) {
-    ft_fd_clr(fd, this->reads);
-    cgi.withdrawResource();
-    cgi_map.erase(fd);
-    Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
-    postProcessing(client_fd);
-  }
-  else if (read_size == -1) {
-    logger::error << "cgi read error" << logger::endl;
+  if (read_size <= 0) {
     ft_fd_clr(fd, this->reads);
     cgi_map.erase(fd);
     cgi.withdrawResource();
-    this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
-    prepareIO(client_fd);
+    if (read_size < 0) {
+      logger::error << "cgi read error" << logger::endl;
+      this->responses[client_fd] = Http::getErrorPage(INTERNAL_SERVER_ERROR, this->requests[client_fd]);
+      prepareIO(client_fd);
+    }
+    else {
+      Http::finishCGI(this->responses[client_fd], this->requests[client_fd], this->sessionManager);
+      postProcessing(client_fd);
+    }
   }
 }
 
