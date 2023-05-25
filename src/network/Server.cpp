@@ -43,11 +43,17 @@ Server::~Server(void) {
  */
 
 void Server::run(void) {
+  setup_server();
+  logger::info << "Server setup done" << logger::endl;
+  logger::info << "Server is running..." << logger::endl;
+  loop();
+}
+
+void Server::loop() {
   struct timeval t;
 
   t.tv_sec = 1;
   t.tv_usec = 0;
-  logger::info << "Server is running..." << logger::endl;
   while (1) {
 
     fd_set readsCpy = this->reads;
@@ -85,12 +91,10 @@ void Server::run(void) {
           readFile(i);
         else if (isCgiPipe(i))
           readCGI(i);
-        else {
-          if (FD_ISSET(i, &this->listens))
-            acceptConnect(i);
-          else
-            receiveData(i);
-        }
+        else if (FD_ISSET(i, &this->listens))
+          acceptConnect(i);
+        else
+          receiveData(i);
       }
     }
   }
@@ -541,8 +545,6 @@ void Server::setup_server() {
     ft_fd_set(fd, this->reads);
     ft_fd_set(fd, this->listens);
   }
-
-  logger::info << "Server setup done" << logger::endl;
 }
 
 int Server::init_socket(void) {

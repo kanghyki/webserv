@@ -24,7 +24,6 @@ class Server {
     Server(Config& config);
     ~Server(void);
 
-    void setup_server();
     void run();
 
   private:
@@ -84,6 +83,9 @@ class Server {
     int                         init_socket(void);
     void                        init_sockaddr_in(const std::string& host, int port, sockaddr_in& in);
     void                        open_socket(int servFd, sockaddr_in& in);
+
+    void                        setup_server();
+    void                        loop();
 };
 
 #endif
