@@ -251,16 +251,6 @@ bool Server::isReadFd(const HttpRequest& req, const HttpResponse& res) {
   return false;
 }
 
-void Server::fileDone(int file_fd) {
-  int           clientFd = this->file_map[file_fd];
-  HttpResponse& res = this->responses[clientFd];
-
-  this->file_map.erase(file_fd);
-  res.setBody(res.getFileBuffer());
-
-  postProcessing(clientFd);
-}
-
 void Server::postProcessing(int client_fd) {
   HttpRequest&  req = this->requests[client_fd];
   HttpResponse& res = this->responses[client_fd];
@@ -476,18 +466,17 @@ void Server::writeFile(int fd) {
 
   std::string data = res.getFileBufferOffSet();
   writeSize = write(fd, data.c_str(), data.length());
-  if (writeSize < 0) {
-    logger::error << "write file failed" << logger::endl;
-    file_map.erase(fd);
+  if (writeSize <= 0) {
     ft_fd_clr(fd, this->writes);
+    this->file_map.erase(fd);
     close(fd);
-    res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
-    prepareIO(client_fd);
-  }
-  else if (writeSize == 0) {
-    ft_fd_clr(fd, this->writes);
-    close(fd);
-    fileDone(fd);
+    if (writeSize < 0) {
+      logger::error << "write file failed" << logger::endl;
+      res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
+      prepareIO(client_fd);
+    }
+    else
+      postProcessing(client_fd);
   }
   else
     res.addOffSet(writeSize);
@@ -500,20 +489,20 @@ void Server::readFile(int fd) {
   HttpResponse& res = this->responses[client_fd];
   HttpRequest&  req = this->requests[client_fd];
 
-
   read_size = read(fd, buf, BUF_SIZE);
-  if (read_size < 0) {
-    logger::error << "read file failed" << logger::endl;
-    file_map.erase(fd);
+  if (read_size <= 0) {
     ft_fd_clr(fd, this->reads);
+    this->file_map.erase(fd);
     close(fd);
-    res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
-    prepareIO(client_fd);
-  }
-  else if (read_size == 0) {
-    ft_fd_clr(fd, this->reads);
-    close(fd);
-    fileDone(fd);
+    if (read_size < 0) {
+      logger::error << "read file failed" << logger::endl;
+      res = Http::getErrorPage(INTERNAL_SERVER_ERROR, req);
+      prepareIO(client_fd);
+    }
+    else {
+      res.setBody(res.getFileBuffer());
+      postProcessing(client_fd);
+    }
   }
   else {
     buf[read_size] = 0;

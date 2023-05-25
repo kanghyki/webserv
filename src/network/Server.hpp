@@ -59,7 +59,6 @@ class Server {
     void                        receiveHeader(int fd, HttpRequest& req);
     void                        prepareIO(int client_fd);
     bool                        isReadFd(const HttpRequest& req, const HttpResponse& res);
-    void                        fileDone(int file_fd);
     void                        postProcessing(int client_fd);
     void                        addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
     void                        sendData(int fd);
