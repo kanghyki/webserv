@@ -1,8 +1,5 @@
 # webserv
 
-![diagram](./diagram.png)
-
-
 # Configuration
 The first server configuration is used as the default configuration.
 
