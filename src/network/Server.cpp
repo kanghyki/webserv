@@ -597,8 +597,8 @@ int Server::init_socket(void) {
   if (fd == -1)
     throw std::runtime_error("Server initialization failed");
 
-  int option = 1;
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+//  int option = 1;
+//  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
   return fd;
 }
