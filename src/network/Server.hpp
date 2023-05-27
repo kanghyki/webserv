@@ -22,7 +22,7 @@
 class Server {
   public:
     Server(Config& config);
-    ~Server(void);
+    ~Server();
 
     void run();
 
@@ -68,9 +68,9 @@ class Server {
      */
     // Receive
     void  acceptConnect(int server_fd);
-    void  receiveData(int fd);
-    void  checkReceiveDone(int fd);
-    void  receiveHeader(int fd, HttpRequest& req);
+    void  receiveData(int client_fd);
+    void  checkReceiveDone(int client_fd);
+    void  receiveHeader(int client_fd, HttpRequest& req);
 
     // I/O
     void  prepareIO(int client_fd);
@@ -78,16 +78,16 @@ class Server {
 
     // Send
     void  postProcessing(int client_fd);
-    void  addExtraHeader(int fd, HttpRequest& req, HttpResponse& res);
-    void  sendData(int fd);
+    void  addExtraHeader(int client_fd, HttpRequest& req, HttpResponse& res);
+    void  sendData(int client_fd);
 
     /*
      * ==============================================
      *                   Connection
      * ==============================================
      */
-    void  closeConnection(int fd);
-    void  keepAliveConnection(int fd);
+    void  closeConnection(int client_fd);
+    void  keepAliveConnection(int client_fd);
 
     /*
      * ==============================================
@@ -127,9 +127,9 @@ class Server {
      *                Server Utility
      * ==============================================
      */
-    int   init_socket(void);
+    int   init_socket();
     void  init_sockaddr_in(const std::string& host, int port, sockaddr_in& in);
-    void  open_socket(int servFd, sockaddr_in& in);
+    void  open_socket(int server_fd, sockaddr_in& in);
 };
 
 #endif
