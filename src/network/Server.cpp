@@ -298,7 +298,7 @@ void Server::postProcessing(int client_fd) {
   }
   addExtraHeader(client_fd, req, res);
   ft_fd_set(client_fd, this->writes);
-  logger::info << "Response to " << client_fd << " from " << req.getServerConfig().getServerName() << ", Status=" << res.getStatusCode() << logger::endl;
+  logger::info << "Response to " << client_fd << ", Status=" << res.getStatusCode() << logger::endl;
 }
 
 void Server::addExtraHeader(int client_fd, HttpRequest& req, HttpResponse& res) {
