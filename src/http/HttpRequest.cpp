@@ -219,6 +219,21 @@ std::string HttpRequest::getSubstitutedPath() const {
 
 std::string HttpRequest::getTargetPath() const { return "." + getSubstitutedPath(); }
 
+std::string HttpRequest::getIndexTargetPath() const {
+  std::string ret;
+  std::string targetPath = getTargetPath();
+  std::string index = getLocationConfig().getIndex();
+
+  if (index == "")
+    return ret;
+
+  while (targetPath.back() == '/') targetPath.pop_back();
+  while (index.front() == '/') index.erase(0, 1);
+  ret = targetPath + '/' + index;
+
+  return ret;
+}
+
 std::string HttpRequest::getQueryString() const { return this->queryString; }
 
 std::string HttpRequest::getVersion() const { return this->version; }
@@ -241,8 +256,8 @@ const std::string HttpRequest::getContentType(void) const {
 
   if (stat(this->getTargetPath().c_str(), &_stat) == -1)
     path = this->getTargetPath();
-  else if (S_ISDIR(_stat.st_mode) && this->getLocationConfig().getIndex() != "")
-    path = this->getTargetPath() + this->getLocationConfig().getIndex();
+  else if (S_ISDIR(_stat.st_mode) && this->getIndexTargetPath() != "")
+    path = this->getIndexTargetPath();
   else
     path = this->getTargetPath();
 

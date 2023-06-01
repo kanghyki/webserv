@@ -14,8 +14,8 @@ std::string HttpDataFecther::fetch() const {
   if (S_ISDIR(_stat.st_mode)) {
     if (this->req.getLocationConfig().isAutoindex())
       _data = autoindex();
-    else if (this->req.getLocationConfig().getIndex() != "")
-      _data = readFile(this->req.getTargetPath() + this->req.getLocationConfig().getIndex());
+    else if (this->req.getIndexTargetPath() != "")
+      _data = readFile(this->req.getIndexTargetPath());
     else
       throw NOT_FOUND;
   }

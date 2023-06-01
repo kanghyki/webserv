@@ -104,9 +104,9 @@ HttpResponse Http::getMethod(const HttpRequest& req) {
       res.getHeader().set(HttpResponseHeader::CONTENT_TYPE, "text/html");
       res.setBody(generateAutoindex(req));
     }
-    else if (req.getLocationConfig().getIndex() != "") {
+    else if (req.getIndexTargetPath() != "") {
       try {
-        int fd = util::openToRead(req.getTargetPath() + req.getLocationConfig().getIndex());
+        int fd = util::openToRead(req.getIndexTargetPath());
         res.setFd(fd);
       } catch(util::SystemFunctionException& e) {
         throw (NOT_FOUND);
