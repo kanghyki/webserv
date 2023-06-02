@@ -176,9 +176,9 @@ void Server::receiveData(int client_fd) {
     return ;
   }
   buf[recv_size] = 0;
-  logger::debug << "recv_size(" << client_fd << "): " << recv_size << logger::endl;
+//  logger::debug << "recv_size(" << client_fd << "): " << recv_size << logger::endl;
   this->recvs[client_fd] += std::string(buf, recv_size);
-  logger::debug << "total(" << client_fd << "): " << this->recvs[client_fd].length() << logger::endl;
+//  logger::debug << "total(" << client_fd << "): " << this->recvs[client_fd].length() << logger::endl;
   checkReceiveDone(client_fd);
 }
 
