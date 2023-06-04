@@ -12,7 +12,7 @@ example) root /html;
 
 2.
 error_page [HTTP status code(int) ...] [path(ident)]
-default value) none
+default value) NONE
 example) error_page 400 403 404 /error_page/error.html;
 
 3.
@@ -69,23 +69,23 @@ example) keepalive_requests 500;
 5.
 listen [host(ident)]:[port(int)];
 default value) 127.0.0.1:80
-example) listen 192.168.0.1:4242;
+example) listen 127.0.0.1:4242;
 
 6.
 server_name [path(ident)];
-default value) NONE
+default value) ""
 example) server_name webserv.42.kr;
 ```
 
 ### Location
 ```
 1.
-limit_except [HTTP method(indent) ...] ;
-default value) NONE
+limit_except [HTTP method(ident) ...] ;
+default value) ["GET", "HEAD", "POST", "DELETE", "PUT"]
 example) limit_except GET POST DELETE;
 
 2.
-cgi [extension(indent)] [CGI path(ident, MUST BE ABSOLUTE PATH)]
+cgi [extension(ident)] [CGI path(ident, MUST BE ABSOLUTE PATH)]
 default value) NONE
 example) cgi .py /cgi/hello.py;
 
@@ -96,7 +96,7 @@ example) autoindex on;
 
 4.
 return [HTTP status code(int)] [URI(ident)]
-default value) NONE
+default value) -1, ""
 example) return 301 http://localhost/index.html;
 
 5.
