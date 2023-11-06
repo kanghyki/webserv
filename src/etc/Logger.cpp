@@ -73,7 +73,7 @@ Logger& Logger::operator<<(unsigned short s) {
 
 Logger& Logger::operator<<(std::string s) {
   if (s == logger::endl) {
-    std::cout << this->timestamp() << this->prefix << this->buf << RESET << std::endl;
+    std::cout << this->timestamp() << this->prefix << this->buf << this->suffix << std::endl;
     this->buf = "";
     this->buf.reserve();
   }
