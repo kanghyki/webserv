@@ -28,13 +28,13 @@ class Logger {
   private:
     Logger& operator=(const Logger& logger);
     Logger(const Logger& logger);
+    std::string buf;
+    std::string prefix;
+    std::string suffix;
 
     std::string timestamp();
 
   protected:
-    std::string buf;
-    std::string prefix;
-    std::string suffix;
 
   public:
     explicit Logger(LOG_LEVEL level);
