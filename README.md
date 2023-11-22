@@ -1,105 +1,128 @@
 # webserv
+A handmade web server.
 
-# Configuration
-The first server configuration is used as the default configuration.
+### Usage
+> default.conf must exist, if you launched webserv without a configuration path
 
-### Common
+```shell
+make && ./webserv (configuration-path)
 ```
-1.
+
+### Configuration
+
+##### Common
+
+Properties that all config blocks have.
+
+```
 root [path(ident)]
 default value) /html
 example) root /html;
+```
 
-2.
+```
 error_page [HTTP status code(int) ...] [path(ident)]
 default value) NONE
 example) error_page 400 403 404 /error_page/error.html;
+```
 
-3.
+```
 client_max_body_size [size(int)]
 default value) 8192
 example) client_max_body_size 5000;
+```
 
-4.
+```
 index [file_name(ident)]
 default value) index.html
 example) index hello.html;
 ```
 
-### Http
+##### Http
+
 ```
-1.
 client_header_timeout [second(int)];
 default value) 60
 example) client_header_timeout 50;
+```
 
-2.
+```
 client_body_timeout [second(int)];
 default value) 60
 example) client_body_timeout 50;
+```
 
-3.
+```
 send_timeout [second(int)];
 default value) 60
 example) send_timeout 50;
 ```
 
-### Server
+##### Server
+
 ```
-1.
-gateway_timeout [second(int)];
-default value) 60
-example) gateway_timeout 30;
-
-2.
-session_timeout [second(int)];
-default value) 600
-example) session_timeout 30;
-
-3.
-keepalive_timeout [second(int)];
-default value) 60
-example) keepalive_timeout 30;
-
-4.
-keepalive_requests [second(int)];
-default value) 1000
-example) keepalive_requests 500;
-
-5.
 listen [host(ident)]:[port(int)];
 default value) 127.0.0.1:80
 example) listen 127.0.0.1:4242;
+```
 
-6.
+```
 server_name [path(ident)];
 default value) ""
 example) server_name webserv.42.kr;
 ```
 
-### Location
 ```
-1.
+keepalive_timeout [second(int)];
+default value) 60
+example) keepalive_timeout 30;
+```
+
+```
+keepalive_requests [second(int)];
+default value) 1000
+example) keepalive_requests 500;
+```
+
+```
+gateway_timeout [second(int)];
+default value) 60
+example) gateway_timeout 30;
+```
+
+```
+session_timeout [second(int)];
+default value) 600
+example) session_timeout 30;
+```
+
+##### Location
+
+```
 limit_except [HTTP method(ident) ...] ;
 default value) ["GET", "HEAD", "POST", "DELETE", "PUT"]
 example) limit_except GET POST DELETE;
+```
 
-2.
+```
 cgi [extension(ident)] [CGI path(ident, MUST BE ABSOLUTE PATH)]
 default value) NONE
 example) cgi .py /cgi/hello.py;
+```
 
-3.
+```
 autoindex [on(ident)/off(ident)]
 default value) off
 example) autoindex on;
+```
 
-4.
+```
 return [HTTP status code(int)] [URI(ident)]
 default value) -1, ""
 example) return 301 http://localhost/index.html;
+```
 
-5.
+```
 alias [path(ident)]
 default value) ""
 example) alias /alias_path;
