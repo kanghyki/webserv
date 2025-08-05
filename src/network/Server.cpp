@@ -608,13 +608,14 @@ int Server::init_socket() {
 }
 
 void Server::init_sockaddr_in(const std::string& host, int port, sockaddr_in& in) {
-  if (!memset(&in, 0, sizeof(in)))
-    throw std::runtime_error("Server initialization failed");
-
+  memset(&in, 0, sizeof(in));
   in.sin_family = AF_INET;
-  inet_pton(AF_INET, host.c_str(), &(in.sin_addr));
+  
+  if (inet_pton(AF_INET, host.c_str(), &(in.sin_addr)) <= 0) {
+    throw std::runtime_error("Invalid IP address: " + host);
+  }
+  
   in.sin_port = htons(port);
-
   logger::info << "Preparing... Host=[" << inet_ntoa(in.sin_addr) << "] Port=[" << ntohs(in.sin_port) << "]" << logger::endl;
 }
 
