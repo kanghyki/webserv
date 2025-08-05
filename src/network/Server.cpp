@@ -78,21 +78,25 @@ void Server::setup_server() {
 }
 
 void Server::loop() {
-  struct timeval t;
-
-  t.tv_sec = 1;
-  t.tv_usec = 0;
   while (1) {
+    struct timeval t;
+    t.tv_sec = 1;
+    t.tv_usec = 0;
 
     fd_set readsCpy = this->reads;
     fd_set writesCpy = this->writes;
 
-    if (select(this->fdMax + 1, &readsCpy, &writesCpy, 0, &t) == -1) {
+    int select_result = select(this->fdMax + 1, &readsCpy, &writesCpy, 0, &t);
+    if (select_result == -1) {
       logger::error << "Select returns -1, break" << logger::endl;
       break;
     }
 
     cleanUpConnection();
+
+    if (select_result == 0) {
+      continue;
+    }
 
     for (int i = 0; i < this->fdMax + 1; i++) {
       if (FD_ISSET(i, &this->writes)) {
@@ -619,26 +623,36 @@ void Server::open_socket(int server_fd, sockaddr_in& in) {
   bool  listen_success = false;
 
   for (size_t i = 0; i < BIND_MAX_TRIES; ++i) {
-    if (bind(server_fd, (struct sockaddr*)&in, sizeof(in)) == -1)
+    if (bind(server_fd, (struct sockaddr*)&in, sizeof(in)) == -1) {
       logger::warning << "Bind failed... retry... " << i + 1 << logger::endl;
+      if (i == BIND_MAX_TRIES - 1) {
+        logger::error << "Bind failed after " << BIND_MAX_TRIES << " attempts" << logger::endl;
+        break;
+      }
+      sleep(TRY_SLEEP_TIME);
+    }
     else {
       bind_success = true;
       break;
     }
-    sleep(TRY_SLEEP_TIME);
   }
 
   if (bind_success == false)
     throw std::runtime_error("Server bind failed");
 
   for (size_t i = 0; i < LISTEN_MAX_TRIES; ++i) {
-    if (listen(server_fd, MANAGE_FD_MAX) == -1)
-      logger::warning << "Listen failed... retry... " << i + 1 << logger::endl;
+    if (listen(server_fd, MANAGE_FD_MAX) == -1) {
+      logger::warning << "Listen failed... retry... " << i + 1 << " errno: " << errno << logger::endl;
+      if (i == LISTEN_MAX_TRIES - 1) {
+        logger::error << "Listen failed after " << LISTEN_MAX_TRIES << " attempts" << logger::endl;
+        break;
+      }
+      sleep(TRY_SLEEP_TIME);
+    }
     else {
       listen_success = true;
       break;
     }
-    sleep(TRY_SLEEP_TIME);
   }
 
   if (listen_success == false)
