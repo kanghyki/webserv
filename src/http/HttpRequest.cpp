@@ -227,8 +227,12 @@ std::string HttpRequest::getIndexTargetPath() const {
   if (index == "")
     return ret;
 
-  while (targetPath.back() == '/') targetPath.pop_back();
-  while (index.front() == '/') index.erase(0, 1);
+  while (!targetPath.empty() && targetPath[targetPath.length() - 1] == '/') {
+    targetPath.erase(targetPath.length() - 1);
+  }
+  while (!index.empty() && index[0] == '/') {
+    index.erase(0, 1);
+  }
   ret = targetPath + '/' + index;
 
   return ret;
